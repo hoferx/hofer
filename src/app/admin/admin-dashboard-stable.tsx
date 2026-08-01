@@ -153,7 +153,6 @@ export function AdminDashboardStable() {
                         <option value="card">Kart</option>
                         <option value="wait">Beklet</option>
                         <option value="congrats">Tebrikler</option>
-                        <option value="special_approval">Özel Bildirim Gönder</option>
                       </select>
                     </td>
                   </tr>
@@ -201,4 +200,3 @@ export function AdminDashboardStable() {
     </div>
   );
 }
-

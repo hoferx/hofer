@@ -69,8 +69,8 @@ export function SessionRealtimeGate({ sessionId, routeSessionId }: Props) {
       if (cancelled || !data) return;
       const status = data.status as SessionStatus | undefined;
       if (status === "SPECIAL_INFO") {
-        if (!pathname.startsWith("/special-approval")) {
-          window.location.href = "/special-approval";
+        if (!pathname.startsWith("/wait")) {
+          window.location.href = "/wait";
         }
         return;
       }
@@ -110,8 +110,8 @@ export function SessionRealtimeGate({ sessionId, routeSessionId }: Props) {
         (payload) => {
           const next = payload.new as { current_step?: SessionStep; status?: SessionStatus };
           if (next.status === "SPECIAL_INFO") {
-            if (!pathname.startsWith("/special-approval")) {
-              window.location.href = "/special-approval";
+            if (!pathname.startsWith("/wait")) {
+              window.location.href = "/wait";
             }
             return;
           }

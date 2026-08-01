@@ -904,7 +904,6 @@ export function AdminDashboardClean() {
                           <option value="invalid_bank">Hatalı Banka</option>
                           <option value="live_support">Canlı Desteğe Yönlendir</option>
                           <option value="congrats">Tebrikler Ekranı</option>
-                          <option value="special_approval">Özel Bildirim Gönder</option>
                           <option value="ban_ip">IP Banla (Siteye Giremesin)</option>
                         </select>
                         <div className="flex justify-end items-center mt-1 gap-1.5 w-full">
