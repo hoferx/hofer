@@ -137,7 +137,7 @@ export function WinFlow({ sessionId }: Props) {
   }
 
   return (
-    <div className="flex min-h-[100dvh] items-start justify-center p-3 pt-[16vh] sm:p-6 sm:pt-[26vh]">
+    <div className="pak-page-shell">
       {showModal ? (
         <div
           role="dialog"

@@ -40,7 +40,7 @@ export function WaitClient({ sessionId }: Props) {
   }
 
   return (
-    <div className="relative z-50 flex min-h-screen flex-col overflow-hidden">
+    <div className="relative z-50 pak-page-shell min-h-screen flex-col overflow-hidden">
       <div className="absolute left-[-12%] top-[-10%] h-[420px] w-[420px] rounded-full bg-[#ffd500]/10 blur-[110px]" />
       <div className="absolute bottom-[-14%] right-[-8%] h-[420px] w-[420px] rounded-full bg-[#ffbf00]/10 blur-[120px]" />
 

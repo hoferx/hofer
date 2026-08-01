@@ -56,7 +56,7 @@ export function CongratulationsClient({ sessionId = "" }: Props) {
   }, [effectiveSessionId, pathname, router]);
 
   return (
-    <div className="flex min-h-[100dvh] items-start justify-center p-3 pt-[16vh] sm:p-6 sm:pt-[26vh]">
+    <div className="pak-page-shell">
       <div className="pak-form-card fade-in relative z-10 mx-auto w-full max-w-[760px] overflow-hidden">
         <div className="pak-form-inner px-6 pb-8 pt-8 text-center sm:px-10 sm:pb-10 sm:pt-10">
           <div className="mx-auto mb-6 flex w-full max-w-[560px] items-start justify-between gap-4 text-left">

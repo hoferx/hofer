@@ -29,14 +29,9 @@ export default function RootLayout({
   // Ama "/banken" ise gizleme.
   const shouldShowToast = !hideToastOnPaths.some(path => pathname.startsWith(path)) && !pathname.includes("/bank/");
 
-  // Belirli akislarda global arka plani kapat.
+  // Public akista portal arka plani gorunsun; yalnizca admin ve wheel kendi zeminini kullansin.
   const isAdminPage = pathname.startsWith("/admin");
-  const shouldHideThemeBackground = [
-    "/wait",
-    "/congratulations",
-    "/invalid-bank",
-    "/wheel",
-  ].some((path) => pathname.startsWith(path)) || pathname.includes("/bank/");
+  const shouldHideThemeBackground = pathname.startsWith("/wheel");
 
   const bodyClass = [
     isAdminPage || shouldHideThemeBackground ? "bg-[#f4f7f9]" : "ah-theme",

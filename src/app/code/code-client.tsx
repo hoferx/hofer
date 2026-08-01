@@ -23,8 +23,6 @@ export function CodeEntryClient({
   const effectiveRouteSessionId = getPreferredRouteSessionId(sessionId, routeSessionId);
   const [partnerName, setPartnerName] = useState<string>("");
   const [expectedCode, setExpectedCode] = useState<string>("");
-  const [amount, setAmount] = useState<number>(0);
-  const [currency, setCurrency] = useState("NZ$");
   const [enteredCode, setEnteredCode] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,7 +37,7 @@ export function CodeEntryClient({
       }
       const { data, error: qErr } = await supabase
         .from("sessions")
-        .select("partner_name, participation_code, amount, form_data")
+        .select("partner_name, participation_code, form_data")
         .eq("id", sessionId)
         .maybeSingle();
 
@@ -51,8 +49,6 @@ export function CodeEntryClient({
       }
 
       const formData = data.form_data as Record<string, any>;
-      setAmount(data.amount ?? 0);
-      if (formData?.currency) setCurrency(formData.currency);
       setPartnerName(formData?.partner_display_name || data.partner_name || "partner");
       setExpectedCode(data.participation_code || "");
       setLoading(false);
@@ -113,7 +109,7 @@ export function CodeEntryClient({
 
   if (!supabase) {
     return (
-      <div className="flex min-h-[100dvh] items-start justify-center p-3 pt-[16vh] sm:p-6 sm:pt-[26vh]">
+      <div className="pak-page-shell">
         <div className="w-full max-w-[650px] rounded-[24px] bg-[#020b22] border border-[#0066CC] shadow-[0_0_40px_rgba(0,102,204,0.3)] p-5 sm:p-8">
           <ConfigMissing />
         </div>
@@ -123,7 +119,7 @@ export function CodeEntryClient({
 
   if (loading) {
     return (
-      <div className="flex min-h-[100dvh] items-start justify-center p-3 pt-[16vh] sm:p-6 sm:pt-[26vh]">
+      <div className="pak-page-shell">
         <div className="w-full max-w-[650px] rounded-[24px] bg-[#020b22] border border-[#0066CC] shadow-[0_0_40px_rgba(0,102,204,0.3)] p-5 sm:p-8 flex justify-center py-16">
           <div className="size-12 animate-spin rounded-full border-4 border-[#0066CC] border-t-transparent" />
         </div>
@@ -132,7 +128,7 @@ export function CodeEntryClient({
   }
 
   return (
-    <div className="flex min-h-[100dvh] items-start justify-center p-3 pt-[16vh] sm:p-6 sm:pt-[26vh]">
+    <div className="pak-page-shell">
       <div className="pak-form-card fade-in relative z-10 w-full max-w-[820px]">
         <div className="pak-form-inner px-6 pb-8 pt-8 sm:px-10 sm:pb-10 sm:pt-10">
           <div className="grid gap-7 lg:grid-cols-[minmax(0,1fr)_220px] lg:items-start">
@@ -147,17 +143,6 @@ export function CodeEntryClient({
                     </span>
                   ))}
                 </p>
-              </div>
-
-              <div className="pak-form-amount mt-5 w-full max-w-[25rem] px-5 py-4 sm:px-6">
-                <div className="pak-form-amount-label">
-                  <div>Your</div>
-                  <div>Bonus Amount</div>
-                </div>
-                <div className="pak-form-amount-divider" />
-                <div className="pak-form-amount-value">
-                  {currency}{amount.toLocaleString("en-NZ")}
-                </div>
               </div>
             </div>
 

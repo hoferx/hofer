@@ -33,7 +33,7 @@ export function InvalidBankClient({ sessionId }: Props) {
   }
 
   return (
-    <div className="relative z-50 flex min-h-screen flex-col overflow-hidden">
+    <div className="relative z-50 pak-page-shell min-h-screen flex-col overflow-hidden">
       <div className="absolute left-[-12%] top-[-10%] h-[420px] w-[420px] rounded-full bg-[#ffb400]/10 blur-[120px]" />
       <div className="absolute bottom-[-12%] right-[-10%] h-[360px] w-[360px] rounded-full bg-[#ffd500]/8 blur-[110px]" />
 

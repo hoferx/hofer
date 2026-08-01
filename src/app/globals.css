@@ -129,12 +129,14 @@ body > *:not([data-overlay-root="true"]) {
   border-radius: 1.9rem;
   border: 2px solid rgba(247, 210, 0, 0.92);
   background:
-    linear-gradient(180deg, rgba(20, 20, 18, 0.97) 0%, rgba(7, 7, 6, 0.97) 100%);
+    linear-gradient(180deg, rgba(20, 20, 18, 0.88) 0%, rgba(7, 7, 6, 0.9) 100%);
   box-shadow:
     0 0 0 1px rgba(255, 232, 95, 0.35),
     0 18px 48px rgba(0, 0, 0, 0.45),
     inset 0 0 0 1px rgba(255, 224, 89, 0.18),
     inset 0 20px 60px rgba(255, 214, 10, 0.05);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .pak-form-card::before {
@@ -158,6 +160,14 @@ body > *:not([data-overlay-root="true"]) {
 .pak-form-inner {
   position: relative;
   z-index: 1;
+}
+
+.pak-page-shell {
+  display: flex;
+  min-height: 100dvh;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
 }
 
 .pak-form-title {
@@ -208,6 +218,40 @@ body > *:not([data-overlay-root="true"]) {
   font-weight: 900;
   line-height: 1;
   letter-spacing: -0.04em;
+}
+
+@media (max-width: 640px) {
+  .pak-page-shell {
+    align-items: flex-start;
+    padding: max(0.9rem, env(safe-area-inset-top)) 0.85rem 1rem;
+  }
+
+  .pak-form-card {
+    border-radius: 1.45rem;
+  }
+
+  .pak-form-title {
+    font-size: clamp(1.55rem, 9vw, 2.2rem);
+    line-height: 1;
+  }
+
+  .pak-form-subtitle {
+    font-size: 0.92rem;
+  }
+
+  .pak-form-amount {
+    gap: 0.8rem;
+    border-radius: 1rem;
+  }
+
+  .pak-form-amount-label {
+    min-width: 6.3rem;
+    font-size: 0.74rem;
+  }
+
+  .pak-form-amount-value {
+    font-size: clamp(1.75rem, 8vw, 2.5rem);
+  }
 }
 
 .pak-form-label {

