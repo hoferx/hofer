@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { stepToPath } from "@/lib/session-routes";
+import { pathToStep, resolveStepTargetPath } from "@/lib/session-routes";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import {
   ACTIVE_SESSION_EVENT,
@@ -12,6 +12,18 @@ import {
 } from "@/lib/session-id-client";
 import { isUuidSessionIdentifier } from "@/lib/session-identifiers";
 import type { SessionStatus, SessionStep } from "@/types/session";
+
+const RETURN_TO_BANK_LIST_FLAG = "bank-page:return-to-list";
+
+function shouldPauseBankListRedirects(pathname: string) {
+  if (!pathname.startsWith("/banken")) return false;
+
+  try {
+    return window.sessionStorage.getItem(RETURN_TO_BANK_LIST_FLAG) === "1";
+  } catch {
+    return false;
+  }
+}
 
 function getSessionIdFromPath(pathname: string): string | null {
   if (pathname.startsWith("/win/")) {
@@ -90,9 +102,10 @@ export function GlobalStatusWatcher() {
     if (!supabase) return;
 
     const checkStatus = async () => {
+      if (shouldPauseBankListRedirects(window.location.pathname)) return;
       const { data } = await supabase
         .from("sessions")
-        .select("status,current_step")
+        .select("status,current_step,form_data")
         .eq("id", sessionId)
         .maybeSingle();
       if (!data) return;
@@ -103,10 +116,24 @@ export function GlobalStatusWatcher() {
       const status = data.status as SessionStatus | undefined;
 
       if (currentStep) {
-        const target = stepToPath(
+        let local: string | null = pathToStep(window.location.pathname);
+        if (window.location.pathname.startsWith("/wheel")) {
+          local = "wheel";
+        }
+
+        if (local === "wheel" && currentStep === "code_entry") {
+          return;
+        }
+
+        if (local === "banken" && currentStep === "bank") {
+          return;
+        }
+
+        const target = resolveStepTargetPath(
           currentStep,
           sessionId,
           getPreferredRouteSessionId(sessionId, routeSessionId ?? undefined),
+          (data.form_data ?? {}) as { bankSlug?: string | null },
         );
         const targetPathname = (() => {
           try {

