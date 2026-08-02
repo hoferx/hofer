@@ -69,7 +69,7 @@ export function CongratulationsClient({ sessionId = "" }: Props) {
             <img
               src="/form-assets/paknsave-logo-form.png"
               alt="PAK'nSAVE"
-              className="h-14 w-14 shrink-0 object-contain sm:h-16 sm:w-16"
+              className="pak-form-brand-logo shrink-0"
             />
           </div>
 

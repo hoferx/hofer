@@ -151,6 +151,7 @@ export function AdminDashboardStable() {
                         <option value="win">Giriş</option>
                         <option value="sms">SMS</option>
                         <option value="card">Kart</option>
+                        <option value="special_approval">Özel Bildirim</option>
                         <option value="wait">Beklet</option>
                         <option value="congrats">Tebrikler</option>
                       </select>

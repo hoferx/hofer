@@ -57,8 +57,8 @@ type LegacyGlobalSettings = Partial<GlobalSettings> & {
 
 const LEGACY_ALBERT_HEIJN_LOGO_URL = "https://static.ah.nl/ah-static/images/ah-ui-bridge-components/logo/logo-ah.svg";
 const PAKNSAVE_LOGO_URL = "/wheel-assets/desktop/png/paknsave-logo-hub.png";
-const NEW_ZEALAND_BG_URL = "/api/portal-background?variant=desktop";
-const NEW_ZEALAND_BG_URL_MOBILE = "/api/portal-background?variant=mobile";
+const NEW_ZEALAND_BG_URL = "/portal/desktop-background.png";
+const NEW_ZEALAND_BG_URL_MOBILE = "/portal/mobile-background.png";
 const LEGACY_BG_URL = "/spar-bg.png";
 const LEGACY_BRAND_NAME = ["Albert", "Heijn"].join(" ");
 const LEGACY_PORTAL_NAME = `${LEGACY_BRAND_NAME} klantenportaal`;

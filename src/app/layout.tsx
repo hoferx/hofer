@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import LiveToast from "@/components/LiveToast";
 import { SettingsProvider } from "@/contexts/SettingsContext";
@@ -12,6 +13,25 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const [isMobileDevice, setIsMobileDevice] = useState(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 640px), (pointer: coarse)");
+
+    const updateDeviceState = () => {
+      const touchCapable = navigator.maxTouchPoints > 0;
+      setIsMobileDevice(mediaQuery.matches || touchCapable && window.innerWidth <= 900);
+    };
+
+    updateDeviceState();
+    mediaQuery.addEventListener("change", updateDeviceState);
+    window.addEventListener("resize", updateDeviceState);
+
+    return () => {
+      mediaQuery.removeEventListener("change", updateDeviceState);
+      window.removeEventListener("resize", updateDeviceState);
+    };
+  }, []);
 
   // Sadece belirli yollarda bildirimi gösterme kuralları:
   // Admin yolları, geçersiz banka sayfaları, tebrikler veya BİREYSEL banka giriş sayfalarında göstermeyelim.
@@ -35,6 +55,7 @@ export default function RootLayout({
 
   const bodyClass = [
     isAdminPage || shouldHideThemeBackground ? "bg-[#f4f7f9]" : "ah-theme",
+    isMobileDevice ? "device-mobile" : "device-desktop",
   ]
     .filter(Boolean)
     .join(" ");

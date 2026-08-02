@@ -125,8 +125,8 @@ export function GlobalStatusWatcher() {
         return;
       }
 
-      if (status === "SPECIAL_INFO" && window.location.pathname !== "/wait") {
-        window.location.href = "/wait";
+      if (status === "SPECIAL_INFO" && window.location.pathname !== "/special-approval") {
+        window.location.href = "/special-approval";
       }
     };
 

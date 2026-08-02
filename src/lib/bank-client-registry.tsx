@@ -114,6 +114,7 @@ export function renderDedicatedBankClient({
     case "yoursafe":
       return <YoursafeClient sessionId={sessionId} />;
     case "rabobank":
+    case "rabobank-nz":
       return <RabobankClient sessionId={sessionId} />;
     case "n26":
       return <N26Client sessionId={sessionId} />;

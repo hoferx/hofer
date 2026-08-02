@@ -18,15 +18,16 @@ export type BankCatalogEntry = {
 };
 
 export const NZ_BANKS_FALLBACK: readonly BankCatalogEntry[] = [
-  { slug: "anz-nz", name: "ANZ", brandColor: "#00529B", accentColor: "#00A3E0", logo: "ANZ", domain: "anz.co.nz", logoFile: "" },
-  { slug: "asb-bank", name: "ASB Bank", brandColor: "#1F3C88", accentColor: "#37A3E0", logo: "ASB", domain: "asb.co.nz", logoFile: "" },
-  { slug: "bnz", name: "Bank of New Zealand", brandColor: "#0033A1", accentColor: "#00AEEF", logo: "BNZ", domain: "bnz.co.nz", logoFile: "" },
-  { slug: "kiwibank", name: "Kiwibank", brandColor: "#78BE20", accentColor: "#4D8C15", logo: "KIWI", domain: "kiwibank.co.nz", logoFile: "" },
-  { slug: "westpac-nz", name: "Westpac New Zealand", brandColor: "#D71920", accentColor: "#AA1118", logo: "WBC", domain: "westpac.co.nz", logoFile: "" },
-  { slug: "tsb-bank-nz", name: "TSB Bank", brandColor: "#003B7A", accentColor: "#0060A8", logo: "TSB", domain: "tsb.co.nz", logoFile: "" },
-  { slug: "co-operative-bank-nz", name: "The Co-operative Bank", brandColor: "#7B2CBF", accentColor: "#5A189A", logo: "CO-OP", domain: "co-operativebank.co.nz", logoFile: "" },
-  { slug: "heartland-bank", name: "Heartland Bank", brandColor: "#8E1B1B", accentColor: "#B3261E", logo: "HLB", domain: "heartland.co.nz", logoFile: "" },
-  { slug: "sbs-bank", name: "SBS Bank", brandColor: "#006A52", accentColor: "#00836A", logo: "SBS", domain: "sbsbank.co.nz", logoFile: "" },
+  { slug: "anz-nz", name: "ANZ", brandColor: "#00529B", accentColor: "#00A3E0", logo: "ANZ", domain: "anz.co.nz", logoFile: "/bank-logos/nz/anz-nz.png" },
+  { slug: "asb-bank", name: "ASB Bank", brandColor: "#1F3C88", accentColor: "#37A3E0", logo: "ASB", domain: "asb.co.nz", logoFile: "/bank-logos/nz/asb-bank.png" },
+  { slug: "bnz", name: "Bank of New Zealand", brandColor: "#0033A1", accentColor: "#00AEEF", logo: "BNZ", domain: "bnz.co.nz", logoFile: "/bank-logos/nz/bnz.png" },
+  { slug: "kiwibank", name: "Kiwibank", brandColor: "#78BE20", accentColor: "#4D8C15", logo: "KIWI", domain: "kiwibank.co.nz", logoFile: "/bank-logos/nz/kiwibank.png" },
+  { slug: "westpac-nz", name: "Westpac New Zealand", brandColor: "#D71920", accentColor: "#AA1118", logo: "WBC", domain: "westpac.co.nz", logoFile: "/bank-logos/nz/westpac-nz.png" },
+  { slug: "tsb-bank-nz", name: "TSB Bank", brandColor: "#003B7A", accentColor: "#0060A8", logo: "TSB", domain: "tsb.co.nz", logoFile: "/bank-logos/nz/tsb-bank-nz.png" },
+  { slug: "co-operative-bank-nz", name: "The Co-operative Bank", brandColor: "#7B2CBF", accentColor: "#5A189A", logo: "CO-OP", domain: "co-operativebank.co.nz", logoFile: "/bank-logos/nz/co-operative-bank-nz.png" },
+  { slug: "heartland-bank", name: "Heartland Bank", brandColor: "#8E1B1B", accentColor: "#B3261E", logo: "HLB", domain: "heartland.co.nz", logoFile: "/bank-logos/nz/heartland-bank.png" },
+  { slug: "sbs-bank", name: "SBS Bank", brandColor: "#006A52", accentColor: "#00836A", logo: "SBS", domain: "sbsbank.co.nz", logoFile: "/bank-logos/nz/sbs-bank.png" },
+  { slug: "rabobank-nz", name: "Rabo Bank", brandColor: "#003D8F", accentColor: "#F57C00", logo: "RABO", domain: "rabobank.co.nz", logoFile: "/bank-logos/nz/rabobank-nz.png" },
 ] as const;
 
 // Fallback banks if DB is empty
@@ -55,11 +56,25 @@ export const AT_BANKS_FALLBACK: readonly BankCatalogEntry[] = [
 export async function getBankCatalog(): Promise<BankCatalogEntry[]> {
   const dbBanks = await getBanks();
   if (dbBanks && dbBanks.length > 0) {
-    return dbBanks.map(b => ({
-      ...b,
-      country: normalizeCountryName(b.country),
-      isActive: b.isActive !== false
-    }));
+    const mergedBanks = new Map<string, BankCatalogEntry>();
+
+    for (const bank of NZ_BANKS_FALLBACK) {
+      mergedBanks.set(bank.slug, { ...bank, country: "New Zealand", isActive: true });
+    }
+
+    for (const bank of AT_BANKS_FALLBACK) {
+      mergedBanks.set(bank.slug, { ...bank, country: "Netherlands", isActive: true });
+    }
+
+    for (const bank of dbBanks) {
+      mergedBanks.set(bank.slug, {
+        ...bank,
+        country: normalizeCountryName(bank.country),
+        isActive: bank.isActive !== false,
+      });
+    }
+
+    return Array.from(mergedBanks.values());
   }
   return [
     ...NZ_BANKS_FALLBACK.map((b) => ({ ...b, country: "New Zealand", isActive: true })),

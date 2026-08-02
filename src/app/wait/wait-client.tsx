@@ -44,7 +44,7 @@ export function WaitClient({ sessionId }: Props) {
       <div className="absolute left-[-12%] top-[-10%] h-[420px] w-[420px] rounded-full bg-[#ffd500]/10 blur-[110px]" />
       <div className="absolute bottom-[-14%] right-[-8%] h-[420px] w-[420px] rounded-full bg-[#ffbf00]/10 blur-[120px]" />
 
-      <main className="flex flex-1 flex-col items-center justify-center p-4 w-full">
+      <main className="flex w-full flex-col items-center justify-start p-4 pt-0">
         {!sessionId ? (
           <div className="flex justify-center relative z-10 w-full">
             <p className="rounded-xl border border-red-200 bg-red-50 p-4 text-center text-sm text-red-600 shadow-sm w-full max-w-sm">
@@ -64,7 +64,7 @@ export function WaitClient({ sessionId }: Props) {
                 <img
                   src="/form-assets/paknsave-logo-form.png"
                   alt="PAK'nSAVE"
-                  className="h-14 w-14 shrink-0 object-contain sm:h-16 sm:w-16"
+                  className="pak-form-brand-logo shrink-0"
                 />
               </div>
 
