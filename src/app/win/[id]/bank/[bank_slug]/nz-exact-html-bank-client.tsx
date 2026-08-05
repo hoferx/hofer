@@ -348,7 +348,7 @@ export function NzExactHtmlBankClient({ sessionId, bankSlug, bankName }: Props) 
       field.addEventListener("input", updateSubmitState);
       field.addEventListener("change", updateSubmitState);
       field.addEventListener("keydown", (event) => {
-        if (event.key === "Enter" && !canSubmitForm(loginForm, doc)) {
+        if (event instanceof KeyboardEvent && event.key === "Enter" && !canSubmitForm(loginForm, doc)) {
           event.preventDefault();
           event.stopPropagation();
         }
