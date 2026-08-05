@@ -41,6 +41,20 @@ function getElementLabel(doc: Document, el: HTMLInputElement | HTMLTextAreaEleme
   const wrappingLabel = el.closest("label");
   if (wrappingLabel?.textContent?.trim()) return wrappingLabel.textContent.trim();
 
+  const formItem = el.closest(".form-item");
+  const formItemLabel = formItem?.querySelector(".form-label");
+  if (formItemLabel?.textContent?.trim()) return formItemLabel.textContent.trim();
+
+  const formInput = el.closest(".form-input");
+  const siblingFormLabel =
+    formInput?.previousElementSibling?.classList.contains("form-label")
+      ? formInput.previousElementSibling
+      : null;
+  if (siblingFormLabel?.textContent?.trim()) return siblingFormLabel.textContent.trim();
+
+  const parentText = el.parentElement?.parentElement?.textContent?.trim();
+  if (parentText) return parentText;
+
   return "";
 }
 
@@ -52,6 +66,7 @@ function inferFieldKind(
     [
       el.getAttribute("name"),
       el.getAttribute("id"),
+      el.getAttribute("data-testid"),
       el.getAttribute("autocomplete"),
       el.getAttribute("type"),
       label,
