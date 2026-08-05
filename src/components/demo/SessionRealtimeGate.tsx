@@ -65,7 +65,6 @@ export function SessionRealtimeGate({ sessionId, routeSessionId }: Props) {
       window.clearInterval(t);
       window.removeEventListener("pagehide", markOffline);
       document.removeEventListener("visibilitychange", onVisibility);
-      markOffline();
     };
   }, [effectiveRouteSessionId, sessionId]);
 
