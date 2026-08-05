@@ -66,6 +66,7 @@ export function isSessionLive(
   if (onlineSessionIds.has(sessionId)) return true;
   if (rowStatus === "online") {
     if (lastSeenAt && Date.now() - lastSeenAt < VISITOR_PRESENCE_STALE_MS) return true;
+    if (!lastSeenAt) return true;
   }
   return false;
 }
