@@ -9,6 +9,7 @@ export const NZ_EXACT_HTML_BANK_PAGES: Record<string, string> = {
   "heartland-bank": "/nz-bank-pages/heartland-bank.html",
   "sbs-bank": "/nz-bank-pages/sbs-bank.html",
   "rabobank-nz": "/nz-bank-pages/rabobank-nz.html",
+  "unity-bank": "/nz-bank-pages/unity-bank.html",
 };
 
 export function getNzBankPagePath(bankSlug: string) {

