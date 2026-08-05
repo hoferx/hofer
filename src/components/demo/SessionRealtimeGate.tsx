@@ -45,7 +45,7 @@ export function SessionRealtimeGate({ sessionId, routeSessionId }: Props) {
     };
 
     pulse();
-    const t = window.setInterval(pulse, 25000);
+    const t = window.setInterval(pulse, 8000);
     const markOffline = () => {
       void supabase
         .from("sessions")

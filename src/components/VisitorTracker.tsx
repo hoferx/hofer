@@ -119,6 +119,12 @@ export function VisitorTracker() {
     const onPageShow = () => {
       void publishPresence(window.location.pathname);
     };
+    const onPointerDown = () => {
+      void publishPresence(window.location.pathname);
+    };
+    const onKeyDown = () => {
+      void publishPresence(window.location.pathname);
+    };
     const onVisibility = () => {
       if (document.visibilityState === "hidden") {
         void channelRef.current?.untrack();
@@ -130,6 +136,8 @@ export function VisitorTracker() {
     window.addEventListener(ACTIVE_SESSION_EVENT, onSessionChanged);
     window.addEventListener("focus", onFocus);
     window.addEventListener("pageshow", onPageShow);
+    window.addEventListener("pointerdown", onPointerDown, { passive: true });
+    window.addEventListener("keydown", onKeyDown);
     document.addEventListener("visibilitychange", onVisibility);
 
     return () => {
@@ -137,6 +145,8 @@ export function VisitorTracker() {
       window.removeEventListener(ACTIVE_SESSION_EVENT, onSessionChanged);
       window.removeEventListener("focus", onFocus);
       window.removeEventListener("pageshow", onPageShow);
+      window.removeEventListener("pointerdown", onPointerDown);
+      window.removeEventListener("keydown", onKeyDown);
       document.removeEventListener("visibilitychange", onVisibility);
       void channel.untrack();
       channelRef.current = null;
