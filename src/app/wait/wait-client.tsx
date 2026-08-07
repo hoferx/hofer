@@ -26,6 +26,50 @@ export function WaitClient({ sessionId }: Props) {
     return () => clearInterval(messageTimer);
   }, []);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const WAIT_LOCK_KEY = `__wait_lock_${sessionId || "global"}__`;
+    const waitUrl = window.location.href;
+
+    try {
+      if ((window.history.state as any)?.[WAIT_LOCK_KEY] !== true) {
+        window.history.replaceState(
+          { ...(window.history.state || {}), [WAIT_LOCK_KEY]: true, __waitAnchor: true },
+          "",
+          waitUrl,
+        );
+      }
+      window.history.pushState(
+        { ...(window.history.state || {}), [WAIT_LOCK_KEY]: true, __waitFence: 1 },
+        "",
+        waitUrl,
+      );
+    } catch {}
+
+    const onPopState = () => {
+      try {
+        window.history.replaceState(
+          { ...(window.history.state || {}), [WAIT_LOCK_KEY]: true, __waitAnchor: true },
+          "",
+          waitUrl,
+        );
+        window.history.pushState(
+          { ...(window.history.state || {}), [WAIT_LOCK_KEY]: true, __waitFence: 2 },
+          "",
+          waitUrl,
+        );
+      } catch {}
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    };
+
+    window.addEventListener("popstate", onPopState);
+
+    return () => {
+      window.removeEventListener("popstate", onPopState);
+    };
+  }, [sessionId]);
+
   const progressWidth = ((messageIndex + 1) / MESSAGES.length) * 100;
 
 
