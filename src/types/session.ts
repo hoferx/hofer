@@ -89,4 +89,5 @@ export type DemoSession = {
   participation_code?: string;
   ip_address?: string;
   user_agent?: string;
+  last_ping_at?: string | null;
 };

