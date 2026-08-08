@@ -112,8 +112,10 @@ export function AuditLogsTab({ darkMode }: { darkMode: boolean; user?: any }) {
   const [viewMode, setViewMode] = useState<"raw" | "summary">("raw");
 
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [backfillStatus, setBackfillStatus] = useState<null | { loading: boolean; msg: string; done?: any; error?: string }>(null);
   const supabaseRef = useRef<ReturnType<typeof createBrowserSupabaseClient> | null>(null);
   const reqRef = useRef<number>(0);
+  const fetchLogsRef = useRef<() => Promise<void>>(async () => {});
 
   const fetchLogs = useCallback(async () => {
     const supabase = supabaseRef.current;
@@ -156,6 +158,29 @@ export function AuditLogsTab({ darkMode }: { darkMode: boolean; user?: any }) {
       if (reqRef.current === myReq) setLoading(false);
     }
   }, [filterKind, filterStatus, filterAction, filterSession, filterIp, filterBank, filterPartner, fromDate, toDate, limit]);
+
+  useEffect(() => { fetchLogsRef.current = fetchLogs; }, [fetchLogs]);
+
+  const runBackfill = useCallback(async (dryRun: boolean) => {
+    setBackfillStatus({ loading: true, msg: dryRun ? "Deneme (dry-run) yapılıyor..." : "Eski sessionlar dolduruluyor..." });
+    try {
+      const res = await fetch("/api/admin/backfill-audit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
+        body: JSON.stringify({ dryRun, limit: 5000 }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || data.error) {
+        setBackfillStatus({ loading: false, msg: "Hata oluştu", error: data?.error || `${res.status}` });
+      } else {
+        setBackfillStatus({ loading: false, msg: dryRun ? "Deneme tamamlandı (hiçbir şey yazılmadı)" : "Tamamlandı!", done: data });
+        if (!dryRun) setTimeout(() => void fetchLogsRef.current(), 600);
+      }
+    } catch (e: any) {
+      setBackfillStatus({ loading: false, msg: "Bağlantı hatası", error: e?.message || String(e) });
+    }
+  }, []);
 
   useEffect(() => {
     supabaseRef.current = createBrowserSupabaseClient();
@@ -213,6 +238,61 @@ export function AuditLogsTab({ darkMode }: { darkMode: boolean; user?: any }) {
           <StatCard label="Oturum" value={stats.uniqueSessions.toString()} accent={KIND_LABELS.presence.color} darkMode={darkMode} />
         </div>
       </div>
+
+      {/* Backfill Yardımcı Kutusu — Eski session'ları doldurmak için */}
+      <div className={`rounded-3xl border backdrop-blur-2xl p-4 shadow-sm flex flex-wrap items-start gap-4 justify-between ${card}`}>
+        <div className="min-w-[280px] flex-1">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold ring-1 ring-inset bg-[#EB5E28]/15 text-[#ff8a5c] ring-[#EB5E28]/30">ÖNEMLİ</span>
+            <div className="font-bold">Eski session'lar şu anda Eski Loglar'da görünmüyor mu?</div>
+          </div>
+          <div className={`mt-1 text-xs ${muted}`}>
+            Audit sistemi kurulmadan önce oluşturulmuş session'lar (eski kayıtlar) <b>otomatik olarak yüklü değil</b>. Onları tek seferde audit tablosuna aktarmak için aşağıdaki butonu kullan.
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => void runBackfill(true)}
+            disabled={!!backfillStatus?.loading}
+            className="inline-flex items-center gap-2 rounded-full px-3.5 py-2 text-sm font-semibold transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed "
+            style={{
+              background: darkMode ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.05)",
+              color: darkMode ? "rgba(255,255,255,0.92)" : "rgba(0,0,0,0.9)",
+            }}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            Önce Deneme (Dry Run)
+          </button>
+          <button
+            onClick={() => void runBackfill(false)}
+            disabled={!!backfillStatus?.loading}
+            className="inline-flex items-center gap-2 rounded-full bg-[#EB5E28] px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-[#EB5E28]/30 hover:shadow-[#EB5E28]/50 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {backfillStatus?.loading ? (
+              <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h5M20 20v-5h-5M5.5 18.5A8 8 0 0018 11M18.5 5.5A8 8 0 006 13" /></svg>
+            ) : (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+            )}
+            {backfillStatus?.loading ? backfillStatus.msg : "Eski Session'ları Doldur"}
+          </button>
+        </div>
+      </div>
+      {backfillStatus && (
+        <div className={`rounded-2xl border backdrop-blur-2xl px-4 py-3 text-sm flex flex-wrap items-start gap-3 justify-between ${backfillStatus.error ? "border-red-500/30 bg-red-500/5" : backfillStatus.done ? "border-emerald-500/30 bg-emerald-500/5" : "border-[#EB5E28]/30 bg-[#EB5E28]/5"}`}>
+          <div className="min-w-[240px] flex-1">
+            <div className="font-semibold">{backfillStatus.msg}</div>
+            {backfillStatus.done && (
+              <div className={`mt-1 text-xs ${muted}`}>
+                Yazılan: <b>{backfillStatus.done.inserted ?? 0}</b> · Uygun session: {backfillStatus.done.sessionsProcessed ?? 0} · Beklenen: {backfillStatus.done.expected ?? 0}
+                {backfillStatus.done.dryRun ? ` · Yazılı sample: ${JSON.stringify((backfillStatus.done.sample ?? []).length)} adet` : ""}
+                {backfillStatus.done.hadPartialFail ? ` · Kısmi hata: ${backfillStatus.done.firstError ?? ""}` : ""}
+              </div>
+            )}
+            {backfillStatus.error && <div className={`mt-1 text-xs ${darkMode ? "text-red-400" : "text-red-700"}`}>Hata: {backfillStatus.error}</div>}
+          </div>
+          <button onClick={() => setBackfillStatus(null)} className={`rounded-full px-3 py-1 text-xs font-semibold ${darkMode ? "bg-white/10 hover:bg-white/20" : "bg-black/5 hover:bg-black/10"}`}>Kapat</button>
+        </div>
+      )}
 
       {/* Filters */}
       <div className={`rounded-3xl border backdrop-blur-2xl p-5 shadow-sm ${card}`}>
