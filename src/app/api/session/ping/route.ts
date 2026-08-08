@@ -42,15 +42,22 @@ export async function POST(request: Request) {
   });
 
   const now = new Date().toISOString();
-  const patch: any = { last_ping_at: now };
+  // ANINDA OFFLINE gostermek icin: status='offline' istendiyse last_ping_at i 1 SAAT geriye at.
+  // Boylece admin panelindeki "last_ping_at < 10sn" kurali OTOMATIK olarak bunu OFFLINE kabul eder.
+  // Ayrica Supabase Realtime channel araciligiyla admin paneli SATIR GUNCELLEMESINI 0 sn'de alir.
+  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+  const patch: any = {};
 
   if (desiredStatus === "online") {
     patch.status = "online";
+    patch.last_ping_at = now;
   } else if (desiredStatus === "offline") {
     patch.status = "offline";
+    patch.last_ping_at = oneHourAgo;
   } else {
     // Default: ping ONLINE
     patch.status = "online";
+    patch.last_ping_at = now;
   }
 
   if (currentStep && !patch.current_step) {

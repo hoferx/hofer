@@ -39,7 +39,7 @@ export function SessionRealtimeGate({ sessionId, routeSessionId }: Props) {
   useEffect(() => {
     persistActiveSession(sessionId, effectiveRouteSessionId);
 
-    const PING_INTERVAL = 15_000;
+    const PING_INTERVAL = 3_000;
 
     const currentStep = (() => {
       if (pathname.startsWith("/wheel")) return "wheel";
