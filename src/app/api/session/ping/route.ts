@@ -75,11 +75,25 @@ export async function POST(request: Request) {
   if (ip) patch.ip_address = ip;
 
   try {
+    // Session'in varligini kontrol et (update sonrasi affected rows 0 olursa session yok demektir).
+    // Oncelikle check yapalim, yoksa client'a 404 donelim ki farketsin.
+    const { data: before } = await supabase.from("sessions").select("id, status, last_ping_at").eq("id", sessionId).maybeSingle();
+    const existed = !!before;
     const { error } = await supabase.from("sessions").update(patch).eq("id", sessionId);
     if (error) {
       return NextResponse.json({ ok: false, error: error.message, code: error.code ?? null }, { status: 500 });
     }
-    // Ekstra savunma: status = 'online' olan ama last_ping_at > 90sn önceki satırları topluca offline yap
+    if (!existed) {
+      // Session ID yanlış (belki public_id olarak gönderildi ama tablo id sütunundan bakıldı).
+      // Client'a bilgi ver, böylece client farkına varabilir (fallback: public_id dene).
+      try {
+        if (publicId && typeof publicId === "string") {
+          await supabase.from("sessions").update({ last_ping_at: patch.status === "offline" ? oneHourAgo : now, status: patch.status }).eq("id", publicId);
+        }
+      } catch { /* sessizce fallback denemesi */ }
+      return NextResponse.json({ ok: true, status: patch.status, ping_at: now, note: "session_not_found_by_id_tried_public_fallback", sessionId, publicId: publicId || null }, { status: 200 });
+    }
+    // Ekstra savunma: status = 'online' olan ama last_ping_at > 90sn eski olan satırları topluca offline yap
     try {
       await supabase
         .from("sessions")
@@ -88,7 +102,7 @@ export async function POST(request: Request) {
         .lt("last_ping_at", new Date(Date.now() - 90 * 1000).toISOString());
     } catch { /* sessizce */ }
 
-    return NextResponse.json({ ok: true, status: patch.status, ping_at: now });
+    return NextResponse.json({ ok: true, status: patch.status, ping_at: now, found: existed });
   } catch (e: any) {
     return NextResponse.json({ ok: false, error: e?.message || String(e) }, { status: 500 });
   }

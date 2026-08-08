@@ -33,13 +33,20 @@ export function SessionRealtimeGate({ sessionId, routeSessionId }: Props) {
   const effectiveRouteSessionId = getPreferredRouteSessionId(sessionId, routeSessionId);
 
   /* Presence: demo ortamında admin için online göstergesi — KESIN cozum (last_ping_at)
-     - 15 snde bir sunucuya PING at (POST /api/session/ping, service-role)
-     - Pagehide / visibility=hidden anında beacon + keepalive ile OFFLINE ping at (kesin gitsin)
-     - Artık supabase anon status update + presence channel bugu onemsiz, karar last_ping_at'dan. */
+     - 3 SN'DE BIR sunucuya PING at (POST /api/session/ping, service-role)
+     - SAYFA KAPANINCA (pagehide / beforeunload): DIREKT OFFLINE (silinmez, tarayıcı kapanınca kesin gitsin)
+     - SIRKETICI visibility=hidden (sekme arkada, mobil kilit, SMS uygulamasına gitme vs.):
+         * SON 10 DAKIKA ICINDE visibility=visible olduysa: OFFLINE ISARETLEME, sadece status='online' KALIR.
+         * Kullanici 10dk dan uzun sure arkada tutarsa ya da tarayici gerçekten kapatilirsa: pagehide/beforeunload ile OFFLINE olur.
+         * Boylece SMS onayi icin banka uygulamasi / messenger acinca ONLINE gozukmeye devam eder (bug olmaz). */
   useEffect(() => {
     persistActiveSession(sessionId, effectiveRouteSessionId);
 
     const PING_INTERVAL = 3_000;
+    // Sadece SAYFA GERCEKTEN kapatilinca (pagehide/beforeunload) OFFLINE yap.
+    // visibility=hidden icin MAKS 10 DAKIKA boyunca ONLINE tut (gecerli olursa tekrar visible olunca ONLINE devam).
+    const VISIBILITY_HIDDEN_TOLERANCE_MS = 10 * 60 * 1000;
+    let lastVisibleAt = Date.now();
 
     const currentStep = (() => {
       if (pathname.startsWith("/wheel")) return "wheel";
@@ -64,28 +71,52 @@ export function SessionRealtimeGate({ sessionId, routeSessionId }: Props) {
 
     const pingOnline = async () => {
       try {
+        // Birincil deneme: normal sessionId ile
         const resp = await fetch("/api/session/ping", {
           method: "POST",
           credentials: "same-origin",
           headers: { "Content-Type": "application/json" },
           body: buildBody("online"),
         });
-        // sessizce
-        void resp;
-      } catch { /* sessizce */ }
+        try {
+          const j = await resp.json() as any;
+          // Sunucu sessionId bulamadiysa ve fallback publicId ile denediyse sorun yok.
+          // Session HIC bulunamadiysa (note='session_not_found...' ve publicId yoksa)
+          //   ya da status=404 ise client burada anlar.
+          if (j && j.ok === false && j.error) {
+            logAuditEvent({
+              session_id: sessionId,
+              public_id: effectiveRouteSessionId,
+              event_kind: "presence",
+              event_action: "ping_online_failed",
+              status: "error",
+              pathname,
+              meta: { httpStatus: resp.status, error: j.error, note: j.note || null },
+            });
+          }
+        } catch { /* sessizce json parse hatasi */ }
+      } catch (e: any) {
+        logAuditEvent({
+          session_id: sessionId,
+          public_id: effectiveRouteSessionId,
+          event_kind: "presence",
+          event_action: "ping_online_fetch_error",
+          status: "error",
+          pathname,
+          meta: { error: e?.message || String(e) },
+        });
+      }
     };
 
     const pingOfflineOrOnline = (status: "offline" | "online") => {
       try {
         const payload = new Blob([buildBody(status)], { type: "application/json" });
-        // ONCELIK 1: sendBeacon (tarayici sayfayi kapatsa bile kuyruga alir ve gonderir)
         if (typeof navigator !== "undefined" && typeof navigator.sendBeacon === "function") {
           try {
             const beaconOk = navigator.sendBeacon("/api/session/ping", payload);
             if (beaconOk) return;
-          } catch { /* beacon hata, fallback */ }
+          } catch { /* fallback */ }
         }
-        // FALLBACK: fetch keepalive
         try {
           void fetch("/api/session/ping", {
             method: "POST",
@@ -109,8 +140,17 @@ export function SessionRealtimeGate({ sessionId, routeSessionId }: Props) {
       meta: { effectiveRouteSessionId, ping_interval_ms: PING_INTERVAL, currentStep },
     });
 
-    const t = window.setInterval(pingOnline, PING_INTERVAL);
+    const t = window.setInterval(() => {
+      // Interval boyunca visibility=hidden olsa bile (durdurulmayan interval tarayıcılar),
+      // son 10dk icinde gorulduyse ONLINE ping atmaya devam et (SMS donunce kesin online).
+      if (document.visibilityState === "visible") {
+        lastVisibleAt = Date.now();
+      }
+      void pingOnline();
+    }, PING_INTERVAL);
 
+    // GERCEKTEN sayfadan cikiliyorsa (kapatma): OFFLINE.
+    // NOT: beforeunload + pagehide ikisini birden dinle, her iki durumda da OFFLINE olsun.
     const markOffline = () => {
       logAuditEvent({
         session_id: sessionId,
@@ -124,8 +164,36 @@ export function SessionRealtimeGate({ sessionId, routeSessionId }: Props) {
     };
 
     const onVisibility = () => {
-      if (document.visibilityState === "hidden") markOffline();
-      else void pingOnline();
+      if (document.visibilityState === "visible") {
+        lastVisibleAt = Date.now();
+        void pingOnline();
+        return;
+      }
+      // visibility=hidden: sadece 10dk dan uzun sure beklediyse OFFLINE yap.
+      // Aksi halde (kisa sureli SMS / app gecisi) ONLINE kalsın.
+      const hiddenFor = Date.now() - lastVisibleAt;
+      if (hiddenFor > VISIBILITY_HIDDEN_TOLERANCE_MS) {
+        logAuditEvent({
+          session_id: sessionId,
+          public_id: effectiveRouteSessionId,
+          event_kind: "presence",
+          event_action: "session_hidden_timeout_offline",
+          status: "warn",
+          pathname,
+          meta: { hiddenForMs: hiddenFor, toleranceMs: VISIBILITY_HIDDEN_TOLERANCE_MS },
+        });
+        pingOfflineOrOnline("offline");
+      } else {
+        // Kısa süreli arka planda kalma: DIKKATLI, sadece audit log at, OFFLINE ISARETLEME.
+        logAuditEvent({
+          session_id: sessionId,
+          public_id: effectiveRouteSessionId,
+          event_kind: "presence",
+          event_action: "session_hidden_short_tolerated",
+          pathname,
+          meta: { hiddenForMs: hiddenFor, toleranceMs: VISIBILITY_HIDDEN_TOLERANCE_MS },
+        });
+      }
     };
 
     window.addEventListener("pagehide", markOffline);
@@ -137,8 +205,8 @@ export function SessionRealtimeGate({ sessionId, routeSessionId }: Props) {
       window.removeEventListener("pagehide", markOffline);
       window.removeEventListener("beforeunload", markOffline);
       document.removeEventListener("visibilitychange", onVisibility);
-      // Cleanup aninda da OFFLINE pingi (best effort)
-      pingOfflineOrOnline("offline");
+      // React unmount (SPA route degisimi): sayfada duruluyorsa (baska bir route), ONLINE kalmaya devam edebilir.
+      // Bu yuzden cleanup'ta OFFLINE ISARETLEMIYORUZ. Sayfa kapaninca pagehide tetiklenir ve OFFLINE olur.
     };
   }, [effectiveRouteSessionId, sessionId, pathname]);
 
