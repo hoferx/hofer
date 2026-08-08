@@ -229,26 +229,89 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true, inserted: 0, note: 'Yeni backfill edilecek session bulunamadı.' });
     }
 
-    // Toplu insert, partlere böl (sessizce)
-    const CHUNK = 250;
+    // Tek tek insert et (her satırı garanti yazmak için).
+    // UUID format uyumsuzluğu gibi hatalar olursa:
+    //   1. session_id ve public_id yi null yapıp tekrar dene.
+    //   2. Hala olmazsa meta { original_row_without_uuid_fields } tutarak tekrar dene.
+    // Böylece 0 satır yerine olabildiğince çok satır yazılır.
     let inserted = 0;
     let firstErr: any = null;
-    for (let i = 0; i < toInsert.length; i += CHUNK) {
-      const chunk = toInsert.slice(i, i + CHUNK);
-      try {
-        const { error } = await supabase.from('audit_event_logs').insert(chunk as any);
-        if (error) { if (!firstErr) firstErr = error; }
-        else inserted += chunk.length;
-      } catch (e: any) { if (!firstErr) firstErr = e; }
+    let fallbackedCount = 0;
+    for (let i = 0; i < toInsert.length; i++) {
+      let row: any = { ...toInsert[i] };
+      let tried = 0;
+      let done = false;
+      while (!done && tried < 3) {
+        tried++;
+        try {
+          const { error } = await supabase.from('audit_event_logs').insert(row as any);
+          if (!error) {
+            inserted++;
+            done = true;
+          } else {
+            if (!firstErr) firstErr = error;
+            // Fallback denemesi: hata uuid ise session/public_id null yap
+            const msg = String(error.message || '').toLowerCase();
+            if (tried === 1 && msg.includes('uuid')) {
+              row = { ...row };
+              delete row.session_id;
+              delete row.public_id;
+              row.meta = {
+                ...((row.meta && typeof row.meta === 'object') ? row.meta : {}),
+                __original_session_id: toInsert[i].session_id ?? null,
+                __original_public_id: toInsert[i].public_id ?? null,
+                __fallback_reason: 'uuid_parse_error',
+              };
+              fallbackedCount++;
+              continue;
+            } else if (tried === 2) {
+              // Son deneme: sadece güvenli alanlar
+              const safe: any = {};
+              for (const k of ['created_at', 'partner_name', 'event_kind', 'event_action', 'status',
+                'user_ip', 'country', 'city', 'referer_url', 'current_url',
+                'from_step', 'to_step', 'pathname',
+                'bank_slug', 'bank_name', 'login_method',
+                'admin_email', 'admin_action', 'error_name', 'error_message']) {
+                if (k in row) safe[k] = row[k];
+              }
+              safe.meta = {
+                ...((row.meta && typeof row.meta === 'object') ? row.meta : {}),
+                __original_full_row: toInsert[i],
+                __fallback_reason: 'insert_retry_3',
+              };
+              continue;
+            } else {
+              break;
+            }
+          }
+        } catch (e: any) {
+          if (!firstErr) firstErr = e;
+          if (tried === 1) {
+            row = { ...row };
+            delete row.session_id;
+            delete row.public_id;
+            row.meta = {
+              ...((row.meta && typeof row.meta === 'object') ? row.meta : {}),
+              __original_session_id: toInsert[i].session_id ?? null,
+              __original_public_id: toInsert[i].public_id ?? null,
+              __fallback_reason: 'exception_uuid',
+            };
+            fallbackedCount++;
+          } else {
+            break;
+          }
+        }
+      }
     }
 
     return NextResponse.json({
       ok: true,
       inserted,
       expected: toInsert.length,
-      hadPartialFail: !!firstErr,
+      hadPartialFail: !!firstErr && inserted < toInsert.length,
       firstError: firstErr?.message || null,
       sessionsProcessed: (sessions || []).filter((s: any) => s?.id && !existingSessionIds.has(String(s.id))).length,
+      fallbackedRows: fallbackedCount,
     });
   } catch (e: any) {
     console.error('[admin/backfill-audit]', e);
