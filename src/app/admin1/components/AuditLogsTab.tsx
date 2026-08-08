@@ -109,7 +109,7 @@ export function AuditLogsTab({ darkMode }: { darkMode: boolean; user?: any }) {
   const [toDate, setToDate] = useState<string>("");
   const [limit, setLimit] = useState<number>(500);
 
-  const [viewMode, setViewMode] = useState<"raw" | "summary">("summary");
+  const [viewMode, setViewMode] = useState<"raw" | "summary">("raw");
 
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const supabaseRef = useRef<ReturnType<typeof createBrowserSupabaseClient> | null>(null);
