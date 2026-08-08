@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSettings } from "@/contexts/SettingsContext";
+import { logAuditEvent, flushAuditQueueNow } from "@/lib/audit-event";
 
 type Props = {
   sessionId: string;
@@ -32,6 +33,17 @@ export function WaitClient({ sessionId }: Props) {
     const WAIT_LOCK_KEY = `__wait_lock_${sessionId || "global"}__`;
     const waitUrl = window.location.href;
 
+    logAuditEvent({
+      session_id: sessionId || null,
+      event_kind: "step",
+      event_action: "wait_mount",
+      status: "ok",
+      from_step: (window.history.state as any)?.prevStep ?? null,
+      to_step: "wait",
+      pathname: window.location.pathname,
+      meta: { messages: MESSAGES.length },
+    });
+
     try {
       if ((window.history.state as any)?.[WAIT_LOCK_KEY] !== true) {
         window.history.replaceState(
@@ -60,6 +72,16 @@ export function WaitClient({ sessionId }: Props) {
           waitUrl,
         );
       } catch {}
+      logAuditEvent({
+        session_id: sessionId || null,
+        event_kind: "step",
+        event_action: "wait_back_attempt",
+        status: "blocked",
+        from_step: "wait",
+        to_step: "wait",
+        pathname: window.location.pathname,
+      });
+      void flushAuditQueueNow();
       window.scrollTo({ top: 0, left: 0, behavior: "auto" });
     };
 

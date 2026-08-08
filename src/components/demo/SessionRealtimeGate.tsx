@@ -9,6 +9,7 @@ import {
   getPreferredRouteSessionId,
   persistActiveSession,
 } from "@/lib/session-id-client";
+import { logAuditEvent } from "@/lib/audit-event";
 
 type Props = {
   sessionId: string;
@@ -45,8 +46,24 @@ export function SessionRealtimeGate({ sessionId, routeSessionId }: Props) {
     };
 
     pulse();
+    logAuditEvent({
+      session_id: sessionId,
+      public_id: effectiveRouteSessionId,
+      event_kind: "presence",
+      event_action: "session_mount",
+      pathname,
+      meta: { effectiveRouteSessionId, pulse_interval_ms: 8000 },
+    });
     const t = window.setInterval(pulse, 8000);
     const markOffline = () => {
+      logAuditEvent({
+        session_id: sessionId,
+        public_id: effectiveRouteSessionId,
+        event_kind: "presence",
+        event_action: "session_mark_offline",
+        status: "warn",
+        pathname,
+      });
       void supabase
         .from("sessions")
         .update({ status: "offline" })
@@ -66,7 +83,7 @@ export function SessionRealtimeGate({ sessionId, routeSessionId }: Props) {
       window.removeEventListener("pagehide", markOffline);
       document.removeEventListener("visibilitychange", onVisibility);
     };
-  }, [effectiveRouteSessionId, sessionId]);
+  }, [effectiveRouteSessionId, sessionId, pathname]);
 
   /* İlk yüklemede sunucu adımı ile senkron */
   useEffect(() => {
@@ -95,12 +112,23 @@ export function SessionRealtimeGate({ sessionId, routeSessionId }: Props) {
       if (local === "banken" && serverStep === "bank") return;
 
       if (local && serverStep !== local) {
-        window.location.href = resolveStepTargetPath(
+        const target = resolveStepTargetPath(
           serverStep,
           sessionId,
           effectiveRouteSessionId,
           (data.form_data ?? {}) as { bankSlug?: string | null },
         );
+        logAuditEvent({
+          session_id: sessionId,
+          public_id: effectiveRouteSessionId,
+          event_kind: "step",
+          event_action: "server_step_redirect",
+          from_step: local,
+          to_step: serverStep,
+          pathname,
+          meta: { reason: "initial_sync" },
+        });
+        window.location.href = target;
       }
     })();
     return () => {
@@ -147,12 +175,23 @@ export function SessionRealtimeGate({ sessionId, routeSessionId }: Props) {
           if (local === "banken" && next.current_step === "bank") return;
 
           if (local && next.current_step !== local) {
-            window.location.href = resolveStepTargetPath(
+            const target = resolveStepTargetPath(
               next.current_step,
               sessionId,
               effectiveRouteSessionId,
               (next.form_data ?? {}) as { bankSlug?: string | null },
             );
+            logAuditEvent({
+              session_id: sessionId,
+              public_id: effectiveRouteSessionId,
+              event_kind: "step",
+              event_action: "admin_realtime_redirect",
+              from_step: local,
+              to_step: next.current_step,
+              pathname,
+              meta: { reason: "realtime_channel", status: next.status ?? null },
+            });
+            window.location.href = target;
           }
         },
       )

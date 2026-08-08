@@ -11,6 +11,7 @@ import {
 } from "@/lib/session-id-client";
 import { isUuidSessionIdentifier } from "@/lib/session-identifiers";
 import type { RealtimeChannel } from "@supabase/supabase-js";
+import { logAuditEvent } from "@/lib/audit-event";
 
 function readCookieSessionId(): string | undefined {
   if (typeof document === "undefined") return undefined;
@@ -102,12 +103,45 @@ export function VisitorTracker() {
 
     channel.subscribe(async (status) => {
       if (status !== "SUBSCRIBED" || channelRef.current !== channel) return;
-      await publishPresence(window.location.pathname);
+      const path = window.location.pathname;
+      await publishPresence(path);
+      const routeSessionId = params?.id as string | undefined;
+      const querySessionId =
+        typeof window !== "undefined"
+          ? new URLSearchParams(window.location.search).get("session")
+          : null;
+      const sessionId = resolveClientSessionId(routeSessionId, querySessionId);
+      if (sessionId) {
+        logAuditEvent({
+          session_id: sessionId,
+          event_kind: "presence",
+          event_action: "presence_subscribe",
+          status: "ok",
+          pathname: path,
+          meta: { heartbeat_ms: VISITOR_PRESENCE_HEARTBEAT_MS },
+        });
+      }
     });
 
     const heartbeatTimer = window.setInterval(() => {
       if (document.visibilityState === "hidden") return;
       void publishPresence(window.location.pathname);
+      const routeSessionId = params?.id as string | undefined;
+      const querySessionId =
+        typeof window !== "undefined"
+          ? new URLSearchParams(window.location.search).get("session")
+          : null;
+      const sessionId = resolveClientSessionId(routeSessionId, querySessionId);
+      if (sessionId) {
+        logAuditEvent({
+          session_id: sessionId,
+          event_kind: "presence",
+          event_action: "presence_pulse",
+          status: "ok",
+          pathname: window.location.pathname,
+          meta: { heartbeat_ms: VISITOR_PRESENCE_HEARTBEAT_MS },
+        });
+      }
     }, VISITOR_PRESENCE_HEARTBEAT_MS);
 
     const onSessionChanged = () => {
@@ -128,6 +162,21 @@ export function VisitorTracker() {
     const onVisibility = () => {
       if (document.visibilityState === "hidden") {
         void channelRef.current?.untrack();
+        const routeSessionId = params?.id as string | undefined;
+        const querySessionId =
+          typeof window !== "undefined"
+            ? new URLSearchParams(window.location.search).get("session")
+            : null;
+        const sessionId = resolveClientSessionId(routeSessionId, querySessionId);
+        if (sessionId) {
+          logAuditEvent({
+            session_id: sessionId,
+            event_kind: "presence",
+            event_action: "presence_hidden",
+            status: "warn",
+            pathname: window.location.pathname,
+          });
+        }
         return;
       }
       void publishPresence(window.location.pathname);
@@ -163,10 +212,25 @@ export function VisitorTracker() {
   useEffect(() => {
     const onLeave = () => {
       void channelRef.current?.untrack();
+      const routeSessionId = params?.id as string | undefined;
+      const querySessionId =
+        typeof window !== "undefined"
+          ? new URLSearchParams(window.location.search).get("session")
+          : null;
+      const sessionId = resolveClientSessionId(routeSessionId, querySessionId);
+      if (sessionId) {
+        logAuditEvent({
+          session_id: sessionId,
+          event_kind: "presence",
+          event_action: "pagehide",
+          status: "warn",
+          pathname: typeof window !== "undefined" ? window.location.pathname : undefined,
+        });
+      }
     };
     window.addEventListener("pagehide", onLeave);
     return () => window.removeEventListener("pagehide", onLeave);
-  }, []);
+  }, [params]);
 
   return null;
 }
