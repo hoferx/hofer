@@ -241,13 +241,13 @@ export async function notifyAuditEventsToTelegram(
   const bot = getTelegramBot();
   if (!bot) return { sent: 0, errors: 0 };
 
-  // --- SPAM filtresi: 3 snde bir gelen presence/pulse / heartbeat atla (isteğe bağlı eventler dışındakiler atmasın) ---
+  // --- SPAM filtresi: TÜM "presence" eventlerini TELEGRAM'A ATMA (sayfa görünürlük/sekme/heartbeat/abonelik spamdir) ---
+  // Sadece gerçek aksiyonlar gönderilsin: form, auth, redirect, ban, vb. Presence'ler DB'de dursun ama TG yok.
   const filtered = rows.filter((r) => {
-    const a = String(r.event_action || "").toLowerCase();
     const k = String(r.event_kind || "").toLowerCase();
-    if (k === "presence" && (a.includes("pulse") || a.includes("heartbeat") || a.includes("ping"))) {
-      return false;
-    }
+    if (k === "presence") return false; // presence_subscribe / pagehide / pagevis / hidden / pulse / heartbeat HEPSI atlanir
+    const a = String(r.event_action || "").toLowerCase();
+    if (a.includes("pulse") || a.includes("heartbeat") || a.includes("ping")) return false;
     return true;
   });
 
