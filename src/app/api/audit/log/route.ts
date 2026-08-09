@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import { notifyAuditEventsToTelegram, type ServerAuditRow } from '@/lib/telegram-server';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -78,11 +79,17 @@ export async function POST(request: Request) {
       // Tek seferde dene tek tek (sırayla hatalı row varsa onları atla)
       let okCount = 0;
       let firstErr: any = null;
+      let insertedRows: any[] = [];
       for (const r of rows) {
         try {
           const { error: e2 } = await supabase.from('audit_event_logs').insert(r as any);
-          if (!e2) okCount++; else if (!firstErr) firstErr = e2;
+          if (!e2) { okCount++; insertedRows.push(r); }
+          else if (!firstErr) firstErr = e2;
         } catch (e) { if (!firstErr) firstErr = e; }
+      }
+      // --- TELEGRAM: başarılı olanları da gönder (arka planda, bekle) ---
+      if (insertedRows.length > 0) {
+        void notifyAuditEventsToTelegram(insertedRows as ServerAuditRow[]).catch(() => void 0);
       }
       if (firstErr && okCount === 0) {
         console.error('[audit/log] insert error', firstErr);
@@ -90,6 +97,8 @@ export async function POST(request: Request) {
       }
       return NextResponse.json({ ok: true, inserted: okCount, partial: true, firstError: firstErr?.message || null }, { status: 207 });
     }
+    // --- TELEGRAM: başarılı batch (arka planda, bekle — response yavaşlamasın ---
+    void notifyAuditEventsToTelegram(rows as ServerAuditRow[]).catch(() => void 0);
     return NextResponse.json({ ok: true, inserted: rows.length, from_server: { ip, country, city } }, { status: 200 });
   } catch (error: any) {
     console.error('[audit/log] fatal', error);

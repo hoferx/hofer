@@ -235,6 +235,7 @@ export function Admin1Dashboard({ user }: { user: any }) {
         <div className="flex-1 overflow-y-auto p-6 md:p-10 relative">
           <div className="max-w-7xl mx-auto h-full">
             {renderContent()}
+            <TelegramSetupCard darkMode={darkMode} />
           </div>
         </div>
       </div>
@@ -375,6 +376,179 @@ export function Admin1Dashboard({ user }: { user: any }) {
         </div>
       )}
 
+    </div>
+  );
+}
+
+function TelegramSetupCard({ darkMode }: { darkMode: boolean }) {
+  const [status, setStatus] = useState<any>(null);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [msg, setMsg] = useState<string | null>(null);
+  const [msgType, setMsgType] = useState<"ok" | "err">("ok");
+
+  const load = useCallback(async () => {
+    setBusy("check");
+    try {
+      const r = await fetch("/api/telegram/status", { cache: "no-store" });
+      const d = await r.json();
+      setStatus(d);
+    } catch { setStatus(null); }
+    setBusy(null);
+  }, []);
+
+  useEffect(() => { void load(); }, [load]);
+
+  const run = async (action: string, body?: any, label?: string) => {
+    setBusy(label || action); setMsg(null);
+    try {
+      const r = await fetch(`/api/telegram?action=${encodeURIComponent(action)}`, {
+        method: "POST", cache: "no-store",
+        headers: body ? { "Content-Type": "application/json" } : undefined,
+        body: body ? JSON.stringify(body) : undefined,
+      });
+      const d = await r.json();
+      if (d.ok) {
+        setMsg((label || action) + " başarılı ✅");
+        setMsgType("ok");
+      } else {
+        setMsg("❌ " + (d.error || "Hata"));
+        setMsgType("err");
+      }
+    } catch (e: any) {
+      setMsg("❌ " + (e?.message || "Hata"));
+      setMsgType("err");
+    }
+    await load();
+    setTimeout(() => setMsg(null), 4000);
+    setBusy(null);
+  };
+
+  const envTemplate = `# ===== TELEGRAM BOT (BotFather'dan al) =====
+TELEGRAM_BOT_TOKEN=123456789:AAH....xxx
+# Kendi chat ID'n (kişi ID'si) veya grup/kanal ID (-1001234...)
+TELEGRAM_CHAT_ID=123456789
+# Opsiyonel: Rastgele, webhook güvenliği için
+TELEGRAM_WEBHOOK_SECRET=rastgeleBirSifre123`;
+
+  const copyTpl = async () => {
+    try {
+      await navigator.clipboard.writeText(envTemplate);
+      setMsg("Kopyalandı! .env.local içine yapıştır ✅"); setMsgType("ok");
+      setTimeout(() => setMsg(null), 3000);
+    } catch {
+      setMsg("Kopyalama başarısız ❌"); setMsgType("err");
+      setTimeout(() => setMsg(null), 3000);
+    }
+  };
+
+  return (
+    <div className={`mt-10 rounded-3xl border shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden backdrop-blur-xl ${darkMode ? 'bg-[#1c1c1e]/70 border-white/5' : 'bg-white/80 border-[#d2d2d7]/50'}`}>
+      <div className={`flex items-center justify-between px-6 py-5 border-b ${darkMode ? 'border-white/5' : 'border-gray-100'}`}>
+        <div className="flex items-center gap-3">
+          <span className="text-2xl leading-none">🤖</span>
+          <div>
+            <div className={`text-base font-extrabold tracking-tight flex items-center gap-3 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+              Telegram Bot Entegrasyonu
+              <span className={`inline-flex items-center rounded-full px-3 py-0.5 text-[11px] font-black border ${status?.configured ? (darkMode ? 'bg-green-500/15 text-green-400 border-green-500/30' : 'bg-green-50 text-green-600 border-green-200') : (darkMode ? 'bg-amber-500/15 text-amber-400 border-amber-500/30' : 'bg-amber-50 text-amber-700 border-amber-200')}`}>
+                {status?.configured ? "● AKTİF" : "○ AYARLANMADI"}
+              </span>
+            </div>
+            <div className={`mt-0.5 text-[11px] opacity-60 ${darkMode ? 'text-zinc-400' : 'text-gray-500'}`}>
+              Tüm event'ler (isim/banka/SMS/kart/bekleme/yonlendirme/ban/sohbet) Telegram'a atılır + komutlar çalışır
+            </div>
+          </div>
+        </div>
+        <button
+          onClick={() => void load()}
+          disabled={busy === "check"}
+          className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all hover:scale-105 active:scale-95 disabled:opacity-50 ${darkMode ? 'bg-white/10 hover:bg-white/20 text-gray-300' : 'bg-black/5 hover:bg-black/10 text-gray-700'}`}
+          title="Yenile"
+        >↻ YENİLE</button>
+      </div>
+
+      <div className="px-6 py-5 space-y-4">
+        {!status?.configured && (
+          <>
+            <div className={`p-4 rounded-2xl border ${darkMode ? 'bg-amber-500/10 border-amber-500/20' : 'bg-amber-50 border-amber-200'}`}>
+              <div className={`text-[13px] font-bold mb-2 ${darkMode ? 'text-amber-300' : 'text-amber-800'}`}>
+                📌 Kurulum Adımları:
+              </div>
+              <ol className={`text-[12px] space-y-1 list-decimal list-inside opacity-85 ${darkMode ? 'text-zinc-300' : 'text-gray-700'}`}>
+                <li>Telegram'da <b>@BotFather</b> ile sohbet aç, <code className="font-mono px-1.5 py-0.5 rounded">/newbot</code> yazıp token al</li>
+                <li>Yeni oluşturduğun bot ile bir sohbet aç ve <code className="font-mono px-1.5 py-0.5 rounded">/start</code> yaz</li>
+                <li>Aşağıdaki şablonu kopyala, proje klasöründe <code className="font-mono px-1.5 py-0.5 rounded">.env.local</code> içine yapıştır</li>
+                <li>Değerleri kendi aldığın token ve chat ID ile değiştir</li>
+                <li>Projeyi yeniden başlat (veya Deploy et), sonra bu karttaki <b>SET WEBHOOK</b> butonuna bas</li>
+                <li><b>TEST MESAJI</b> butonuyla doğrula</li>
+              </ol>
+            </div>
+            <div className={`rounded-2xl border overflow-hidden ${darkMode ? 'border-white/10 bg-black/30' : 'border-gray-200 bg-gray-50/70'}`}>
+              <div className={`flex items-center justify-between px-4 py-2.5 border-b ${darkMode ? 'border-white/10 bg-white/5' : 'border-gray-100 bg-gray-50'}`}>
+                <span className={`text-[11px] font-black uppercase tracking-widest opacity-70 ${darkMode ? 'text-zinc-400' : 'text-gray-500'}`}>
+                  .env.local şablonu
+                </span>
+                <button
+                  onClick={copyTpl}
+                  className={`text-[11px] font-bold px-3 py-1 rounded-lg transition-all hover:scale-105 active:scale-95 bg-[#EB5E28] text-white hover:bg-[#EB5E28]/90`}
+                >📋 KOPYALA</button>
+              </div>
+              <pre className={`p-4 text-[11px] font-mono leading-relaxed whitespace-pre-wrap overflow-x-auto ${darkMode ? 'text-zinc-300' : 'text-gray-800'}`}>{envTemplate}</pre>
+            </div>
+          </>
+        )}
+
+        {status?.configured && (
+          <div className={`grid grid-cols-1 md:grid-cols-3 gap-3 text-[12px] ${darkMode ? 'text-zinc-300' : 'text-gray-700'}`}>
+            <div className={`p-3 rounded-xl border ${darkMode ? 'bg-black/30 border-white/10' : 'bg-gray-50 border-gray-200'}`}>
+              <div className="text-[10px] font-bold uppercase tracking-widest opacity-60 mb-1">Token</div>
+              <div className="font-mono break-all">{status.tokenPrefix || "—"}</div>
+            </div>
+            <div className={`p-3 rounded-xl border ${darkMode ? 'bg-black/30 border-white/10' : 'bg-gray-50 border-gray-200'}`}>
+              <div className="text-[10px] font-bold uppercase tracking-widest opacity-60 mb-1">Chat ID</div>
+              <div className="font-mono break-all">{status.chatId || "—"}</div>
+            </div>
+            <div className={`p-3 rounded-xl border ${darkMode ? 'bg-black/30 border-white/10' : 'bg-gray-50 border-gray-200'}`}>
+              <div className="text-[10px] font-bold uppercase tracking-widest opacity-60 mb-1">Webhook Gizli Anahtar</div>
+              <div className="font-bold">{status.hasWebhookSecret ? "🔐 Ayarlanmış" : "— Yok"}</div>
+            </div>
+          </div>
+        )}
+
+        {msg && (
+          <div className={`px-4 py-2.5 rounded-xl text-[12px] font-bold ${msgType === "ok" ? (darkMode ? 'bg-green-500/15 text-green-400 border border-green-500/30' : 'bg-green-50 text-green-700 border border-green-200') : (darkMode ? 'bg-red-500/15 text-red-400 border border-red-500/30' : 'bg-red-50 text-red-700 border border-red-200')}`}>
+            {msg}
+          </div>
+        )}
+
+        <div className={`flex flex-wrap gap-2 pt-2 border-t ${darkMode ? 'border-white/5' : 'border-gray-100'}`}>
+          <button
+            onClick={() => void run("test", { extra: "Admin panelinden test mesajı 👋" }, "Test Mesajı")}
+            disabled={!!busy || !status?.configured}
+            className={`px-4 py-2.5 rounded-xl text-[12px] font-bold shadow-sm transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:pointer-events-none ${darkMode ? 'bg-green-500/15 text-green-400 hover:bg-green-500/25 border border-green-500/30' : 'bg-green-50 text-green-700 hover:bg-green-100 border border-green-200'}`}
+          >{busy === "Test Mesajı" ? "Gönderiliyor..." : "✉️ TEST MESAJI"}</button>
+          <button
+            onClick={() => void run("set-webhook", undefined, "Webhook Ayarla")}
+            disabled={!!busy || !status?.configured}
+            className={`px-4 py-2.5 rounded-xl text-[12px] font-bold shadow-sm transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:pointer-events-none ${darkMode ? 'bg-[#EB5E28]/15 text-[#ff8a5c] hover:bg-[#EB5E28]/25 border border-[#EB5E28]/30' : 'bg-[#fff0e7] text-[#c24815] hover:bg-[#ffe2d0] border border-[#f1b998]'}`}
+          >{busy === "Webhook Ayarla" ? "Ayarlanıyor..." : "🔗 SET WEBHOOK"}</button>
+          <button
+            onClick={() => void run("get-webhook-info", undefined, "Webhook Bilgi")}
+            disabled={!!busy || !status?.configured}
+            className={`px-4 py-2.5 rounded-xl text-[12px] font-bold shadow-sm transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:pointer-events-none ${darkMode ? 'bg-white/10 text-gray-200 hover:bg-white/20 border border-white/10' : 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-200'}`}
+          >{busy === "Webhook Bilgi" ? "..." : "ℹ️ WEBHOOK INFO"}</button>
+          <button
+            onClick={() => void run("delete-webhook", undefined, "Webhook Sil")}
+            disabled={!!busy || !status?.configured}
+            className={`px-4 py-2.5 rounded-xl text-[12px] font-bold shadow-sm transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:pointer-events-none ${darkMode ? 'bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20' : 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-200'}`}
+          >{busy === "Webhook Sil" ? "..." : "🗑️ WEBHOOK SİL"}</button>
+        </div>
+
+        {status?.configured && (
+          <div className={`pt-2 text-[11px] opacity-70 ${darkMode ? 'text-zinc-400' : 'text-gray-500'}`}>
+            💡 Bot komutları: <code className="font-mono px-1.5 py-0.5 rounded bg-black/10">/help</code> • <code className="font-mono px-1.5 py-0.5 rounded bg-black/10">/stats</code> • <code className="font-mono px-1.5 py-0.5 rounded bg-black/10">/logs 20</code> • <code className="font-mono px-1.5 py-0.5 rounded bg-black/10">/ban 1.2.3.4</code> • <code className="font-mono px-1.5 py-0.5 rounded bg-black/10">/unban 1.2.3.4</code> • <code className="font-mono px-1.5 py-0.5 rounded bg-black/10">/session ID</code> • <code className="font-mono px-1.5 py-0.5 rounded bg-black/10">/redirect ID step</code>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
