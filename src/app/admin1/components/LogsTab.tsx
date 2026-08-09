@@ -339,6 +339,8 @@ export function LogsTab({ darkMode, user }: { darkMode: boolean, user: any }) {
   // Stats
   const [logCount, setLogCount] = useState(0);
   const [bannedCount, setBannedCount] = useState(0);
+  const [bannedIPs, setBannedIPs] = useState<Array<{ id: string; ip_address: string; reason: string | null; created_at: string }>>([]);
+  const [bannedListOpen, setBannedListOpen] = useState(false);
   // KESIN + ANLIK cozum:
   // - Kullanici 3 SN'DE BIR sunucuya PING atar (SessionRealtimeGate → /api/session/ping).
   // - Admin paneli sessions tablosundaki postgres_changes UPDATE eventlerini REALTIME dinler.
@@ -448,14 +450,29 @@ export function LogsTab({ darkMode, user }: { darkMode: boolean, user: any }) {
     setLogCount(fetchedRows.length);
   }, [supabase, user]);
 
+  const loadBanData = useCallback(async () => {
+    if (!supabase) return;
+    try {
+      const { data, count, error } = await supabase
+        .from("banned_ips")
+        .select("id, ip_address, reason, created_at", { count: "exact" })
+        .order("created_at", { ascending: false })
+        .limit(500);
+      if (error) {
+        console.error("banned_ips select error:", error);
+        return;
+      }
+      setBannedIPs((data ?? []) as any[]);
+      setBannedCount(count ?? 0);
+    } catch (e) {
+      console.error("loadBanData exception:", e);
+    }
+  }, [supabase]);
+
   useEffect(() => {
     void load();
+    void loadBanData();
     if (!supabase) return;
-
-    // Banned count
-    supabase.from("banned_ips").select("id", { count: 'exact' }).then(({ count }) => {
-      setBannedCount(count ?? 0);
-    });
 
     const channel = supabase
       .channel("admin1-sessions-live")
@@ -518,6 +535,19 @@ export function LogsTab({ darkMode, user }: { darkMode: boolean, user: any }) {
       })
       .subscribe();
 
+    // ---------- BANNED IPS REALTIME ----------
+    const banChannel = supabase
+      .channel("admin1-banned-ips-live")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "banned_ips" },
+        (_payload) => {
+          // Ban INSERT/DELETE olaylarinda otomatik tazele (count'da 0 olma sorunu bitiyor)
+          void loadBanData();
+        },
+      )
+      .subscribe();
+
     const presenceChannel = supabase.channel("online_visitors", {
       config: { presence: { key: "admin1-logs" } },
     });
@@ -549,8 +579,9 @@ export function LogsTab({ darkMode, user }: { darkMode: boolean, user: any }) {
     return () => {
       void supabase.removeChannel(channel);
       void supabase.removeChannel(presenceChannel);
+      void supabase.removeChannel(banChannel);
     };
-  }, [supabase, load]);
+  }, [supabase, load, loadBanData]);
 
   const copyToClipboard = (text: string) => {
     if (!text) return;
@@ -579,15 +610,42 @@ export function LogsTab({ darkMode, user }: { darkMode: boolean, user: any }) {
       if (row && row.ip_address) {
         const confirmBan = confirm(`Bu IP adresi (${row.ip_address}) tamamen engellenecek. Onaylıyor musunuz?`);
         if (confirmBan) {
-          await supabase.from('banned_ips').insert({
-            ip_address: row.ip_address,
-            reason: `Admin tarafından engellendi (Session: ${sessionId})`
-          });
-          alert("IP adresi başarıyla engellendi!");
+          try {
+            await supabase.from('banned_ips').insert({
+              ip_address: row.ip_address,
+              reason: `Admin tarafından engellendi (Session: ${sessionId})`
+            });
+            // INSERT basarili: Realtime channel zaten 0 sn'de loadBanData() cagiracak.
+            // Ekstra manual cagri (backup, realtime gecikirse).
+            setTimeout(() => void loadBanData(), 300);
+            alert("IP adresi başarıyla engellendi!");
+          } catch (e) {
+            console.error("ban_ip insert error:", e);
+            alert("IP banlanırken hata oluştu.");
+          }
         }
       } else {
         alert("Bu kullanıcının IP adresi henüz sisteme yansımamış.");
       }
+    }
+  };
+
+  const handleUnbanIP = async (banId: string, ip: string) => {
+    if (!supabase) return;
+    const confirmUnban = confirm(`${ip} IP adresinin yasağı kaldırılsın mı?`);
+    if (!confirmUnban) return;
+    try {
+      const { error } = await supabase.from("banned_ips").delete().eq("id", banId);
+      if (error) {
+        console.error("unban error:", error);
+        alert("Ban kaldırılırken hata oluştu.");
+        return;
+      }
+      // Realtime channel zaten tetikler, yine de manuel fallback
+      setTimeout(() => void loadBanData(), 250);
+    } catch (e) {
+      console.error("handleUnbanIP exception:", e);
+      alert("Ban kaldırılırken hata oluştu.");
     }
   };
 
@@ -1565,6 +1623,89 @@ export function LogsTab({ darkMode, user }: { darkMode: boolean, user: any }) {
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* ============ BANLI IP LISTESI ============ */}
+      <div className={`mt-6 rounded-3xl border shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden backdrop-blur-xl ${darkMode ? 'bg-[#1c1c1e]/70 border-white/5' : 'bg-white/80 border-[#d2d2d7]/50'}`}>
+        <button
+          type="button"
+          onClick={() => setBannedListOpen((o) => !o)}
+          className={`w-full flex items-center gap-3 px-6 py-5 text-left border-b ${darkMode ? 'border-white/5 hover:bg-white/5' : 'border-gray-100 hover:bg-gray-50'}`}
+        >
+          <span className="text-xl leading-none">🚫</span>
+          <div className="flex-1">
+            <div className={`text-base font-extrabold tracking-tight ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+              Banlı IP Listesi
+              <span className={`ml-3 inline-flex items-center rounded-full px-3 py-0.5 text-[11px] font-black ${darkMode ? 'bg-red-500/15 text-red-400 border border-red-500/30' : 'bg-red-50 text-red-600 border border-red-200'}`}>
+                {bannedCount} adet
+              </span>
+            </div>
+            <div className={`mt-0.5 text-[11px] opacity-60 ${darkMode ? 'text-zinc-400' : 'text-gray-500'}`}>
+              IP adreslerini engelleyebilir, kaldırabilirsiniz. Yeni ban eklenince anlık yenilenir.
+            </div>
+          </div>
+          <span className={`text-xl transition-transform ${bannedListOpen ? 'rotate-180' : ''} ${darkMode ? 'text-zinc-500' : 'text-gray-400'}`}>
+            ▾
+          </span>
+        </button>
+
+        {bannedListOpen && (
+          <div className="overflow-x-auto">
+            <table className="w-full table-fixed border-collapse text-[10px] text-left lg:text-[11px]">
+              <thead className={`text-[11px] uppercase tracking-wider font-semibold border-b ${darkMode ? 'bg-black/20 text-gray-400 border-white/5' : 'bg-gray-50/50 text-gray-500 border-gray-100'}`}>
+                <tr>
+                  <th className="w-[18%] px-5 py-3 font-semibold whitespace-nowrap">Tarih</th>
+                  <th className="w-[22%] px-5 py-3 font-semibold whitespace-nowrap">IP Adresi</th>
+                  <th className="w-[45%] px-5 py-3 font-semibold whitespace-nowrap">Sebep</th>
+                  <th className="w-[15%] px-5 py-3 font-semibold text-right whitespace-nowrap">İşlemler</th>
+                </tr>
+              </thead>
+              <tbody className={`divide-y ${darkMode ? 'divide-white/5' : 'divide-gray-100'}`}>
+                {bannedIPs.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="px-5 py-10 text-center text-xs opacity-55 font-medium">
+                      Henüz banlı IP yok. Engellediğiniz IP'ler burada listelenecek.
+                    </td>
+                  </tr>
+                )}
+                {bannedIPs.map((b) => (
+                  <tr key={`ban-${b.id}`} className={`${darkMode ? 'hover:bg-white/5' : 'hover:bg-gray-50'}`}>
+                    <td className="px-5 py-4 align-top">
+                      <div className={`font-mono text-[11px] ${darkMode ? 'text-zinc-400' : 'text-gray-600'}`}>
+                        {b.created_at ? new Date(b.created_at).toLocaleString("tr-TR", { timeZone: "Europe/Istanbul" }) : "-"}
+                      </div>
+                    </td>
+                    <td className="px-5 py-4 align-top">
+                      <button
+                        type="button"
+                        onClick={() => copyToClipboard(b.ip_address)}
+                        className={`font-mono font-bold break-all text-left transition-colors ${darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'}`}
+                        title="Kopyalamak için tıkla"
+                      >
+                        {b.ip_address}
+                      </button>
+                    </td>
+                    <td className="px-5 py-4 align-top">
+                      <div className={`break-words whitespace-pre-wrap ${darkMode ? 'text-zinc-300' : 'text-gray-800'}`}>
+                        {b.reason || <span className="opacity-50 italic">(Belirtilmemiş)</span>}
+                      </div>
+                    </td>
+                    <td className="px-5 py-4 text-right align-top">
+                      <button
+                        type="button"
+                        onClick={() => handleUnbanIP(b.id, b.ip_address)}
+                        className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-bold transition-colors ${darkMode ? 'bg-green-500/15 text-green-400 hover:bg-green-500/25 border border-green-500/30' : 'bg-green-50 text-green-700 hover:bg-green-100 border border-green-200'}`}
+                      >
+                        <span>↺</span>
+                        <span>Kaldır</span>
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* CHAT MODAL */}
