@@ -502,6 +502,7 @@ TELEGRAM_WEBHOOK_SECRET=rastgeleBirSifre123`;
   );
 
   const canRunButtons = !!status?.hasToken && !!status?.hasChatId;
+  const canSetWebhook = !!canRunButtons && !!status?.hasOrigin && status?.hasOrigin;
 
   return (
     <div className={`rounded-3xl border shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden backdrop-blur-xl ${darkMode ? 'bg-[#1c1c1e]/70 border-white/5' : 'bg-white/80 border-[#d2d2d7]/50'}`}>
@@ -532,14 +533,19 @@ TELEGRAM_WEBHOOK_SECRET=rastgeleBirSifre123`;
         {/* TEŞHİS BÖLÜMÜ — HANGİ ENV OKUNMUŞ HANGİSİ EKSİK */}
         {status && (
           <>
-            <div className={`grid grid-cols-1 md:grid-cols-3 gap-3 text-[12px] ${darkMode ? 'text-zinc-300' : 'text-gray-700'}`}>
+            <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 text-[12px] ${darkMode ? 'text-zinc-300' : 'text-gray-700'}`}>
               {rowItem(!!status.hasToken, "TELEGRAM_BOT_TOKEN", status.tokenPrefix || "Railway'de TANIMSIZ",
                 status.hasToken ? "Token başarıyla okundu" : "Railway Variables → TELEGRAM_BOT_TOKEN ekle")}
               {rowItem(!!status.hasChatId, "TELEGRAM_CHAT_ID", status.chatId || "Railway'de TANIMSIZ",
                 status.hasChatId ? "Chat ID başarıyla okundu" : "Railway Variables → TELEGRAM_CHAT_ID = 8225834720 ekle")}
               {rowItem(!!status.hasWebhookSecret, "TELEGRAM_WEBHOOK_SECRET",
                 status.hasWebhookSecret ? "🔐 Ayarlanmış (gizli)" : "Railway'de TANIMSIZ (önerilen)",
-                status.hasWebhookSecret ? "Ekstra güvenlik" : "Opsiyonel, ama ekle: RailWaySecret_2026_Paratransfer")}
+                status.hasWebhookSecret ? "Ekstra güvenlik" : "Opsiyonel: RailWaySecret_2026_Paratransfer")}
+              {rowItem(!!status.hasOrigin, "PUBLIC_SITE_URL",
+                (status.origin || "⚠️ localhost:8080 (Railway proxy)"),
+                status.hasOrigin
+                  ? `Kullanılacak: ${status.origin || "-"}`
+                  : "ZORUNLU: 'PUBLIC_SITE_URL=https://paknsave.unuhanga.store' ekle (sonuna / YOK)")}
             </div>
 
             {!status.configured && status.missingFields?.length > 0 && (
@@ -567,7 +573,7 @@ TELEGRAM_WEBHOOK_SECRET=rastgeleBirSifre123`;
                 <li>Telegram'da <b>@BotFather</b> → <code className="font-mono px-1.5 py-0.5 rounded">/newbot</code> → Token al</li>
                 <li>Telegram'da <b>@paratransfer_bot</b> sohbetini aç → <code className="font-mono px-1.5 py-0.5 rounded">/start</code> yaz</li>
                 <li>Railway projeni aç → Sol menü → <b>⚙️ Variables</b></li>
-                <li>Aşağıdaki 3 değeri EKLE (KOPYALA butonu ile kopyala)</li>
+                <li>Aşağıdaki 4 değeri EKLE (KOPYALA butonu ile kopyala)</li>
                 <li>Değişkenlerden sonra otomatik yeniden deploy → ardından ↻ YENİLE'ye bas</li>
                 <li>Deploy tamamlanınca <b>🔗 SET WEBHOOK</b> → <b>✉️ TEST MESAJI</b> butonları aktif olur</li>
               </ol>
@@ -601,7 +607,8 @@ TELEGRAM_WEBHOOK_SECRET=rastgeleBirSifre123`;
           >{busy === "Test Mesajı" ? "Gönderiliyor..." : "✉️ TEST MESAJI"}</button>
           <button
             onClick={() => void run("set-webhook", undefined, "Webhook Ayarla")}
-            disabled={!!busy || !canRunButtons}
+            disabled={!!busy || !canSetWebhook}
+            title={canSetWebhook ? "" : "PUBLIC_SITE_URL tanımlı değil (localhost görünüyor)"}
             className={`px-4 py-2.5 rounded-xl text-[12px] font-bold shadow-sm transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 disabled:pointer-events-none ${darkMode ? 'bg-[#EB5E28]/15 text-[#ff8a5c] hover:bg-[#EB5E28]/25 border border-[#EB5E28]/30' : 'bg-[#fff0e7] text-[#c24815] hover:bg-[#ffe2d0] border border-[#f1b998]'}`}
           >{busy === "Webhook Ayarla" ? "Ayarlanıyor..." : "🔗 SET WEBHOOK"}</button>
           <button
