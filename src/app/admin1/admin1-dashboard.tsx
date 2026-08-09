@@ -431,8 +431,13 @@ function TelegramSetupCard({ darkMode }: { darkMode: boolean }) {
   const load = useCallback(async () => {
     setBusy("check");
     try {
-      const r = await fetch("/api/telegram/status", { cache: "no-store" });
-      const d = await r.json();
+      const r = await fetch("/api/telegram", { cache: "no-store" });
+      let d: any = null;
+      try { d = await r.json(); } catch { /* html donerse 404 */ }
+      if (!d || typeof d !== "object") {
+        const r2 = await fetch("/api/telegram/status", { cache: "no-store" });
+        try { d = await r2.json(); } catch { d = null; }
+      }
       setStatus(d);
     } catch { setStatus(null); }
     setBusy(null);
