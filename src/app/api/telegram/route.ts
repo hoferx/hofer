@@ -11,9 +11,9 @@ import {
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-async function requireAdmin(request: NextRequest): Promise<{ ok: boolean; error?: string; email?: string }> {
+async function requireAdmin(_request: NextRequest): Promise<{ ok: boolean; error?: string; email?: string }> {
   try {
-    const supabase = await createServerSupabaseClient({ headers: request.headers });
+    const supabase = await createServerSupabaseClient();
     if (!supabase) return { ok: false, error: "Supabase client oluşturulamadı" };
     const { data } = await supabase.auth.getUser();
     if (!data?.user?.email) return { ok: false, error: "Admin oturumu açılmamış" };
