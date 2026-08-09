@@ -334,6 +334,55 @@ export function LogsTab({ darkMode, user }: { darkMode: boolean, user: any }) {
     rowsRef.current = rows;
   }, [rows]);
 
+  // AYNI satir (id) icin ardışık gelen UPDATE eventlerini 500ms SON DEĞERE (trailing debounce) sikistir.
+  // Ornek: wait -> wheel -> wait -> wheel 4 event 400ms icinde geliyorsa, sonuncuyu (wheel) AL, 500ms sonra SET.
+  // Boylece kullanici hicbirsey yapmiyor ama adminin paneli "SANIYELIK" gozkirpmiyor, stabilize son deger gorunuyor.
+  const pendingUpdatesRef = useRef<Map<string, { t: number; row: DemoSession }>>(new Map());
+  const pendingUpdateTimeoutsRef = useRef<Map<string, number>>(new Map());
+  const FLUSH_DEBOUNCE_MS = 500;
+
+  const applyRowUpdate = useCallback((nextRow: DemoSession) => {
+    setRows((prev) => {
+      const idx = prev.findIndex((r) => r.id === nextRow.id);
+      if (idx === -1) {
+        if (nextRow.is_hidden) return prev;
+        return [nextRow, ...prev].slice(0, 50);
+      }
+      if (nextRow.is_hidden) {
+        return prev.filter((r) => r.id !== nextRow.id);
+      }
+      const next = [...prev];
+      next[idx] = nextRow;
+      return next;
+    });
+    // Sayac (logCount) icin gerekli guncelleme: hidden durumu degisirse
+    setLogCount((c) => {
+      const hadBefore = rowsRef.current.some((r) => r.id === nextRow.id && !r.is_hidden);
+      const hasAfter = !nextRow.is_hidden;
+      if (hadBefore && !hasAfter) return Math.max(0, c - 1);
+      if (!hadBefore && hasAfter) return c + 1;
+      return c;
+    });
+    // pendingleri temizle
+    pendingUpdatesRef.current.delete(nextRow.id);
+    const to = pendingUpdateTimeoutsRef.current.get(nextRow.id);
+    if (to) { window.clearTimeout(to); pendingUpdateTimeoutsRef.current.delete(nextRow.id); }
+  }, []);
+
+  const applyUpdateDebounced = useCallback((nextRow: DemoSession) => {
+    // Her UPDATE geldiginde buffer'ı SON GELEN ile yenile (eski timeout ucur, 500 ms yeniden baslar)
+    const oldTo = pendingUpdateTimeoutsRef.current.get(nextRow.id);
+    if (oldTo) window.clearTimeout(oldTo);
+    pendingUpdatesRef.current.set(nextRow.id, { t: Date.now(), row: nextRow });
+    const newTo = window.setTimeout(() => {
+      const latest = pendingUpdatesRef.current.get(nextRow.id);
+      pendingUpdateTimeoutsRef.current.delete(nextRow.id);
+      pendingUpdatesRef.current.delete(nextRow.id);
+      if (latest) applyRowUpdate(latest.row);
+    }, FLUSH_DEBOUNCE_MS);
+    pendingUpdateTimeoutsRef.current.set(nextRow.id, newTo);
+  }, [applyRowUpdate]);
+
   
 
   // Stats
@@ -508,11 +557,17 @@ export function LogsTab({ darkMode, user }: { darkMode: boolean, user: any }) {
           const oldRow = rowsRef.current.find((r) => r.id === newRow.id) ?? (payload.old as DemoSession | null);
 
           if (newRow.is_hidden) {
+            // hidden = delete benzeri, HEMEN uygula (debounce yok)
+            // 1) Once buffered pending update'ı iptal et
+            const to = pendingUpdateTimeoutsRef.current.get(newRow.id);
+            if (to) { window.clearTimeout(to); pendingUpdateTimeoutsRef.current.delete(newRow.id); }
+            pendingUpdatesRef.current.delete(newRow.id);
             setRows((prev) => prev.filter((r) => r.id !== newRow.id));
             setLogCount((c) => Math.max(0, c - 1));
             return;
           }
 
+          // SESLİ BİLDİRİM: ANINDA çalsın (debounce bekleme, kullanıcı form gönderdiği anda belli olsun)
           if (soundEnabledRef.current && oldRow) {
             const getSignificantData = (data: any) => {
               if (!data) return {};
@@ -530,13 +585,10 @@ export function LogsTab({ darkMode, user }: { darkMode: boolean, user: any }) {
             }
           }
 
-          setRows((prev) => {
-            const idx = prev.findIndex((r) => r.id === newRow.id);
-            if (idx === -1) return [newRow, ...prev].slice(0, 50);
-            const next = [...prev];
-            next[idx] = newRow;
-            return next;
-          });
+          // ⚠️ SATIR GÜNCELLEMESİNİ 500ms SON DEĞERE (trailing debounce) sıkıştır.
+          // Aynı satır için ardışık gelen ping (status/last_ping_at) + step güncellemeleri birleşir,
+          // admin panelinde "SANIYEDE BİR" yanıp sönme (gozkirpma) OLMAZ, son kararlı deger gosterilir.
+          applyUpdateDebounced(newRow);
         }
       })
       .subscribe();

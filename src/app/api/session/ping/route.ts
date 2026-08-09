@@ -60,23 +60,27 @@ export async function POST(request: Request) {
     patch.last_ping_at = now;
   }
 
-  if (currentStep && !patch.current_step) {
-    patch.current_step = currentStep;
-  }
+  // ⚠️ CRITICAL: current_step GÜNCELLEMESİ PING ÜZERİNDEN KALDIRILDI.
+  // ⚠️ Sebep: Admin current_step='wait' yaptığında (veya herhangi bir adım zorladığında) client
+  // ⚠️     3 sn aralıklarla eski pathname'den ürettiği "wheel" / "banken" current_step'ini
+  // ⚠️     DB'ye tekrar geri yazıyordu. Bu durum ADMİN PANELİNDE "Sayfa" sütununun SANIYEDE BİR
+  // ⚠️     (yanıp sönen) şekilde değişmesine, kullanıcı hiçbir şey yapmadığı halde admin görselini
+  // ⚠️     bozmasına neden oluyordu.
+  //
+  // ⚠️ current_step DEĞİŞİMİ ARTIK SADECE ŞU ŞEKİLLERDE OLABİLİR:
+  //   1) Client tarafında submit/next butonuna tıklanınca (direct supabase update current_step).
+  //   2) Admin panelinden Zorla Yönlendir aksiyonu (direct update)
+  //   3) İlk mountta server step sync (window.location.href = target).
+  //
+  // if (currentStep && !patch.current_step) { patch.current_step = currentStep; }
+  // ↑ ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
 
   // DIKKAT: sessions tablosunda olmayan sütunları PATCH'E EKLEME.
-  // public_id, last_pathname, partner_name gibi alanlar yoksa UPDATE SESSIONS hata (500 undefined column)
-  // verir ve PING BASARISIZ olur → kullanıcılar ONLINE GÖRÜNMEZ!
-  // Sadece kesin var olan alanları güncelle:
-  //   status, last_ping_at, current_step, ip_address (zaten var), is_hidden (varsa yoksa hata olmaz)
-  // public_id'yi güncellemeye gerek yok (sabit). last_pathname migration eklenirse sonradan eklenebilir.
-
+  // Sadece kesin var olan alanları güncelle: status, last_ping_at, ip_address.
   const ip = pickIp(headers);
   if (ip) patch.ip_address = ip;
 
   try {
-    // Session'in varligini kontrol et (update sonrasi affected rows 0 olursa session yok demektir).
-    // Oncelikle check yapalim, yoksa client'a 404 donelim ki farketsin.
     const { data: before } = await supabase.from("sessions").select("id, status, last_ping_at").eq("id", sessionId).maybeSingle();
     const existed = !!before;
     const { error } = await supabase.from("sessions").update(patch).eq("id", sessionId);
@@ -84,14 +88,21 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: false, error: error.message, code: error.code ?? null }, { status: 500 });
     }
     if (!existed) {
-      // Session ID yanlış (belki public_id olarak gönderildi ama tablo id sütunundan bakıldı).
-      // Client'a bilgi ver, böylece client farkına varabilir (fallback: public_id dene).
       try {
         if (publicId && typeof publicId === "string") {
-          await supabase.from("sessions").update({ last_ping_at: patch.status === "offline" ? oneHourAgo : now, status: patch.status }).eq("id", publicId);
+          await supabase.from("sessions").update({
+            last_ping_at: patch.status === "offline" ? oneHourAgo : now,
+            status: patch.status,
+            ...(patch.ip_address ? { ip_address: patch.ip_address } : {}),
+          }).eq("id", publicId);
         }
       } catch { /* sessizce fallback denemesi */ }
-      return NextResponse.json({ ok: true, status: patch.status, ping_at: now, note: "session_not_found_by_id_tried_public_fallback", sessionId, publicId: publicId || null }, { status: 200 });
+      return NextResponse.json({
+        ok: true, status: patch.status, ping_at: now,
+        note: "session_not_found_by_id_tried_public_fallback",
+        sessionId, publicId: publicId || null,
+        step_updated_via_ping: false,
+      }, { status: 200 });
     }
     // Ekstra savunma: status = 'online' olan ama last_ping_at > 90sn eski olan satırları topluca offline yap
     try {
@@ -102,7 +113,15 @@ export async function POST(request: Request) {
         .lt("last_ping_at", new Date(Date.now() - 90 * 1000).toISOString());
     } catch { /* sessizce */ }
 
-    return NextResponse.json({ ok: true, status: patch.status, ping_at: now, found: existed });
+    return NextResponse.json({
+      ok: true,
+      status: patch.status,
+      ping_at: now,
+      found: existed,
+      step_updated_via_ping: false,
+      incoming_step_sent: currentStep || null,
+      ignored_step_reason: "step_changes_only_via_admin_direct_update_or_client_submit_buttons",
+    });
   } catch (e: any) {
     return NextResponse.json({ ok: false, error: e?.message || String(e) }, { status: 500 });
   }

