@@ -102,6 +102,8 @@ export function stepToPath(
   switch (step) {
     case "code_entry":
       return "/code";
+    case "wheel":
+      return "/wheel";
     case "win":
       return `/win/${routeSessionId}`;
     case "banken":

