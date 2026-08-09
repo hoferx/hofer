@@ -17,6 +17,7 @@ export function Admin1Dashboard({ user }: { user: any }) {
   const [darkMode, setDarkMode] = useState(true);
   const [activeTab, setActiveTab] = useState("Loglar");
   const [showNewLinkModal, setShowNewLinkModal] = useState(false);
+  const [showTelegramModal, setShowTelegramModal] = useState(false);
 
   // Link Oluşturma State'leri
   const [creatingLink, setCreatingLink] = useState(false);
@@ -212,6 +213,14 @@ export function Admin1Dashboard({ user }: { user: any }) {
         <div className={`h-[75px] border-b flex items-center justify-between px-8 shrink-0 backdrop-blur-2xl ${darkMode ? 'border-white/5 bg-[#1c1c1e]/60' : 'border-[#d2d2d7]/50 bg-white/60'}`}>
           <div className="flex items-center gap-3">
             <span className="text-xl font-semibold opacity-90">{activeTab}</span>
+            <button
+              onClick={() => setShowTelegramModal(true)}
+              className={`ml-2 flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-bold shadow-sm transition-all duration-300 hover:scale-105 active:scale-95 border ${darkMode ? 'bg-sky-500/10 text-sky-300 border-sky-500/30 hover:bg-sky-500/20' : 'bg-sky-50 text-sky-700 border-sky-200 hover:bg-sky-100'}`}
+              title="Telegram Bot Yönetimi"
+            >
+              <span className="text-base">🤖</span>
+              <span className="hidden sm:inline">Telegram</span>
+            </button>
           </div>
           <div className="flex items-center space-x-5">
             <span className={`text-sm font-medium px-3 py-1 rounded-full ${darkMode ? 'bg-white/10 text-white/70' : 'bg-black/5 text-black/60'}`}>
@@ -235,7 +244,6 @@ export function Admin1Dashboard({ user }: { user: any }) {
         <div className="flex-1 overflow-y-auto p-6 md:p-10 relative">
           <div className="max-w-7xl mx-auto h-full">
             {renderContent()}
-            <TelegramSetupCard darkMode={darkMode} />
           </div>
         </div>
       </div>
@@ -376,6 +384,40 @@ export function Admin1Dashboard({ user }: { user: any }) {
         </div>
       )}
 
+      {/* Telegram Bot Yönetim Modal */}
+      {showTelegramModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity" onClick={() => setShowTelegramModal(false)}></div>
+          <div className={`relative w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.3)] transform transition-all animate-in fade-in zoom-in-95 duration-300 ${darkMode ? 'bg-[#1c1c1e]/95 backdrop-blur-2xl border border-white/10' : 'bg-white/95 backdrop-blur-2xl border border-white/50'}`}>
+            <div className={`flex items-center justify-between px-6 py-4 border-b sticky top-0 z-10 backdrop-blur-xl ${darkMode ? 'border-white/10 bg-[#1c1c1e]/80' : 'border-gray-100 bg-white/80'}`}>
+              <div className="flex items-center gap-3">
+                <span className="text-2xl leading-none">🤖</span>
+                <div>
+                  <div className={`text-lg font-extrabold tracking-tight ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                    Telegram Bot Entegrasyonu
+                  </div>
+                  <div className={`text-[11px] opacity-60 ${darkMode ? 'text-zinc-400' : 'text-gray-500'}`}>
+                    Bildirim & Komut Yönetimi
+                  </div>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowTelegramModal(false)}
+                className={`p-2 rounded-xl transition-all hover:scale-105 active:scale-95 ${darkMode ? 'bg-white/10 hover:bg-white/20 text-gray-300' : 'bg-black/5 hover:bg-black/10 text-gray-700'}`}
+                title="Kapat"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <div className="p-0 sm:p-6 pt-6 sm:pt-0">
+              <div className="-mx-6 sm:mx-0">
+                <TelegramSetupCard darkMode={darkMode} />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
@@ -442,7 +484,7 @@ TELEGRAM_WEBHOOK_SECRET=rastgeleBirSifre123`;
   };
 
   return (
-    <div className={`mt-10 rounded-3xl border shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden backdrop-blur-xl ${darkMode ? 'bg-[#1c1c1e]/70 border-white/5' : 'bg-white/80 border-[#d2d2d7]/50'}`}>
+    <div className={`rounded-3xl border shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden backdrop-blur-xl ${darkMode ? 'bg-[#1c1c1e]/70 border-white/5' : 'bg-white/80 border-[#d2d2d7]/50'}`}>
       <div className={`flex items-center justify-between px-6 py-5 border-b ${darkMode ? 'border-white/5' : 'border-gray-100'}`}>
         <div className="flex items-center gap-3">
           <span className="text-2xl leading-none">🤖</span>
