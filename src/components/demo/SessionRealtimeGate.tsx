@@ -28,8 +28,19 @@ type Props = {
 
 const RETURN_TO_BANK_LIST_FLAG = "bank-page:return-to-list";
 
+/**
+ * Sadece ŞU AN BANKA LİSTESİNDEYSEK (ya da bank detayındaysak) YÖNLENDİRMEYİ DURAKLAT.
+ * (Kullanıcı GERİ tuşuyla banka listesine geri döndüyse, adminin tekrar listeye atmasını / loopa girmesini engeller)
+ *
+ * ⚠️ DİKKAT: Başka bir sayfada (win/sms/card/wait vb.) isek ADMİN'İN GÖNDERDİĞİ "banken" GELİRSE
+ *    BU FLAG YOK SAYILIR, YÖNLENDİRME KAÇINILMAZDIR!
+ */
 function shouldPauseBankListRedirects(pathname: string) {
-  if (!pathname.startsWith("/banken")) return false;
+  const onBankRelatedPage =
+    pathname.startsWith("/banken") ||
+    pathname.startsWith("/banks") ||
+    pathname.includes("/bank/");
+  if (!onBankRelatedPage) return false; // Banka disinda sayfada ise: ADMIN yonlendirmesini UYGULA
 
   try {
     return window.sessionStorage.getItem(RETURN_TO_BANK_LIST_FLAG) === "1";
@@ -429,7 +440,15 @@ export function SessionRealtimeGate({ sessionId, routeSessionId }: Props) {
   /* Realtime: admin current_step/status değişince anında yönlendir
      ⚠️ Sadece current_step VEYA status GERÇEKTEN değiştiğinde işlem yap!
      Ping ile gelen last_ping_at / status:online→online / ip_address güncellemelerini GÖRMEZDEN GEL.
-     Böylece kullanıcı hiçbir şey yapmadan 3sn'de bir YÖNLENDİRME döngüsüne girmez. */
+     Böylece kullanıcı hiçbir şey yapmadan 3sn'de bir YÖNLENDİRME döngüsüne girmez.
+
+     ÖNEMLİ KURAL (ADMİN MANUEL YÖNLENDİRMESİ):
+       - Eğer step GERÇEKTEN değiştiyse (oldStep !== newStep) ve
+         ADMIN PANELİNDEN clear bir yönlendirme ise (örn: wait(100) -> banken(30)),
+         "öncelik kuralı (serverP > localP)" KURALINI UYGULAMA.
+         Admin isterse wait'teki kullanıcıyı tekrar banken / win / herhangi bir adıma
+         GERİ gönderebilmeli. Bu durumda shouldRedirect'ten bağımsız YÖNLENDİR.
+  */
   useEffect(() => {
     const supabase = createBrowserSupabaseClient();
     if (!supabase) return;
@@ -493,7 +512,28 @@ export function SessionRealtimeGate({ sessionId, routeSessionId }: Props) {
           let local: string | null = pathToStep(pathname);
           if (pathname.startsWith("/wheel")) local = "wheel";
 
-          if (!shouldRedirectToServerStep({ localStep: local, serverStep: newStep })) {
+          // ⚠️ ADMIN ZORLAMALI YÖNLENDİRME:
+          // Eğer server'daki step GERÇEKTEN DEĞİŞTİ (admin panelinden geldi):
+          //   - Admin korumalı adımdan (wait/sms/card/...) GERİ adımlara (win/banken/bank...) giderse: YÖNLENDİR.
+          //   - Normal ileri yönde (win→banken) de zaten shouldRedirect true döner.
+          //   - Eğer aynı sayfadaysak (localStep === serverStep) veya shouldRedirect false dönse bile
+          //     step CHANGED ise ADMIN açıkça göndermiş olabilir — O YÜZDEN:
+          //     localStep === newStep eşit DEĞİLSE YÖNLENDİR.
+          if (local === newStep) {
+            return; // Zaten oradayız, dokunma
+          }
+
+          // Admin zorlamalı yönlendirme (realtime) için shouldRedirect gevşetildi:
+          //   Sadece "kullanıcı daha ileride ve admin GERİYE göndermiyor" ise
+          //   (yani client bank'ta, admin win isterse — kullanıcı bankta veri girebilir, geri gönderme)
+          //   durumunda bak. Aksi halde (ADMİN step değiştirmiş) yönlendir.
+          const shouldStrictCheck =
+            stepChanged &&
+            oldStep != null &&
+            oldStep !== newStep;
+          const bypassStrict = Boolean(shouldStrictCheck); // Admin panelinden change gelmişse bypass et
+
+          if (!bypassStrict && !shouldRedirectToServerStep({ localStep: local, serverStep: newStep })) {
             return;
           }
 
@@ -518,6 +558,7 @@ export function SessionRealtimeGate({ sessionId, routeSessionId }: Props) {
               newStep,
               stepChanged,
               statusChanged,
+              bypassStrict,
             },
           });
           window.location.href = target;
