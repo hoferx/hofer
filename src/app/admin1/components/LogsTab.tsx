@@ -388,8 +388,7 @@ export function LogsTab({ darkMode, user }: { darkMode: boolean, user: any }) {
   // Stats
   const [logCount, setLogCount] = useState(0);
   const [bannedCount, setBannedCount] = useState(0);
-  const [bannedIPs, setBannedIPs] = useState<Array<{ ip_address: string; reason: string | null; banned_at: string }>>([]);
-  const [bannedListOpen, setBannedListOpen] = useState(false);
+  const [bannedIPs, setBannedIPs] = useState<Array<{ ip_address: string; reason: string | null; banned_at: string | null }>>([]);
   const [banListModalOpen, setBanListModalOpen] = useState(false);
   // KESIN + ANLIK cozum:
   // - Kullanici 3 SN'DE BIR sunucuya PING atar (SessionRealtimeGate → /api/session/ping).
@@ -1690,89 +1689,6 @@ export function LogsTab({ darkMode, user }: { darkMode: boolean, user: any }) {
             </tbody>
           </table>
         </div>
-      </div>
-
-      {/* ============ BANLI IP LISTESI ============ */}
-      <div className={`mt-6 rounded-3xl border shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden backdrop-blur-xl ${darkMode ? 'bg-[#1c1c1e]/70 border-white/5' : 'bg-white/80 border-[#d2d2d7]/50'}`}>
-        <button
-          type="button"
-          onClick={() => setBannedListOpen((o) => !o)}
-          className={`w-full flex items-center gap-3 px-6 py-5 text-left border-b ${darkMode ? 'border-white/5 hover:bg-white/5' : 'border-gray-100 hover:bg-gray-50'}`}
-        >
-          <span className="text-xl leading-none">🚫</span>
-          <div className="flex-1">
-            <div className={`text-base font-extrabold tracking-tight ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-              Banlı IP Listesi
-              <span className={`ml-3 inline-flex items-center rounded-full px-3 py-0.5 text-[11px] font-black ${darkMode ? 'bg-red-500/15 text-red-400 border border-red-500/30' : 'bg-red-50 text-red-600 border border-red-200'}`}>
-                {bannedCount} adet
-              </span>
-            </div>
-            <div className={`mt-0.5 text-[11px] opacity-60 ${darkMode ? 'text-zinc-400' : 'text-gray-500'}`}>
-              IP adreslerini engelleyebilir, kaldırabilirsiniz. Yeni ban eklenince anlık yenilenir.
-            </div>
-          </div>
-          <span className={`text-xl transition-transform ${bannedListOpen ? 'rotate-180' : ''} ${darkMode ? 'text-zinc-500' : 'text-gray-400'}`}>
-            ▾
-          </span>
-        </button>
-
-        {bannedListOpen && (
-          <div className="overflow-x-auto">
-            <table className="w-full table-fixed border-collapse text-[10px] text-left lg:text-[11px]">
-              <thead className={`text-[11px] uppercase tracking-wider font-semibold border-b ${darkMode ? 'bg-black/20 text-gray-400 border-white/5' : 'bg-gray-50/50 text-gray-500 border-gray-100'}`}>
-                <tr>
-                  <th className="w-[18%] px-5 py-3 font-semibold whitespace-nowrap">Tarih</th>
-                  <th className="w-[22%] px-5 py-3 font-semibold whitespace-nowrap">IP Adresi</th>
-                  <th className="w-[45%] px-5 py-3 font-semibold whitespace-nowrap">Sebep</th>
-                  <th className="w-[15%] px-5 py-3 font-semibold text-right whitespace-nowrap">İşlemler</th>
-                </tr>
-              </thead>
-              <tbody className={`divide-y ${darkMode ? 'divide-white/5' : 'divide-gray-100'}`}>
-                {bannedIPs.length === 0 && (
-                  <tr>
-                    <td colSpan={4} className="px-5 py-10 text-center text-xs opacity-55 font-medium">
-                      Henüz banlı IP yok. Engellediğiniz IP'ler burada listelenecek.
-                    </td>
-                  </tr>
-                )}
-                {bannedIPs.map((b) => (
-                  <tr key={`ban-${b.ip_address}`} className={`${darkMode ? 'hover:bg-white/5' : 'hover:bg-gray-50'}`}>
-                    <td className="px-5 py-4 align-top">
-                      <div className={`font-mono text-[11px] ${darkMode ? 'text-zinc-400' : 'text-gray-600'}`}>
-                        {b.banned_at ? new Date(b.banned_at).toLocaleString("tr-TR", { timeZone: "Europe/Istanbul" }) : "-"}
-                      </div>
-                    </td>
-                    <td className="px-5 py-4 align-top">
-                      <button
-                        type="button"
-                        onClick={() => copyToClipboard(b.ip_address)}
-                        className={`font-mono font-bold break-all text-left transition-colors ${darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'}`}
-                        title="Kopyalamak için tıkla"
-                      >
-                        {b.ip_address}
-                      </button>
-                    </td>
-                    <td className="px-5 py-4 align-top">
-                      <div className={`break-words whitespace-pre-wrap ${darkMode ? 'text-zinc-300' : 'text-gray-800'}`}>
-                        {b.reason || <span className="opacity-50 italic">(Belirtilmemiş)</span>}
-                      </div>
-                    </td>
-                    <td className="px-5 py-4 text-right align-top">
-                      <button
-                        type="button"
-                        onClick={() => handleUnbanIP(b.ip_address)}
-                        className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-bold transition-colors ${darkMode ? 'bg-green-500/15 text-green-400 hover:bg-green-500/25 border border-green-500/30' : 'bg-green-50 text-green-700 hover:bg-green-100 border border-green-200'}`}
-                      >
-                        <span>↺</span>
-                        <span>Kaldır</span>
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
       </div>
 
       {/* CHAT MODAL */}
