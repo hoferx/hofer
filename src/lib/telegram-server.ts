@@ -275,7 +275,7 @@ export async function notifyAuditEventsToTelegram(
     try {
       await bot.api.sendMessage(cfg.chatId, text, {
         parse_mode: "HTML",
-        disable_web_page_preview: true,
+        link_preview_options: { is_disabled: true },
       });
       sent += chunk.length;
     } catch (err: unknown) {
@@ -292,7 +292,7 @@ export async function notifyAuditEventsToTelegram(
           try {
             await bot.api.sendMessage(cfg.chatId, line, {
               parse_mode: "HTML",
-              disable_web_page_preview: true,
+              link_preview_options: { is_disabled: true },
             });
             sent++;
             errors--;
@@ -319,7 +319,7 @@ export async function sendTelegramTestMessage(
       `✅ <b>Telegram Bot Bağlantısı Başarılı</b>\n\n🕒 ${escapeHTML(
         new Date().toLocaleString("tr-TR", { timeZone: "Europe/Istanbul" }),
       )}${extraText ? `\n\n${escapeHTML(extraText)}` : ""}`;
-    await bot.api.sendMessage(cfg.chatId, text, { parse_mode: "HTML" });
+    await bot.api.sendMessage(cfg.chatId, text, { parse_mode: "HTML", link_preview_options: { is_disabled: true } });
     return { ok: true };
   } catch (e: any) {
     return { ok: false, error: e?.message || String(e) };

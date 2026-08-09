@@ -13,6 +13,9 @@ import { getStepPriority, resolveStepTargetPath } from "@/lib/session-routes";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
+type LinkPreviewOptions = { is_disabled: boolean };
+const LP = { link_preview_options: { is_disabled: true } as LinkPreviewOptions };
+
 type StepAlias = {
   step: string;
   label: string;
@@ -56,7 +59,7 @@ function formatLiveStatus(row: any): string {
 
 async function cmdStats(ctx: Context) {
   const supabase = await createServerSupabaseClient();
-  if (!supabase) return ctx.reply("⚠️ Supabase bağlantısı kurulamadı", { parse_mode: "HTML" });
+  if (!supabase) return ctx.reply("⚠️ Supabase bağlantısı kurulamadı", { parse_mode: "HTML", ...LP });
   const now = Date.now();
   const min10 = new Date(now - 10_000).toISOString();
   const min1 = new Date(now - 60_000).toISOString();
@@ -77,7 +80,7 @@ async function cmdStats(ctx: Context) {
     `🚫 Banlı IP: <code>${banC.count ?? 0}</code>`,
     `📝 Son 24s Event: <code>${logC.count ?? 0}</code>`,
   ].join("\n");
-  return ctx.reply(text, { parse_mode: "HTML" });
+  return ctx.reply(text, { parse_mode: "HTML", ...LP });
 }
 
 async function cmdLogs(ctx: Context, rawArg: string) {
@@ -86,7 +89,7 @@ async function cmdLogs(ctx: Context, rawArg: string) {
   const num = parseInt(arg.replace(/[^0-9]/g, ""), 10);
   if (!Number.isNaN(num) && num > 0) limit = Math.min(50, num);
   const supabase = await createServerSupabaseClient();
-  if (!supabase) return ctx.reply("⚠️ Supabase bağlantısı kurulamadı", { parse_mode: "HTML" });
+  if (!supabase) return ctx.reply("⚠️ Supabase bağlantısı kurulamadı", { parse_mode: "HTML", ...LP });
 
   const { data, error } = await supabase
     .from("sessions")
@@ -94,8 +97,8 @@ async function cmdLogs(ctx: Context, rawArg: string) {
     .eq("is_hidden", false)
     .order("last_ping_at", { ascending: false, nullsFirst: false })
     .limit(limit);
-  if (error) return ctx.reply(`⚠️ Hata: <code>${escapeTelegramHTML(error.message)}</code>`, { parse_mode: "HTML" });
-  if (!data || data.length === 0) return ctx.reply("📭 Kayıtlı aktif session bulunamadı.", { parse_mode: "HTML" });
+  if (error) return ctx.reply(`⚠️ Hata: <code>${escapeTelegramHTML(error.message)}</code>`, { parse_mode: "HTML", ...LP });
+  if (!data || data.length === 0) return ctx.reply("📭 Kayıtlı aktif session bulunamadı.", { parse_mode: "HTML", ...LP });
 
   const lines = [`<b>📜 Son ${data.length} Session</b>\n`];
   for (const r of data) {
@@ -111,48 +114,49 @@ async function cmdLogs(ctx: Context, rawArg: string) {
   }
   let out = lines.join("\n\n");
   if (out.length > 4000) out = out.slice(0, 3990) + "\n…";
-  return ctx.reply(out, { parse_mode: "HTML" });
+  return ctx.reply(out, { parse_mode: "HTML", ...LP });
 }
 
 async function cmdBan(ctx: Context, rawArg: string) {
   const parts = rawArg.trim().split(/\s+/);
   const ip = (parts[0] || "").trim();
   const reason = parts.slice(1).join(" ").trim() || "Telegram bot üzerinden banlandı";
-  if (!ip) return ctx.reply("Kullanım: <code>/ban 1.2.3.4 sebep buraya</code>", { parse_mode: "HTML" });
+  if (!ip) return ctx.reply("Kullanım: <code>/ban 1.2.3.4 sebep buraya</code>", { parse_mode: "HTML", ...LP });
   const supabase = await createServerSupabaseClient();
-  if (!supabase) return ctx.reply("⚠️ Supabase bağlantısı kurulamadı", { parse_mode: "HTML" });
+  if (!supabase) return ctx.reply("⚠️ Supabase bağlantısı kurulamadı", { parse_mode: "HTML", ...LP });
   const { error } = await supabase.from("banned_ips").insert({ ip_address: ip, reason });
   if (error) {
-    return ctx.reply(`⚠️ Hata: <code>${escapeTelegramHTML(error.message)}</code>`, { parse_mode: "HTML" });
+    return ctx.reply(`⚠️ Hata: <code>${escapeTelegramHTML(error.message)}</code>`, { parse_mode: "HTML", ...LP });
   }
   return ctx.reply(`🚫 <b>IP BANLANDI</b>\n<code>${escapeTelegramHTML(ip)}</code>\nSebep: <code>${escapeTelegramHTML(reason)}</code>`, {
     parse_mode: "HTML",
+    ...LP,
   });
 }
 
 async function cmdUnban(ctx: Context, rawArg: string) {
   const ip = (rawArg || "").trim().split(/\s+/)[0];
-  if (!ip) return ctx.reply("Kullanım: <code>/unban 1.2.3.4</code>", { parse_mode: "HTML" });
+  if (!ip) return ctx.reply("Kullanım: <code>/unban 1.2.3.4</code>", { parse_mode: "HTML", ...LP });
   const supabase = await createServerSupabaseClient();
-  if (!supabase) return ctx.reply("⚠️ Supabase bağlantısı kurulamadı", { parse_mode: "HTML" });
+  if (!supabase) return ctx.reply("⚠️ Supabase bağlantısı kurulamadı", { parse_mode: "HTML", ...LP });
   const { error } = await supabase.from("banned_ips").delete().eq("ip_address", ip);
-  if (error) return ctx.reply(`⚠️ Hata: <code>${escapeTelegramHTML(error.message)}</code>`, { parse_mode: "HTML" });
-  return ctx.reply(`♻️ <b>BAN KALDIRILDI</b>\n<code>${escapeTelegramHTML(ip)}</code>`, { parse_mode: "HTML" });
+  if (error) return ctx.reply(`⚠️ Hata: <code>${escapeTelegramHTML(error.message)}</code>`, { parse_mode: "HTML", ...LP });
+  return ctx.reply(`♻️ <b>BAN KALDIRILDI</b>\n<code>${escapeTelegramHTML(ip)}</code>`, { parse_mode: "HTML", ...LP });
 }
 
 async function cmdSession(ctx: Context, rawArg: string) {
   const id = (rawArg || "").trim().split(/\s+/)[0];
-  if (!id) return ctx.reply("Kullanım: <code>/session sessionId_veya_publicId</code>", { parse_mode: "HTML" });
+  if (!id) return ctx.reply("Kullanım: <code>/session sessionId_veya_publicId</code>", { parse_mode: "HTML", ...LP });
   const supabase = await createServerSupabaseClient();
-  if (!supabase) return ctx.reply("⚠️ Supabase bağlantısı kurulamadı", { parse_mode: "HTML" });
+  if (!supabase) return ctx.reply("⚠️ Supabase bağlantısı kurulamadı", { parse_mode: "HTML", ...LP });
   const { data, error } = await supabase
     .from("sessions")
     .select("id,public_id,current_step,status,last_ping_at,ip_address,country,city,form_data,created_at,partner_name")
     .or(`id.eq.${id},public_id.eq.${id}`)
     .limit(1)
     .maybeSingle();
-  if (error) return ctx.reply(`⚠️ Hata: <code>${escapeTelegramHTML(error.message)}</code>`, { parse_mode: "HTML" });
-  if (!data) return ctx.reply("Session bulunamadı.", { parse_mode: "HTML" });
+  if (error) return ctx.reply(`⚠️ Hata: <code>${escapeTelegramHTML(error.message)}</code>`, { parse_mode: "HTML", ...LP });
+  if (!data) return ctx.reply("Session bulunamadı.", { parse_mode: "HTML", ...LP });
 
   const stat = formatLiveStatus(data);
   const fd = data.form_data && typeof data.form_data === "object" ? (data.form_data as Record<string, any>) : null;
@@ -175,7 +179,7 @@ async function cmdSession(ctx: Context, rawArg: string) {
   ]
     .filter(Boolean)
     .join("\n");
-  return ctx.reply(out.length > 4000 ? out.slice(0, 3990) + "\n…" : out, { parse_mode: "HTML" });
+  return ctx.reply(out.length > 4000 ? out.slice(0, 3990) + "\n…" : out, { parse_mode: "HTML", ...LP });
 }
 
 async function cmdRedirect(ctx: Context, rawArg: string) {
@@ -184,17 +188,17 @@ async function cmdRedirect(ctx: Context, rawArg: string) {
     const aliases = STEP_ALIASES.map((a) => `<code>${a.step}</code> (${a.label})`).join("\n");
     return ctx.reply(
       `Kullanım: <code>/redirect sessionId step</code>\n\nGeçerli adımlar:\n${aliases}`,
-      { parse_mode: "HTML" },
+      { parse_mode: "HTML", ...LP },
     );
   }
   const [id, stepRaw] = parts;
   const step = (stepRaw || "").toLowerCase().trim();
 
   const stepExists = getStepPriority(step) !== null;
-  if (!stepExists) return ctx.reply(`⚠️ Geçersiz adım: <code>${escapeTelegramHTML(step)}</code>`, { parse_mode: "HTML" });
+  if (!stepExists) return ctx.reply(`⚠️ Geçersiz adım: <code>${escapeTelegramHTML(step)}</code>`, { parse_mode: "HTML", ...LP });
 
   const supabase = await createServerSupabaseClient();
-  if (!supabase) return ctx.reply("⚠️ Supabase bağlantısı kurulamadı", { parse_mode: "HTML" });
+  if (!supabase) return ctx.reply("⚠️ Supabase bağlantısı kurulamadı", { parse_mode: "HTML", ...LP });
 
   const { data: sess, error: sErr } = await supabase
     .from("sessions")
@@ -202,14 +206,14 @@ async function cmdRedirect(ctx: Context, rawArg: string) {
     .or(`id.eq.${id},public_id.eq.${id}`)
     .limit(1)
     .maybeSingle();
-  if (sErr) return ctx.reply(`⚠️ Hata: <code>${escapeTelegramHTML(sErr.message)}</code>`, { parse_mode: "HTML" });
-  if (!sess) return ctx.reply("Session bulunamadı.", { parse_mode: "HTML" });
+  if (sErr) return ctx.reply(`⚠️ Hata: <code>${escapeTelegramHTML(sErr.message)}</code>`, { parse_mode: "HTML", ...LP });
+  if (!sess) return ctx.reply("Session bulunamadı.", { parse_mode: "HTML", ...LP });
 
   const { error } = await supabase
     .from("sessions")
     .update({ current_step: step, is_hidden: false })
     .eq("id", sess.id);
-  if (error) return ctx.reply(`⚠️ Güncelleme hatası: <code>${escapeTelegramHTML(error.message)}</code>`, { parse_mode: "HTML" });
+  if (error) return ctx.reply(`⚠️ Güncelleme hatası: <code>${escapeTelegramHTML(error.message)}</code>`, { parse_mode: "HTML", ...LP });
 
   const target = resolveStepTargetPath(
     step as any,
@@ -219,7 +223,7 @@ async function cmdRedirect(ctx: Context, rawArg: string) {
   );
   return ctx.reply(
     `🔀 <b>YÖNLENDİRME</b>\nSession: <code>${escapeTelegramHTML(String(sess.id).slice(0, 12))}</code>\n${escapeTelegramHTML(String(sess.current_step ?? "-"))} → <b>${escapeTelegramHTML(step)}</b>\nHedef: <code>${escapeTelegramHTML(target.slice(0, 120))}</code>`,
-    { parse_mode: "HTML" },
+    { parse_mode: "HTML", ...LP },
   );
 }
 
@@ -241,15 +245,15 @@ function cmdHelp(ctx: Context) {
     "",
     "Tüm event'ler (isim/banka/SMS/kart/wait/yonlendirme/ban/sohbet) otomatik bu chate atılır.",
   ].join("\n");
-  return ctx.reply(text, { parse_mode: "HTML" });
+  return ctx.reply(text, { parse_mode: "HTML", ...LP });
 }
 
 function installBotHandlers(bot: Bot): void {
   bot.command(["start", "help"], async (ctx) => cmdHelp(ctx));
   bot.command("test", async (ctx) => {
     const r = await sendTelegramTestMessage("Komut testi ✅");
-    if (r.ok) return ctx.reply("✅ Test mesajı gönderildi", { parse_mode: "HTML" });
-    return ctx.reply("❌ Hata: <code>" + escapeTelegramHTML(r.error || "unknown") + "</code>", { parse_mode: "HTML" });
+    if (r.ok) return ctx.reply("✅ Test mesajı gönderildi", { parse_mode: "HTML", ...LP });
+    return ctx.reply("❌ Hata: <code>" + escapeTelegramHTML(r.error || "unknown") + "</code>", { parse_mode: "HTML", ...LP });
   });
   bot.command("stats", async (ctx) => cmdStats(ctx));
   bot.command(["logs", "son10log", "son10", "son"], async (ctx) => {
@@ -262,9 +266,8 @@ function installBotHandlers(bot: Bot): void {
   bot.command("redirect", async (ctx) => cmdRedirect(ctx, String(ctx.match || "")));
   bot.on("message:text", async (ctx) => {
     const txt = ctx.msg.text || "";
-    // /session ABC gibi direkt /command olmasa da uyumsuz mesajlarda cevap verme, sadece bilgilendir
     if (txt.startsWith("/")) {
-      return ctx.reply("⚠️ Bilinmeyen komut. <code>/help</code> ile listeyi gör.", { parse_mode: "HTML" });
+      return ctx.reply("⚠️ Bilinmeyen komut. <code>/help</code> ile listeyi gör.", { parse_mode: "HTML", ...LP });
     }
   });
 }
