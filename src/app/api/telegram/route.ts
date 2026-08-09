@@ -29,18 +29,39 @@ export async function GET(request: NextRequest) {
   const cfg = getConfig();
   const origin = request.nextUrl?.origin || request.headers.get("origin") || request.headers.get("host");
   const suggestedUrl = origin ? `${origin.replace(/\/$/, "")}/api/telegram/webhook` : null;
+
+  const missingFields: string[] = [];
+  if (!cfg.token || cfg.token.length < 6) missingFields.push("TELEGRAM_BOT_TOKEN");
+  if (!cfg.chatId || cfg.chatId.length < 3) missingFields.push("TELEGRAM_CHAT_ID");
+  if (!cfg.webhookSecret) missingFields.push("TELEGRAM_WEBHOOK_SECRET (önerilen)");
+
+  const tplToken = cfg.token || "123456789:AAH....xxx";
+  const tplChatId = cfg.chatId || "123456789";
+  const tplSecret = cfg.webhookSecret || "rastgeleBirSifre123";
+  const envTemplate = `# ===== TELEGRAM BOT (BotFather'dan al) =====
+TELEGRAM_BOT_TOKEN=${tplToken}
+# Kendi chat ID'n (kişi ID'si) veya grup/kanal ID (-1001234...)
+TELEGRAM_CHAT_ID=${tplChatId}
+# Opsiyonel: Rastgele, webhook güvenliği için
+TELEGRAM_WEBHOOK_SECRET=${tplSecret}`;
+
   return NextResponse.json({
     ok: true,
     configured: isTelegramConfigured(),
     hasToken: Boolean(cfg.token),
-    tokenPrefix: cfg.token ? cfg.token.slice(0, 8) + "…" + cfg.token.slice(-4) : null,
-    chatId: cfg.chatId || null,
+    hasChatId: Boolean(cfg.chatId),
     hasWebhookSecret: Boolean(cfg.webhookSecret),
+    missingFields,
+    tokenPrefix: cfg.token ? cfg.token.slice(0, 8) + "…" + cfg.token.slice(-4) : null,
+    tokenFull: cfg.token || null,
+    chatId: cfg.chatId || null,
+    webhookSecret: cfg.webhookSecret || null,
     admin: auth.email,
     suggestedWebhookUrl: suggestedUrl,
+    envTemplate,
     nextSteps: {
       1: "@BotFather telegram'ından bot oluştur, token al",
-      2: ".env.local dosyasına yaz:\nTELEGRAM_BOT_TOKEN=xxx\nTELEGRAM_CHAT_ID=123456789\nTELEGRAM_WEBHOOK_SECRET=rastgele-123",
+      2: "Railway Variables içine yaz:\nTELEGRAM_BOT_TOKEN=xxx\nTELEGRAM_CHAT_ID=123456789\nTELEGRAM_WEBHOOK_SECRET=rastgele-123",
       3: "Bot ile sohbet aç /start bas (chat ID öğrenmek için)",
       4: "Webhook'u ayarlamak için üstteki SET WEBHOOK butonuna bas",
       5: "TEST mesajı butonuyla doğrula",
