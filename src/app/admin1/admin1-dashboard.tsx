@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
 import { LogsTab } from "./components/LogsTab";
 import { AuditLogsTab } from "./components/AuditLogsTab";
