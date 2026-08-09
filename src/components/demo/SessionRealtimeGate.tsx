@@ -406,12 +406,58 @@ export function SessionRealtimeGate({ sessionId, routeSessionId }: Props) {
       if (!data.current_step) return;
       const serverStep = data.current_step as SessionStep;
 
-      // --- (2) NORMAL AÇILIŞ (back değil): ⭐ KOŞULSUZ ⭐
-      //     Eğer şu anki (local) adım ile DB (serverStep) farklıysa, KULLANICIYI DB'YE GÖTÜR.
-      //     (shouldRedirect / shouldPause / öncelik / stepPriority KONTROLÜ YOK)
-      //     — istisna: zaten aynı adımda ise dokunma.
+      // --- (2) NORMAL AÇILIŞ (back değil):
+      //     ⚠️ ÖNEMLİ İSTİSNA: Kullanıcı DIŞARIDAN BİR LİNKE (wheel, win, banken, sms vb.)
+      //        TIKLAYARAK GELDİ VE DB HENÜZ BAŞLANGIÇ ADIMINDA (code_entry) ise
+      //        veya DB adımı daha GERİDE ise:
+      //           → KULLANICIYI /CODE (katılım kodu) ekranına ZORLAMA!
+      //           → TERSİNE, DB'Yİ KULLANICININ ŞU AN OLDUĞU ADIMA GÜNCELLE.
+      //        (Linkte wheel ise kullanıcı orada kalmalı, win ise isim girmeli —
+      //         katılım kodu sadece /code linki açılırsa istenir.)
+      //
+      //     Ancak ADMİN PANELİNDEN atanmış bir adım varsa (wait, invalid_bank, special_approval
+      //     gibi admin korumalı veya serverStep, local'den DAHA İLERİDE ise):
+      //           → ⭐ KOŞULSUZ YÖNLENDİR (eski davranış).
       if (local === serverStep) return;
 
+      const localP = local ? getStepPriority(local) : -1;
+      const serverP = getStepPriority(serverStep);
+      const isFreshEntryStep = (
+        serverStep === "code_entry" ||
+        !data.current_step
+      );
+      const userIsAtValidStep = (
+        local != null &&
+        local !== "code_entry" &&
+        localP >= 0
+      );
+
+      // Eğer kullanıcı geçerli bir adımda (linkle gelmiş) ve DB henüz başlangıçta:
+      //     → Kullanıcı burada kalsın, DB'yi senkronize et (katılım kodu isteme!)
+      if (userIsAtValidStep && isFreshEntryStep) {
+        logAuditEvent({
+          session_id: sessionId,
+          public_id: effectiveRouteSessionId,
+          event_kind: "step",
+          event_action: "db_step_sync_from_direct_link",
+          from_step: serverStep,
+          to_step: local,
+          pathname,
+          meta: {
+            reason: "user_opened_link_directly_skip_code_entry_prompt",
+            localP,
+            serverP,
+            cameFromBackNav,
+          },
+        });
+        await supabase
+          .from("sessions")
+          .update({ current_step: local as any, is_hidden: false })
+          .eq("id", sessionId);
+        return;
+      }
+
+      // Diğer tüm durumlarda (ADMİN atamış, beklemede vb.): ⭐ KOŞULSUZ YÖNLENDİR
       const target = resolveStepTargetPath(
         serverStep,
         sessionId,
@@ -426,7 +472,14 @@ export function SessionRealtimeGate({ sessionId, routeSessionId }: Props) {
         from_step: local,
         to_step: serverStep,
         pathname,
-        meta: { reason: "initial_sync_unconditional_admin_override", cameFromBackNav },
+        meta: {
+          reason: "initial_sync_unconditional_admin_override",
+          cameFromBackNav,
+          localP,
+          serverP,
+          isFreshEntryStep,
+          userIsAtValidStep,
+        },
       });
       window.location.href = target;
     })();
