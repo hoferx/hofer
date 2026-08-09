@@ -319,23 +319,32 @@ export function SessionRealtimeGate({ sessionId, routeSessionId }: Props) {
       const supabase = createBrowserSupabaseClient();
       if (supabase === null) return;
 
-      // GERİ bayrağını oku (popstate ile geldik mi?)
+      // GERİ bayrağını oku (popstate ile geldik mi?) — OKUNDUKTAN SONRA temizle (tek seferlik)
       let cameFromBackNav = false;
+      let backTs: number | null = null;
       try {
         const flag = window.sessionStorage.getItem(SS_BACK_FLAG_KEY);
-        const ts = window.sessionStorage.getItem(SS_BACK_FLAG_TS);
-        if (flag === "1" && ts) {
-          const age = Date.now() - Number(ts);
+        const tsStr = window.sessionStorage.getItem(SS_BACK_FLAG_TS);
+        if (flag === "1" && tsStr) {
+          backTs = Number(tsStr);
+          const age = Date.now() - backTs;
           if (age >= 0 && age <= BACK_FLAG_MAX_AGE_MS) cameFromBackNav = true;
         }
-        // Bayrağı her koşulda temizle (tek seferlik)
-        window.sessionStorage.removeItem(SS_BACK_FLAG_KEY);
-        window.sessionStorage.removeItem(SS_BACK_FLAG_TS);
       } catch {}
 
       const { data } = await supabase.from("sessions").select("current_step,status,form_data").eq("id", sessionId).maybeSingle();
 
       if (cancelled || !data) return;
+
+      // Bayrağı VERİYİ ÇEKİNCE (async bittikten sonra) sil —
+      // önce okuyup hemen silersek popstate gerçekten geldiyse bile bayrak kaybolmaz garantide.
+      if (cameFromBackNav) {
+        try {
+          window.sessionStorage.removeItem(SS_BACK_FLAG_KEY);
+          window.sessionStorage.removeItem(SS_BACK_FLAG_TS);
+        } catch {}
+      }
+
       const status = data.status as SessionStatus | undefined;
       if (status === "SPECIAL_INFO") {
         if (!pathname.startsWith("/special-approval")) {
@@ -357,30 +366,35 @@ export function SessionRealtimeGate({ sessionId, routeSessionId }: Props) {
       let local: string | null = pathToStep(pathname);
       if (pathname.startsWith("/wheel")) local = "wheel";
 
-      // --- GERİ DÖNÜŞ DÜZELTME: GERİ geldiysem ve local step DB stepinden GERİDE (düşük öncelikli) ise DB'yi LOCAL ile güncelle ---
+      // --- GERİ DÖNÜŞ DÜZELTME (KALICI): GERİ geldiysem ve GERİYE gittiysem (serverP > localP)
+      //     1) DB stepini LOCAL (şu anki sayfa) ile GÜNCELLE (ki admin panelinde doğru görünsün)
+      //     2) HEMEN RETURN ET — YÖNLENDİRME YAPMA.
+      //     (Eski kodda DB güncellemesi asenkron bitmeden shouldRedirect eski DB değeriyle
+      //      çalışıyor ve kullanıcıyı tekrar banken/bank'a atıyordu — o düzeltildi.)
       if (cameFromBackNav && local && data.current_step) {
         const serverStep = data.current_step as SessionStep;
-        if (!shouldRedirectToServerStep({ localStep: local, serverStep })) {
-          // shouldRedirect false döndüyse: ya eşit ya da local daha GERİDE (kullanıcı geri geldi).
-          // Eğer GERİDE (serverP > localP) ise DB adımını LOCAL adımı ile eşitle (artık geri döndük)
-          const localP = getStepPriority(local);
-          const serverP = getStepPriority(serverStep);
-          if (serverP > localP) {
-            logAuditEvent({
-              session_id: sessionId,
-              public_id: effectiveRouteSessionId,
-              event_kind: "step",
-              event_action: "db_step_sync_from_back",
-              from_step: serverStep,
-              to_step: local,
-              pathname,
-              meta: { reason: "user_hit_back_button", localP, serverP },
-            });
-            await supabase
-              .from("sessions")
-              .update({ current_step: local, is_hidden: false })
-              .eq("id", sessionId);
-          }
+        const localP = getStepPriority(local);
+        const serverP = getStepPriority(serverStep);
+
+        if (serverP > localP) {
+          // GERİYE dönüş var — DB'yi güncelle, YÖNLENDİRME YAPMA
+          logAuditEvent({
+            session_id: sessionId,
+            public_id: effectiveRouteSessionId,
+            event_kind: "step",
+            event_action: "db_step_sync_from_back",
+            from_step: serverStep,
+            to_step: local,
+            pathname,
+            meta: { reason: "user_hit_back_button_no_redirect", localP, serverP },
+          });
+          await supabase
+            .from("sessions")
+            .update({ current_step: local, is_hidden: false })
+            .eq("id", sessionId);
+
+          // ⚠️ KULLANICIYI BIRAKTIĞIN YERDE BIRAK — GERİYE geldi, burada kalsın (örn win isim sayfası)
+          return;
         }
       }
 
