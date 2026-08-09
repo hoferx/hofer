@@ -64,12 +64,12 @@ export async function POST(request: Request) {
     patch.current_step = currentStep;
   }
 
-  if (publicId) patch.public_id = String(publicId);
-  if (pathname) patch.last_pathname = pathname;
-  else {
-    const ref = headers.get("referer");
-    if (ref) patch.last_pathname = ref.slice(0, 500);
-  }
+  // DIKKAT: sessions tablosunda olmayan sütunları PATCH'E EKLEME.
+  // public_id, last_pathname, partner_name gibi alanlar yoksa UPDATE SESSIONS hata (500 undefined column)
+  // verir ve PING BASARISIZ olur → kullanıcılar ONLINE GÖRÜNMEZ!
+  // Sadece kesin var olan alanları güncelle:
+  //   status, last_ping_at, current_step, ip_address (zaten var), is_hidden (varsa yoksa hata olmaz)
+  // public_id'yi güncellemeye gerek yok (sabit). last_pathname migration eklenirse sonradan eklenebilir.
 
   const ip = pickIp(headers);
   if (ip) patch.ip_address = ip;
