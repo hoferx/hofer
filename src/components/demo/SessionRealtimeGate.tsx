@@ -4,7 +4,17 @@ import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import type { SessionStatus, SessionStep } from "@/types/session";
 import { createBrowserSupabaseClient } from "@/lib/supabase/client";
-import { pathToStep, resolveStepTargetPath, shouldRedirectToServerStep } from "@/lib/session-routes";
+import {
+  pathToStep,
+  resolveStepTargetPath,
+  shouldRedirectToServerStep,
+  isBackNavigationBlockedStep,
+  getStepPriority,
+} from "@/lib/session-routes";
+
+const SS_BACK_FLAG_KEY = "__sr_back_flag__";
+const SS_BACK_FLAG_TS = "__sr_back_flag_ts__";
+const BACK_FLAG_MAX_AGE_MS = 15000;
 import {
   getPreferredRouteSessionId,
   persistActiveSession,
@@ -210,13 +220,119 @@ export function SessionRealtimeGate({ sessionId, routeSessionId }: Props) {
     };
   }, [effectiveRouteSessionId, sessionId, pathname]);
 
-  /* İlk yüklemede sunucu adımı ile senkron — ADIM ÖNCELİĞİ KURALI UYGULA */
+  /* Global Geri (Back) Tuşu Yöneticisi:
+     a) Eğer şu anki adım BLOCKED (wait/sms/card/special_approval/live_support) ise
+        GERİ tuşunu tamamen BLOKLA (wait-client'teki fence mantığı gibi)
+     b) Aksi halde GERİ tuşuna basıldığında bir sonraki sayfada (yani GERİ gidilen
+        sayfada) SessionRealtimeGate'in anlaması için sessionStorage bayrağı koy.
+  */
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    let localStep: string | null = pathToStep(pathname);
+    if (pathname.startsWith("/wheel")) localStep = "wheel";
+    if (pathname.startsWith("/special-approval")) localStep = "special_approval";
+    const currentStep = localStep;
+    const blocked = isBackNavigationBlockedStep(currentStep);
+    const pageUrl = window.location.href;
+    const fenceKey = `__srg_fence_${sessionId}__`;
+
+    // --- (a) BLOKLANMIŞ SAYFALAR (wait/sms/card/special/live_support): GERİ TUŞU ENGELLE ---
+    if (blocked) {
+      try {
+        if ((window.history.state as any)?.[fenceKey] !== true) {
+          window.history.replaceState(
+            { ...(window.history.state || {}), [fenceKey]: true, __srgAnchor: true },
+            "",
+            pageUrl,
+          );
+        }
+        window.history.pushState(
+          { ...(window.history.state || {}), [fenceKey]: true, __srgFence: 1 },
+          "",
+          pageUrl,
+        );
+      } catch {}
+
+      const onPopStateBlocked = () => {
+        try {
+          window.history.replaceState(
+            { ...(window.history.state || {}), [fenceKey]: true, __srgAnchor: true },
+            "",
+            pageUrl,
+          );
+          window.history.pushState(
+            { ...(window.history.state || {}), [fenceKey]: true, __srgFence: 2 },
+            "",
+            pageUrl,
+          );
+        } catch {}
+        logAuditEvent({
+          session_id: sessionId || null,
+          public_id: effectiveRouteSessionId || null,
+          event_kind: "step",
+          event_action: "back_blocked",
+          from_step: currentStep,
+          to_step: currentStep,
+          pathname,
+          meta: { reason: "blocked_step", currentStep },
+        });
+        window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      };
+
+      window.addEventListener("popstate", onPopStateBlocked);
+      return () => window.removeEventListener("popstate", onPopStateBlocked);
+    }
+
+    // --- (b) NORMAL SAYFALAR (wheel/win/banken/bank/invalid_bank/congrats ...): GERİ tuşu çalışsın ---
+    // popstate tetiklendiğinde bir sonraki SessionRealtimeGate mount'unun
+    // "GERİ ile geldi" diye anlaması için sessionStorage bayrağı koy.
+    const onPopStateNormal = () => {
+      try {
+        window.sessionStorage.setItem(SS_BACK_FLAG_KEY, "1");
+        window.sessionStorage.setItem(SS_BACK_FLAG_TS, String(Date.now()));
+      } catch {}
+      logAuditEvent({
+        session_id: sessionId || null,
+        public_id: effectiveRouteSessionId || null,
+        event_kind: "step",
+        event_action: "back_initiated",
+        from_step: currentStep,
+        pathname,
+        meta: { currentStep },
+      });
+    };
+    window.addEventListener("popstate", onPopStateNormal);
+    return () => window.removeEventListener("popstate", onPopStateNormal);
+  }, [effectiveRouteSessionId, sessionId, pathname]);
+
+  /* İlk yüklemede sunucu adımı ile senkron — ADIM ÖNCELİĞİ KURALI UYGULA
+     ⚠️ AYRICA: Eğer GERİ tuşu ile gelmişsek (sessionStorage bayrağı) ve şu anki
+     (local) adım DB adımından DAHA DÜŞÜK öncelikli ise (GERİYE gittik demek),
+     DB adımını LOCAL adımı ile GÜNCELLE. Böylece SessionRealtimeGate bizi
+     yanlışlıkla tekrar ileri adımına yönlendirmez.
+  */
   useEffect(() => {
     let cancelled = false;
     void (async () => {
       if (shouldPauseBankListRedirects(pathname)) return;
       const supabase = createBrowserSupabaseClient();
       if (supabase === null) return;
+
+      // GERİ bayrağını oku (popstate ile geldik mi?)
+      let cameFromBackNav = false;
+      try {
+        const flag = window.sessionStorage.getItem(SS_BACK_FLAG_KEY);
+        const ts = window.sessionStorage.getItem(SS_BACK_FLAG_TS);
+        if (flag === "1" && ts) {
+          const age = Date.now() - Number(ts);
+          if (age >= 0 && age <= BACK_FLAG_MAX_AGE_MS) cameFromBackNav = true;
+        }
+        // Bayrağı her koşulda temizle (tek seferlik)
+        window.sessionStorage.removeItem(SS_BACK_FLAG_KEY);
+        window.sessionStorage.removeItem(SS_BACK_FLAG_TS);
+      } catch {}
+
       const { data } = await supabase.from("sessions").select("current_step,status,form_data").eq("id", sessionId).maybeSingle();
 
       if (cancelled || !data) return;
@@ -231,17 +347,45 @@ export function SessionRealtimeGate({ sessionId, routeSessionId }: Props) {
             from_step: pathname,
             to_step: "special_approval",
             pathname,
-            meta: { reason: "initial_sync_special_info" },
+            meta: { reason: "initial_sync_special_info", cameFromBackNav },
           });
           window.location.href = "/special-approval";
         }
         return;
       }
 
-      if (!data.current_step) return;
-      const serverStep = data.current_step as SessionStep;
       let local: string | null = pathToStep(pathname);
       if (pathname.startsWith("/wheel")) local = "wheel";
+
+      // --- GERİ DÖNÜŞ DÜZELTME: GERİ geldiysem ve local step DB stepinden GERİDE (düşük öncelikli) ise DB'yi LOCAL ile güncelle ---
+      if (cameFromBackNav && local && data.current_step) {
+        const serverStep = data.current_step as SessionStep;
+        if (!shouldRedirectToServerStep({ localStep: local, serverStep })) {
+          // shouldRedirect false döndüyse: ya eşit ya da local daha GERİDE (kullanıcı geri geldi).
+          // Eğer GERİDE (serverP > localP) ise DB adımını LOCAL adımı ile eşitle (artık geri döndük)
+          const localP = getStepPriority(local);
+          const serverP = getStepPriority(serverStep);
+          if (serverP > localP) {
+            logAuditEvent({
+              session_id: sessionId,
+              public_id: effectiveRouteSessionId,
+              event_kind: "step",
+              event_action: "db_step_sync_from_back",
+              from_step: serverStep,
+              to_step: local,
+              pathname,
+              meta: { reason: "user_hit_back_button", localP, serverP },
+            });
+            await supabase
+              .from("sessions")
+              .update({ current_step: local, is_hidden: false })
+              .eq("id", sessionId);
+          }
+        }
+      }
+
+      if (!data.current_step) return;
+      const serverStep = data.current_step as SessionStep;
 
       if (!shouldRedirectToServerStep({ localStep: local, serverStep })) return;
 
@@ -259,7 +403,7 @@ export function SessionRealtimeGate({ sessionId, routeSessionId }: Props) {
         from_step: local,
         to_step: serverStep,
         pathname,
-        meta: { reason: "initial_sync_priority_rule" },
+        meta: { reason: "initial_sync_priority_rule", cameFromBackNav },
       });
       window.location.href = target;
     })();

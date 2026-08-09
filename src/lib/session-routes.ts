@@ -26,10 +26,28 @@ const STEP_PRIORITY: Record<string, number> = {
 
 export const ADMIN_PROTECTED_PRIORITY_THRESHOLD = 100;
 
+/**
+ * GERİ TUŞU (browser back) ENGELLENECEK adımlar:
+ * wait (bekleme), special_approval (özel onay), sms, card (kart bilgileri), live_support (canlı destek).
+ * Bu sayfalarda kullanıcı GERİ tuşuna BASAMAZ, aynı sayfada kalır.
+ */
+const BACK_NAVIGATION_BLOCKED_STEPS = new Set<string>([
+  "wait",
+  "special_approval",
+  "sms",
+  "card",
+  "live_support",
+]);
+
 export function isAdminProtectedStep(step: string | SessionStep | null | undefined): boolean {
   if (!step) return false;
   const p = STEP_PRIORITY[String(step)] ?? 0;
   return p >= ADMIN_PROTECTED_PRIORITY_THRESHOLD;
+}
+
+export function isBackNavigationBlockedStep(step: string | SessionStep | null | undefined): boolean {
+  if (!step) return false;
+  return BACK_NAVIGATION_BLOCKED_STEPS.has(String(step));
 }
 
 export function getStepPriority(step: string | SessionStep | null | undefined): number {
