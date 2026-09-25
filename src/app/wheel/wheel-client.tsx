@@ -39,18 +39,19 @@ const LOCAL_HISTORY_KEY = "ah-prize-wheel-last-five-wins";
 const MAX_HISTORY_ITEMS = 5;
 const WHEEL_CURRENCY = "€";
 
+// Segment order clockwise from top — matches wheel-assets/hofer artwork
 const PRIZES: readonly PrizeSegment[] = [
-  { kind: "amount", text: "€2.000", selectionIndex: 0, rotationIndex: 0, amount: 2000, popupLines: ["€ 2.000"] },
-  { kind: "amount", text: "€2.500", selectionIndex: 1, rotationIndex: 1, amount: 2500, popupLines: ["€ 2.500"] },
-  { kind: "amount", text: "€3.000", selectionIndex: 2, rotationIndex: 2, amount: 3000, popupLines: ["€ 3.000"] },
-  { kind: "amount", text: "€3.500", selectionIndex: 3, rotationIndex: 3, amount: 3500, popupLines: ["€ 3.500"] },
-  { kind: "amount", text: "€4.000", selectionIndex: 4, rotationIndex: 4, amount: 4000, popupLines: ["€ 4.000"] },
-  { kind: "amount", text: "€5.000", selectionIndex: 5, rotationIndex: 5, amount: 5000, popupLines: ["€ 5.000"] },
-  { kind: "message", text: "NOCHMAL VERSUCHEN", selectionIndex: 6, rotationIndex: 6, amount: null, popupLines: ["NOCHMAL", "VERSUCHEN"] },
-  { kind: "message", text: "BEIM NÄCHSTEN MAL", selectionIndex: 7, rotationIndex: 7, amount: null, popupLines: ["BEIM", "NÄCHSTEN", "MAL"] },
+  { kind: "amount", text: "3.500 €", selectionIndex: 0, rotationIndex: 0, amount: 3500, popupLines: ["3.500 €"] },
+  { kind: "amount", text: "2.500 €", selectionIndex: 1, rotationIndex: 1, amount: 2500, popupLines: ["2.500 €"] },
+  { kind: "amount", text: "2.000 €", selectionIndex: 2, rotationIndex: 2, amount: 2000, popupLines: ["2.000 €"] },
+  { kind: "amount", text: "2.500 €", selectionIndex: 3, rotationIndex: 3, amount: 2500, popupLines: ["2.500 €"] },
+  { kind: "amount", text: "1.500 €", selectionIndex: 4, rotationIndex: 4, amount: 1500, popupLines: ["1.500 €"] },
+  { kind: "amount", text: "3.000 €", selectionIndex: 5, rotationIndex: 5, amount: 3000, popupLines: ["3.000 €"] },
+  { kind: "message", text: "NOCH EINMAL DREHEN", selectionIndex: 6, rotationIndex: 6, amount: null, popupLines: ["NOCH EINMAL", "DREHEN"] },
+  { kind: "amount", text: "1.000 €", selectionIndex: 7, rotationIndex: 7, amount: 1000, popupLines: ["1.000 €"] },
 ] as const;
 
-const WINNABLE_PRIZES = PRIZES.filter((prize) => prize.selectionIndex <= 5);
+const WINNABLE_PRIZES = PRIZES.filter((prize) => prize.kind === "amount");
 
 function normalizeAngle(angle: number) {
   return ((angle % 360) + 360) % 360;
@@ -424,7 +425,7 @@ export function WheelClient({
   return (
     <>
       <div
-        className="relative w-full overflow-hidden bg-[#050505]"
+        className="relative w-full overflow-hidden bg-[#061538]"
         style={{
           height: "100dvh",
           minHeight: "100dvh",
@@ -436,9 +437,9 @@ export function WheelClient({
       >
         {!isViewportReady ? (
           <picture aria-hidden="true" className="absolute inset-0 block">
-            <source media="(max-width: 767px)" srcSet="/wheel-assets/mobile/background-opaque.png" />
+            <source media="(max-width: 767px)" srcSet="/wheel-assets/hofer/background-mobile.png" />
             <img
-              src="/wheel-assets/desktop/background-opaque.png"
+              src="/wheel-assets/hofer/background-desktop.png"
               alt=""
               className="h-full w-full object-cover"
               draggable={false}

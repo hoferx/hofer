@@ -1,12 +1,18 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120">
   <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#ffd500"/>
-      <stop offset="1" stop-color="#ffb800"/>
+    <linearGradient id="rays" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#e4002b"/>
+      <stop offset="0.3" stop-color="#ff8c00"/>
+      <stop offset="0.55" stop-color="#ffd200"/>
+      <stop offset="0.8" stop-color="#64b4e6"/>
+      <stop offset="1" stop-color="#00a0dc"/>
     </linearGradient>
   </defs>
-  <circle cx="60" cy="60" r="56" fill="url(#g)"/>
-  <path d="M36 58h48v30a6 6 0 0 1-6 6H42a6 6 0 0 1-6-6V58z" fill="#0b1f4b"/>
-  <rect x="55" y="48" width="10" height="46" fill="#0b1f4b"/>
-  <path d="M60 48c-8 0-13-5-13-11 0-4 3-7 7-7 6 0 6 9 6 18zm0 0c8 0 13-5 13-11 0-4-3-7-7-7-6 0-6 9-6 18z" fill="#0b1f4b"/>
+  <circle cx="60" cy="60" r="56" fill="#ffffff" stroke="#0a2e7e" stroke-width="6"/>
+  <rect x="30" y="18" width="60" height="60" rx="10" fill="#0a2e7e"/>
+  <path d="M60 27 L72 70" stroke="url(#rays)" stroke-width="6" stroke-linecap="round"/>
+  <path d="M60 27 L60 70" stroke="#ffffff" stroke-width="6" stroke-linecap="round"/>
+  <path d="M60 27 L48 70" stroke="url(#rays)" stroke-width="6" stroke-linecap="round"/>
+  <path d="M51 58 L69 58" stroke="#ffffff" stroke-width="6" stroke-linecap="round"/>
+  <text x="60" y="100" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-style="italic" font-size="22" font-weight="900" fill="#0a2e7e" letter-spacing="1">HOFER</text>
 </svg>

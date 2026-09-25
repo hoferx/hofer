@@ -2,7 +2,7 @@
   "fallbackPreset": "desktop",
   "scenes": {
     "desktop": {
-      "src": "/wheel-assets/desktop/background-opaque.png",
+      "src": "/wheel-assets/hofer/background-desktop.png",
       "aspectRatio": "16 / 9",
       "wheelCenterX": 50.05,
       "wheelCenterY": 39.2,
@@ -13,7 +13,7 @@
       "spinButtonHeight": 10.1
     },
     "mobile": {
-      "src": "/wheel-assets/mobile/background-opaque.png",
+      "src": "/wheel-assets/hofer/background-mobile.png",
       "aspectRatio": "9 / 16",
       "wheelCenterX": 50.15,
       "wheelCenterY": 33.15,

@@ -78,16 +78,16 @@ export function WheelSettingsTab({ darkMode }: { darkMode: boolean }) {
   const wheelSettings = settings.wheel_settings || {};
 
   const defaultAssets = {
-    desktop_background: "/wheel-assets/desktop/background-opaque.png",
-    desktop_wheel: "/wheel-assets/desktop/png/wheel-spin-face.png",
-    desktop_pointer: "/wheel-assets/desktop/png/pointer.png",
-    desktop_button: "/wheel-assets/desktop/png/spin-now-button.png",
-    desktop_centerHub: "/wheel-assets/logo-hub.svg",
-    mobile_background: "/wheel-assets/mobile/background-opaque.png",
-    mobile_wheel: "/wheel-assets/mobile/png/wheel-spin-face.png",
-    mobile_pointer: "/wheel-assets/mobile/png/pointer.png",
-    mobile_button: "/wheel-assets/mobile/png/spin-now-button.png",
-    mobile_centerHub: "/wheel-assets/logo-hub.svg",
+    desktop_background: "/wheel-assets/hofer/background-desktop.png",
+    desktop_wheel: "/wheel-assets/hofer/wheel-face.png",
+    desktop_pointer: "/wheel-assets/hofer/pointer.png",
+    desktop_button: "/wheel-assets/hofer/spin-button.png",
+    desktop_centerHub: "/wheel-assets/hofer/center-hub.png",
+    mobile_background: "/wheel-assets/hofer/background-mobile.png",
+    mobile_wheel: "/wheel-assets/hofer/wheel-face.png",
+    mobile_pointer: "/wheel-assets/hofer/pointer.png",
+    mobile_button: "/wheel-assets/hofer/spin-button.png",
+    mobile_centerHub: "/wheel-assets/hofer/center-hub.png",
   };
 
   const renderField = (key: string, label: string, defaultUrl: string) => {
