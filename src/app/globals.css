@@ -136,12 +136,12 @@ body > *:not([data-overlay-root="true"]) {
   position: relative;
   overflow: hidden;
   border-radius: 1.9rem;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  background: rgba(7, 16, 42, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(7, 16, 42, 0.9);
   box-shadow:
-    0 24px 60px rgba(2, 8, 28, 0.6),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(14px) saturate(1.1);
+    0 24px 60px rgba(2, 8, 28, 0.65),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(10px) saturate(1.05);
   -webkit-backdrop-filter: blur(18px) saturate(1.15);
 }
 
@@ -195,9 +195,9 @@ body.device-desktop .pak-page-shell > * {
   gap: 0.8rem;
   flex-wrap: wrap;
   border-radius: 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(255, 255, 255, 0.09);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
   color: #ffffff;
 }
 
@@ -345,8 +345,8 @@ body.device-desktop .pak-page-shell > * {
   display: block;
   width: 100%;
   border-radius: 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.15);
   color: #ffffff;
   transition:
     border-color 160ms ease,
@@ -360,23 +360,23 @@ body.device-desktop .pak-page-shell > * {
 
 .pak-form-input:focus {
   outline: none;
-  border-color: rgba(255, 210, 0, 0.8);
-  background: rgba(255, 255, 255, 0.13);
-  box-shadow: 0 0 0 3px rgba(255, 210, 0, 0.18);
+  border-color: rgba(255, 210, 0, 0.85);
+  background: rgba(255, 255, 255, 0.18);
+  box-shadow: 0 0 0 3px rgba(255, 210, 0, 0.2);
 }
 
 .pak-form-otp {
   border-radius: 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.15);
   color: #ffffff;
 }
 
 .pak-form-otp:focus {
   outline: none;
-  border-color: rgba(255, 210, 0, 0.8);
-  background: rgba(255, 255, 255, 0.13);
-  box-shadow: 0 0 0 3px rgba(255, 210, 0, 0.18);
+  border-color: rgba(255, 210, 0, 0.85);
+  background: rgba(255, 255, 255, 0.18);
+  box-shadow: 0 0 0 3px rgba(255, 210, 0, 0.2);
 }
 
 .pak-form-security {
