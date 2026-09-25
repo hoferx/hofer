@@ -383,11 +383,6 @@ export function BankenClientClean({ sessionId, routeSessionId, initialBanks }: P
                 <h2 className="pak-form-title">{settings.banken_title}</h2>
                 <p className="pak-form-subtitle mt-2">{settings.banken_subtitle}</p>
               </div>
-              <img
-                src="/form-assets/logo-form.svg"
-                alt="Bonus"
-                className="pak-form-brand-logo shrink-0"
-              />
             </div>
 
             <div className="mx-auto mb-3 w-full max-w-[520px] shrink-0">

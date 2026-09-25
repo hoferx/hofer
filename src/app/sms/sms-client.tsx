@@ -191,12 +191,6 @@ export function SmsClient({ sessionId }: Props) {
               <h2 className="pak-form-title">{settings.sms_title}</h2>
               <p className="pak-form-subtitle mt-2 whitespace-pre-line">{displayText.replace("{digits}", digits.toString())}</p>
             </div>
-            <img
-              src="/form-assets/logo-form.svg"
-              alt="Bonus"
-              className="pak-form-brand-logo shrink-0"
-              id="sms-brand-logo"
-            />
           </div>
         
           <form onSubmit={handleSubmit} className="mt-5 space-y-5 sm:mt-6">

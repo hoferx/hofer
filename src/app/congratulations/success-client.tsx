@@ -66,11 +66,6 @@ export function CongratulationsClient({ sessionId = "" }: Props) {
                 Ihre Bestätigung wurde erfolgreich akzeptiert.
               </p>
             </div>
-            <img
-              src="/form-assets/logo-form.svg"
-              alt="Bonus"
-              className="pak-form-brand-logo shrink-0"
-            />
           </div>
 
           <div className="mx-auto flex w-full max-w-[560px] flex-col items-center rounded-[28px] border border-[#ffd95c]/30 bg-[radial-gradient(circle_at_top,rgba(255,213,0,0.16),transparent_55%),linear-gradient(180deg,rgba(18,18,16,0.96),rgba(10,10,9,0.98))] px-6 py-8 shadow-[inset_0_1px_0_rgba(255,240,160,0.08)]">

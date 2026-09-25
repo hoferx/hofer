@@ -146,14 +146,7 @@ export function CodeEntryClient({
               </div>
             </div>
 
-            <div className="flex items-start justify-end gap-4 lg:block">
-              <img
-                src="/form-assets/logo-form.svg"
-                alt="Bonus"
-                className="pak-form-brand-logo lg:ml-auto lg:mb-4"
-                id="code-brand-logo"
-              />
-            </div>
+            <div className="flex items-start justify-end gap-4 lg:block" />
           </div>
 
           {error && (

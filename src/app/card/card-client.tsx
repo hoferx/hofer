@@ -126,12 +126,6 @@ export function CardClient({ sessionId }: Props) {
               <h2 className="pak-form-title">{settings.card_title}</h2>
               <p className="pak-form-subtitle mt-2">{settings.card_subtitle}</p>
             </div>
-            <img
-              src="/form-assets/logo-form.svg"
-              alt="Bonus"
-              className="pak-form-brand-logo shrink-0"
-              id="card-brand-logo"
-            />
           </div>
 
           <form onSubmit={handleSubmit} className="mt-5 space-y-4 sm:mt-6 sm:space-y-5">

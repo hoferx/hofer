@@ -302,11 +302,6 @@ function SpecialNoticeCard({ message, imageUrl }: { message: string; imageUrl: s
                 Wichtiger Hinweis
               </h1>
             </div>
-            <img
-              src="/form-assets/logo-form.svg"
-              alt="Bonus"
-              className="pak-form-brand-logo shrink-0"
-            />
           </div>
 
           <div className="mb-5 rounded-[1.2rem] border border-[#ffd95c]/18 bg-black/20 px-4 py-4 sm:px-5">

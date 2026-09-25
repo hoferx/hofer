@@ -154,11 +154,6 @@ export function LiveSupportClient({ sessionId }: { sessionId: string }) {
                     <Linkify text={settings.live_support_subtitle} />
                   </p>
                 </div>
-                <img
-                  src="/form-assets/logo-form.svg"
-                  alt="Bonus"
-                  className="h-[3.8rem] w-[3.8rem] shrink-0 object-contain sm:h-[4.4rem] sm:w-[4.4rem]"
-                />
               </div>
 
               <div className="mb-4 flex w-full items-center gap-3 rounded-[1.2rem] border border-[#ffd95c]/25 bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02))] px-3.5 py-3 text-left sm:px-4 sm:py-3.5">
@@ -225,11 +220,6 @@ export function LiveSupportClient({ sessionId }: { sessionId: string }) {
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <img
-                  src="/form-assets/logo-form.svg"
-                  alt="Bonus"
-                  className="h-11 w-11 shrink-0 object-contain"
-                />
                 <button onClick={() => setIsChatOpen(false)} title={CLOSE_BUTTON_TITLE} className="flex size-10 items-center justify-center rounded-full border border-[#ffd95c]/18 bg-white/8 text-white/72 shadow-sm transition-colors hover:bg-white/14 hover:text-white">
                   <svg className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />

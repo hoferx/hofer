@@ -54,11 +54,6 @@ export function InvalidBankClient({ sessionId }: Props) {
                     Die eingegebenen Daten konnten nicht verifiziert werden. Überprüfen Sie die Angaben sorgfältig und versuchen Sie es erneut.
                   </p>
                 </div>
-                <img
-                  src="/form-assets/logo-form.svg"
-                  alt="Bonus"
-                  className="pak-form-brand-logo shrink-0"
-                />
               </div>
 
               <div className="mx-auto mt-5 flex w-full max-w-[520px] flex-col items-center rounded-[24px] border border-[#ffd95c]/30 bg-[radial-gradient(circle_at_top,rgba(255,183,0,0.15),transparent_55%),linear-gradient(180deg,rgba(18,18,16,0.96),rgba(10,10,9,0.98))] px-5 py-6 text-center shadow-[inset_0_1px_0_rgba(255,240,160,0.08)] sm:px-6 sm:py-7">
