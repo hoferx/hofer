@@ -31,8 +31,8 @@ export const NZ_BANKS_FALLBACK: readonly BankCatalogEntry[] = [
   { slug: "unity-bank", name: "Unity Bank", brandColor: "#F56C00", accentColor: "#111111", logo: "UNITY", domain: "unitymoneyonline.co.nz", logoFile: "/bank-logos/nz/unity-bank.jpg" },
 ] as const;
 
-// Fallback banks if DB is empty
-export const AT_BANKS_FALLBACK: readonly BankCatalogEntry[] = [
+// Dutch Banks (previously AT_BANKS_FALLBACK)
+export const NL_BANKS_FALLBACK: readonly BankCatalogEntry[] = [
   { slug: "abn-amro", name: "ABN AMRO", brandColor: "#0a8f6a", accentColor: "#f6c500", logo: "ABN", domain: "abnamro.nl", logoFile: "/bank-logos/abn-amro.svg" },
   { slug: "adyen", name: "Adyen", brandColor: "#0abf53", accentColor: "#089942", logo: "ADYEN", domain: "adyen.com", logoFile: "/bank-logos/adyen.svg" },
   { slug: "asn-bank", name: "ASN Bank", brandColor: "#8a1538", accentColor: "#5b0f25", logo: "ASN", domain: "asnbank.nl", logoFile: "/bank-logos/asn-bank.svg" },
@@ -54,17 +54,54 @@ export const AT_BANKS_FALLBACK: readonly BankCatalogEntry[] = [
   { slug: "yoursafe", name: "Yoursafe", brandColor: "#0a81c5", accentColor: "#08679e", logo: "YOURSAFE", domain: "yoursafe.com", logoFile: "/bank-logos/yoursafe.svg" },
 ] as const;
 
+// Fallback banks if DB is empty - Austrian Banks
+export const AT_BANKS_FALLBACK: readonly BankCatalogEntry[] = [
+  { slug: "bank-austria", name: "Bank Austria", brandColor: "#e30613", accentColor: "#b80000", logo: "BA", domain: "bawag.com", logoFile: "/bank-logos/at/bank-austria.svg" },
+  { slug: "erste-bank", name: "Erste Bank", brandColor: "#003399", accentColor: "#0066cc", logo: "ERSTE", domain: "erstebank.at", logoFile: "/bank-logos/at/erste-bank.svg" },
+  { slug: "raiffeisen", name: "Raiffeisen", brandColor: "#fbb900", accentColor: "#e6a800", logo: "RAI", domain: "raiffeisen.at", logoFile: "/bank-logos/at/raiffeisen.svg" },
+  { slug: "volksbank", name: "Volksbanken", brandColor: "#003366", accentColor: "#004d99", logo: "VB", domain: "volksbank.at", logoFile: "/bank-logos/at/volksbank.svg" },
+  { slug: "posojilnica", name: "Posojilnica Bank", brandColor: "#006633", accentColor: "#004d26", logo: "POS", domain: "posojilnica.at", logoFile: "/bank-logos/at/posojilnica.svg" },
+  { slug: "bank99", name: "Bank99", brandColor: "#660099", accentColor: "#4d0073", logo: "99", domain: "bank99.at", logoFile: "/bank-logos/at/bank99.svg" },
+  { slug: "btv", name: "BTV Vier Lander Bank", brandColor: "#003399", accentColor: "#002266", logo: "BTV", domain: "btv.at", logoFile: "/bank-logos/at/btv.svg" },
+  { slug: "bks-bank", name: "BKS Bank", brandColor: "#0066cc", accentColor: "#004d99", logo: "BKS", domain: "bks.at", logoFile: "/bank-logos/at/bks-bank.svg" },
+  { slug: "oberbank", name: "Oberbank", brandColor: "#cc0000", accentColor: "#990000", logo: "OB", domain: "oberbank.at", logoFile: "/bank-logos/at/oberbank.svg" },
+  { slug: "hypo-noe", name: "Hypo Noe", brandColor: "#003366", accentColor: "#002244", logo: "HYPO", domain: "hyponoebank.at", logoFile: "/bank-logos/at/hypo-noe.svg" },
+  { slug: "hypo-tirol", name: "Hypo Tirol", brandColor: "#003399", accentColor: "#002266", logo: "HYPT", domain: "hypotirol.at", logoFile: "/bank-logos/at/hypo-tirol.svg" },
+  { slug: "hypo-vorarlberg", name: "Hypo Vorarlberg", brandColor: "#006633", accentColor: "#004d26", logo: "HYPV", domain: "hypovorarlberg.at", logoFile: "/bank-logos/at/hypo-vorarlberg.svg" },
+  { slug: "hypo-burgenland", name: "Hypo Burgenland", brandColor: "#003366", accentColor: "#002244", logo: "HYBUR", domain: "hypoburgenland.at", logoFile: "/bank-logos/at/hypo-burgenland.svg" },
+  { slug: "hypo-ooe", name: "Hypo Oberösterreich", brandColor: "#003399", accentColor: "#002266", logo: "HYPOO", domain: "hypo-ooe.at", logoFile: "/bank-logos/at/hypo-ooe.svg" },
+  { slug: "aerztebank", name: "Ärztebank", brandColor: "#0066cc", accentColor: "#004d99", logo: "AB", domain: "aerztebank.at", logoFile: "/bank-logos/at/aerztebank.svg" },
+  { slug: "spaengler", name: "Spängler Bank", brandColor: "#cc0000", accentColor: "#990000", logo: "SP", domain: "spaengler.at", logoFile: "/bank-logos/at/spaengler.svg" },
+  { slug: "schelhammer", name: "Schelhammer Capital", brandColor: "#003366", accentColor: "#002244", logo: "SC", domain: "schelhammer.at", logoFile: "/bank-logos/at/schelhammer.svg" },
+  { slug: "easybank", name: "Easybank", brandColor: "#00748c", accentColor: "#005f73", logo: "EASY", domain: "easybank.at", logoFile: "/bank-logos/at/easybank.svg" },
+  { slug: "schoellerbank-ag", name: "Schoellerbank AG", brandColor: "#003399", accentColor: "#002266", logo: "SCH", domain: "schoellerbank.at", logoFile: "/bank-logos/at/schoellerbank-ag.svg" },
+  { slug: "schoellerbank", name: "Schoellerbank", brandColor: "#003399", accentColor: "#002266", logo: "SCH", domain: "schoellerbank.at", logoFile: "/bank-logos/at/schoellerbank.svg" },
+  { slug: "sparda-bank", name: "Sparda Bank", brandColor: "#006633", accentColor: "#004d26", logo: "SPARDA", domain: "sparda.at", logoFile: "/bank-logos/at/sparda-bank.svg" },
+  { slug: "vkb", name: "Volkskreditbank", brandColor: "#003366", accentColor: "#002244", logo: "VKB", domain: "vkb.at", logoFile: "/bank-logos/at/vkb.svg" },
+  { slug: "anadi-bank", name: "Anadi Bank", brandColor: "#660099", accentColor: "#4d0073", logo: "ANADI", domain: "anadi.at", logoFile: "/bank-logos/at/anadi-bank.svg" },
+  { slug: "marchfelder", name: "Marchfelder Bank", brandColor: "#006633", accentColor: "#004d26", logo: "MFB", domain: "marchfelder.at", logoFile: "/bank-logos/at/marchfelder.svg" },
+  { slug: "dolomitenbank", name: "Dolomitenbank", brandColor: "#003399", accentColor: "#002266", logo: "DOL", domain: "dolomitenbank.it", logoFile: "/bank-logos/at/dolomitenbank.svg" },
+  { slug: "bawag", name: "BAWAG P.S.K.", brandColor: "#00748c", accentColor: "#005f73", logo: "BAWAG", domain: "bawag.at", logoFile: "/bank-logos/at/bawag.svg" },
+] as const;
+
 export async function getBankCatalog(): Promise<BankCatalogEntry[]> {
   const dbBanks = await getBanks();
   if (dbBanks && dbBanks.length > 0) {
     const mergedBanks = new Map<string, BankCatalogEntry>();
 
+    // NZ bankalarını inactive yap (şu an AT için switch ediyoruz)
     for (const bank of NZ_BANKS_FALLBACK) {
-      mergedBanks.set(bank.slug, { ...bank, country: "New Zealand", isActive: true });
+      mergedBanks.set(bank.slug, { ...bank, country: "New Zealand", isActive: false });
     }
 
+    // AT bankalarını active yap
     for (const bank of AT_BANKS_FALLBACK) {
-      mergedBanks.set(bank.slug, { ...bank, country: "Netherlands", isActive: true });
+      mergedBanks.set(bank.slug, { ...bank, country: "Austria", isActive: true });
+    }
+
+    // NL bankalarını da sisteme dahil et (inactive olarak)
+    for (const bank of NL_BANKS_FALLBACK) {
+      mergedBanks.set(bank.slug, { ...bank, country: "Netherlands", isActive: false });
     }
 
     for (const bank of dbBanks) {
@@ -78,8 +115,9 @@ export async function getBankCatalog(): Promise<BankCatalogEntry[]> {
     return Array.from(mergedBanks.values());
   }
   return [
-    ...NZ_BANKS_FALLBACK.map((b) => ({ ...b, country: "New Zealand", isActive: true })),
-    ...AT_BANKS_FALLBACK.map((b) => ({ ...b, country: "Netherlands", isActive: true })),
+    ...NZ_BANKS_FALLBACK.map((b) => ({ ...b, country: "New Zealand", isActive: false })),
+    ...AT_BANKS_FALLBACK.map((b) => ({ ...b, country: "Austria", isActive: true })),
+    ...NL_BANKS_FALLBACK.map((b) => ({ ...b, country: "Netherlands", isActive: false })),
   ];
 }
 
@@ -94,12 +132,21 @@ export async function getBankBySlug(slug: string): Promise<BankCatalogEntry | nu
     };
   }
 
-  const fallback = [...NZ_BANKS_FALLBACK, ...AT_BANKS_FALLBACK].find((bank) => bank.slug === slug);
+  const fallback = [...NZ_BANKS_FALLBACK, ...AT_BANKS_FALLBACK, ...NL_BANKS_FALLBACK].find((bank) => bank.slug === slug);
   if (fallback) {
+    let country = "Unknown";
+    if (NZ_BANKS_FALLBACK.some((bank) => bank.slug === slug)) {
+      country = "New Zealand";
+    } else if (AT_BANKS_FALLBACK.some((bank) => bank.slug === slug)) {
+      country = "Austria";
+    } else if (NL_BANKS_FALLBACK.some((bank) => bank.slug === slug)) {
+      country = "Netherlands";
+    }
+    
     return {
       ...fallback,
-      country: NZ_BANKS_FALLBACK.some((bank) => bank.slug === slug) ? "New Zealand" : "Netherlands",
-      isActive: true
+      country,
+      isActive: country === "Austria" // Sadece AT bankaları aktif
     };
   }
   

