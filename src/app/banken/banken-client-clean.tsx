@@ -17,6 +17,8 @@ type Props = {
 };
 
 const RETURN_TO_BANK_LIST_FLAG = "bank-page:return-to-list";
+const SELF_NAV_FLAG_KEY = "bank-page:self-nav";
+const SELF_NAV_FLAG_TS_KEY = "bank-page:self-nav-ts";
 const BANK_SESSION_FIELDS_TO_CLEAR = [
   "bankSlug",
   "bankName",
@@ -292,6 +294,15 @@ export function BankenClientClean({ sessionId, routeSessionId, initialBanks }: P
     setMsg(null);
     setBankSlug(nextBankSlug);
 
+    // Kendi yazdığımız current_step update'i realtime listener'ı tetikleyip
+    // window.location.href ile ÇIFT navigation yapmasın diye bayrak koy.
+    try {
+      window.sessionStorage.setItem(SELF_NAV_FLAG_KEY, nextBankSlug);
+      window.sessionStorage.setItem(SELF_NAV_FLAG_TS_KEY, String(Date.now()));
+    } catch {
+      /* ignore sessionStorage errors */
+    }
+
     const nextFormData: Record<string, any> = {
       ...sessionFormData,
       bankSlug: nextBankSlug,
@@ -318,6 +329,12 @@ export function BankenClientClean({ sessionId, routeSessionId, initialBanks }: P
     setSaving(false);
     if (error) {
       navigationLockRef.current = false;
+      try {
+        window.sessionStorage.removeItem(SELF_NAV_FLAG_KEY);
+        window.sessionStorage.removeItem(SELF_NAV_FLAG_TS_KEY);
+      } catch {
+        /* ignore sessionStorage errors */
+      }
       setMsg("Speichern fehlgeschlagen.");
     }
     else {

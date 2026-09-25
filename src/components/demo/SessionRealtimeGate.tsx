@@ -568,6 +568,18 @@ export function SessionRealtimeGate({ sessionId, routeSessionId }: Props) {
             effectiveRouteSessionId,
             (next.form_data ?? {}) as { bankSlug?: string | null },
           );
+
+          // Client'ın KENDİ update'inin tetiklediği realtime event'te
+          // hard-redirect yapma (router.push ile çift history entry olmasın).
+          try {
+            const navSlug = window.sessionStorage.getItem("bank-page:self-nav");
+            const navTs = Number(window.sessionStorage.getItem("bank-page:self-nav-ts") ?? "0");
+            const isFreshSelfNav = navSlug != null && Date.now() - navTs < 5000;
+            if (isFreshSelfNav && newStep === "bank" && target.includes(`/bank/${navSlug}`)) {
+              return;
+            }
+          } catch { /* ignore sessionStorage errors */ }
+
           logAuditEvent({
             session_id: sessionId,
             public_id: effectiveRouteSessionId,

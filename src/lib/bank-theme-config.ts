@@ -17,18 +17,18 @@ export type BankTheme = {
 
 const DEFAULT_THEME: BankTheme = {
   slug: "default",
-  name: "Bankieren",
+  name: "Banking",
   colors: {
-    primary: "#0051a5",
-    secondary: "#003d7a",
+    primary: "#0a2e7e",
+    secondary: "#00133d",
     textOnPrimary: "#ffffff",
   },
   logoText: "BANK",
-  buttonText: "Inloggen",
+  buttonText: "Anmelden",
   inputLabels: {
-    verfuegernummer: "Klantnummer",
-    pin: "Toegangscode",
-    tacCode: "Bevestigingscode",
+    verfuegernummer: "Kundennummer",
+    pin: "Passwort",
+    tacCode: "TAN-Code",
   },
 };
 
