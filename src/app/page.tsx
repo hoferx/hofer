@@ -133,12 +133,12 @@ export default function Home() {
           <div className="pak-form-inner px-5 pb-6 pt-6 sm:px-7 sm:pb-8 sm:pt-8 lg:px-10 lg:pb-9 lg:pt-9">
             <div className="grid gap-6 lg:grid-cols-[minmax(0,1.08fr)_84px] lg:items-start">
               <div className="min-w-0">
-                <div className="mb-4 inline-flex max-w-full items-center gap-2 rounded-full border border-red-400/30 bg-[#3a0505]/40 px-4 py-2 text-left backdrop-blur-sm">
+                <div className="mb-4 inline-flex max-w-full items-center gap-2 rounded-full border border-white/15 bg-white/8 px-4 py-2 text-left backdrop-blur-sm">
                   <span className="relative flex h-2.5 w-2.5 shrink-0">
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
                     <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500" />
                   </span>
-                  <span className="text-xs font-extrabold uppercase tracking-[0.14em] text-[#ffb3b3]">
+                  <span className="text-xs font-extrabold uppercase tracking-[0.14em] text-white/85">
                     Angebot endet in: {formatTime(timeLeft)}
                   </span>
                 </div>
@@ -191,15 +191,15 @@ export default function Home() {
                   )}
                 </button>
 
-                <div className="mt-7 flex flex-wrap items-center gap-3 border-t border-white/10 pt-5 text-[0.77rem] font-semibold uppercase tracking-[0.16em] text-[#fff0a6]/75">
+                <div className="mt-7 flex flex-wrap items-center gap-3 border-t border-white/10 pt-5 text-[0.77rem] font-semibold uppercase tracking-[0.16em] text-white/55">
                   <div className="flex items-center gap-2">
-                    <svg className="h-4 w-4 text-[#ffd500]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="h-4 w-4 text-[#ffd200]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                     </svg>
                     Sichere Auszahlung
                   </div>
                   <div className="flex items-center gap-2">
-                    <svg className="h-4 w-4 text-[#ffd500]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="h-4 w-4 text-[#ffd200]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                     </svg>
                     Sofortige Verifizierung
