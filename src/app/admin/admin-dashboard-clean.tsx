@@ -28,7 +28,7 @@ export function AdminDashboardClean() {
   }, [rows]);
   
   const [amount, setAmount] = useState("5000");
-  const [currency, setCurrency] = useState("NZ$");
+  const [currency, setCurrency] = useState("€");
   const [partnerName, setPartnerName] = useState("");
   const [participationCode, setParticipationCode] = useState("");
   const [showNewLinkModal, setShowNewLinkModal] = useState(false);
@@ -851,7 +851,7 @@ export function AdminDashboardClean() {
                         <div className="text-[11px] text-zinc-500 font-mono">{fd.phone || "-"}</div>
                         {row.amount > 0 && (
                         <div className="mt-1 inline-flex items-center rounded-md bg-blue-500/10 px-2 py-0.5 text-[10px] font-bold text-blue-500 border border-blue-500/20">
-                          {row.amount} {(fd.currency as string) || "NZ$"}
+                          {row.amount} {(fd.currency as string) || "€"}
                         </div>
                       )}
                       </td>
@@ -1333,10 +1333,10 @@ export function AdminDashboardClean() {
                 <label className="block text-xs font-bold text-zinc-500 mb-1.5 uppercase">Para Birimi</label>
                 <div className="flex gap-2">
                   <button 
-                    onClick={() => setCurrency("NZ$")}
-                    className={`flex-1 py-2 rounded-lg border font-bold text-lg transition-all ${currency === "NZ$" ? "bg-blue-700/20 border-blue-500 text-blue-500" : "bg-zinc-900 border-zinc-800 text-zinc-500 hover:bg-zinc-800"}`}
+                    onClick={() => setCurrency("€")}
+                    className={`flex-1 py-2 rounded-lg border font-bold text-lg transition-all ${currency === "€" ? "bg-blue-700/20 border-blue-500 text-blue-500" : "bg-zinc-900 border-zinc-800 text-zinc-500 hover:bg-zinc-800"}`}
                   >
-                    NZ$ (NZD)
+                    € (EUR)
                   </button>
                   <button 
                     onClick={() => setCurrency("$")}

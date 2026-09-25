@@ -255,13 +255,13 @@ export function ReceiptModal({ onClose }: { onClose: () => void }) {
               <div style={getTextStyle(450.5, 788.63, 8)}>{headerDate}</div>
               <div style={getTextStyle(500, 776.74, 10, false, true)}>{headerName}</div>
               
-              <div style={getTextStyle(220.31, 659.29, 10)}>{senderAccount} {senderAccount && !senderAccount.includes("NZD") ? "NZD" : ""}</div>
+              <div style={getTextStyle(220.31, 659.29, 10)}>{senderAccount} {senderAccount && !senderAccount.includes("EUR") ? "EUR" : ""}</div>
               <div style={getTextStyle(220.31, 644.66, 10)}>{senderName}</div>
               
               <div style={getTextStyle(220.31, 595.95, 10)}>{receiverName}</div>
               <div style={getTextStyle(220.31, 581.33, 10)}>{receiverIban}</div>
               
-              <div style={getTextStyle(220.31, 535.61, 10)}>{amount} {amount && !amount.includes("NZD") ? "NZD" : ""}</div>
+              <div style={getTextStyle(220.31, 535.61, 10)}>{amount} {amount && !amount.includes("EUR") ? "EUR" : ""}</div>
               <div style={getTextStyle(220.31, 520.99, 10)}>{reference}</div>
               <div style={getTextStyle(220.31, 506.36, 10)}>{dueDate}</div>
             </div>

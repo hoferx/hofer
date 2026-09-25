@@ -65,7 +65,7 @@ export async function GET(request: NextRequest) {
   const tplToken = cfg.token || "123456789:AAH....xxx";
   const tplChatId = cfg.chatId || "123456789";
   const tplSecret = cfg.webhookSecret || "rastgeleBirSifre123";
-  const tplSite = origin?.replace(/\/$/, "") || "https://paknsave.unuhanga.store";
+  const tplSite = origin?.replace(/\/$/, "") || "https://hofer.up.railway.app";
   const envTemplate = `# ===== TELEGRAM BOT (BotFather'dan al) =====
 TELEGRAM_BOT_TOKEN=${tplToken}
 # Kendi chat ID'n (kişi ID'si) veya grup/kanal ID (-1001234...)
@@ -127,8 +127,8 @@ export async function POST(request: NextRequest) {
     if (!origin) {
       return NextResponse.json({
         ok: false,
-        error: "Railway proxy'den dolayı origin = localhost görünüyor. Railway Variables'e 'PUBLIC_SITE_URL=https://paknsave.unuhanga.store' ekle ve yeniden deploy et.",
-        howToFix: "PUBLIC_SITE_URL=https://paknsave.unuhanga.store (kök domain, / olmadan) değişkenini ekle → restart → tekrar dene.",
+        error: "Railway proxy'den dolayı origin = localhost görünüyor. Railway Variables'e 'PUBLIC_SITE_URL=https://hofer.up.railway.app' ekle ve yeniden deploy et.",
+        howToFix: "PUBLIC_SITE_URL=https://hofer.up.railway.app (kök domain, / olmadan) değişkenini ekle → restart → tekrar dene.",
       }, { status: 400 });
     }
     const secret = getTelegramWebhookSecret();

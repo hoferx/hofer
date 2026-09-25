@@ -82,12 +82,12 @@ export function WheelSettingsTab({ darkMode }: { darkMode: boolean }) {
     desktop_wheel: "/wheel-assets/desktop/png/wheel-spin-face.png",
     desktop_pointer: "/wheel-assets/desktop/png/pointer.png",
     desktop_button: "/wheel-assets/desktop/png/spin-now-button.png",
-    desktop_centerHub: "/wheel-assets/desktop/png/paknsave-logo-hub.png",
+    desktop_centerHub: "/wheel-assets/logo-hub.svg",
     mobile_background: "/wheel-assets/mobile/background-opaque.png",
     mobile_wheel: "/wheel-assets/mobile/png/wheel-spin-face.png",
     mobile_pointer: "/wheel-assets/mobile/png/pointer.png",
     mobile_button: "/wheel-assets/mobile/png/spin-now-button.png",
-    mobile_centerHub: "/wheel-assets/mobile/png/paknsave-logo-hub.png",
+    mobile_centerHub: "/wheel-assets/logo-hub.svg",
   };
 
   const renderField = (key: string, label: string, defaultUrl: string) => {

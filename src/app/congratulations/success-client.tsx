@@ -61,14 +61,14 @@ export function CongratulationsClient({ sessionId = "" }: Props) {
         <div className="pak-form-inner px-6 pb-8 pt-8 text-center sm:px-10 sm:pb-10 sm:pt-10">
           <div className="mx-auto mb-6 flex w-full max-w-[560px] items-start justify-between gap-4 text-left">
             <div>
-              <h2 className="pak-form-title max-w-[12ch]">Request completed</h2>
+              <h2 className="pak-form-title max-w-[12ch]">Anfrage abgeschlossen</h2>
               <p className="pak-form-subtitle mt-3 max-w-[30rem]">
-                Your confirmation has been accepted successfully.
+                Ihre Bestätigung wurde erfolgreich akzeptiert.
               </p>
             </div>
             <img
-              src="/form-assets/paknsave-logo-form.png"
-              alt="PAK'nSAVE"
+              src="/form-assets/logo-form.svg"
+              alt="Bonus"
               className="pak-form-brand-logo shrink-0"
             />
           </div>
@@ -95,14 +95,14 @@ export function CongratulationsClient({ sessionId = "" }: Props) {
             </div>
 
             <p className="max-w-[34rem] text-[17px] font-semibold leading-8 text-white sm:text-[19px]">
-              Congratulations! Your request has been completed successfully. Continue by following your partner&apos;s instructions.
+              Herzlichen Glückwunsch! Ihre Anfrage wurde erfolgreich abgeschlossen. Folgen Sie den Anweisungen Ihres Partners, um fortzufahren.
             </p>
 
             <div className="mt-8 pak-form-security justify-center text-center">
               <svg className="h-8 w-8 shrink-0 text-[#ffd500]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
                 <path d="M12 15v2m-6 4h12a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2Zm10-10V7a4 4 0 0 0-8 0v4h8Z" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-              <span>Confirmation stored securely</span>
+              <span>Bestätigung sicher gespeichert</span>
             </div>
           </div>
         </div>

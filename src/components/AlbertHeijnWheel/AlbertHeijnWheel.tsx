@@ -50,7 +50,7 @@ const WHEEL_ASSETS: Record<
     frameSrc: "/wheel-assets/desktop/png/wheel-frame.png",
     pointerSrc: "/wheel-assets/desktop/png/pointer.png",
     buttonSrc: "/wheel-assets/desktop/png/spin-now-button.png",
-    centerHubSrc: "/wheel-assets/desktop/png/paknsave-logo-hub.png",
+    centerHubSrc: "/wheel-assets/logo-hub.svg",
 
     wheelLeft: "27.1531%",
     wheelTop: "5.9511%",
@@ -79,7 +79,7 @@ const WHEEL_ASSETS: Record<
     frameSrc: "/wheel-assets/mobile/png/wheel-frame.png",
     pointerSrc: "/wheel-assets/mobile/png/pointer.png",
     buttonSrc: "/wheel-assets/mobile/png/spin-now-button.png",
-    centerHubSrc: "/wheel-assets/mobile/png/paknsave-logo-hub.png",
+    centerHubSrc: "/wheel-assets/logo-hub.svg",
 
     wheelLeft: "7.86397%",
     wheelTop: "20.39474%",
@@ -122,7 +122,7 @@ export function AlbertHeijnWheel({ layout, rotation, spinning, disabled, onSpin,
           {/* 1. BACKGROUND */}
           <img
             src={assets.backgroundSrc}
-            alt={layout.sceneKey === "desktop" ? "Desktop prize wheel background" : "Mobile prize wheel background"}
+            alt={layout.sceneKey === "desktop" ? "Hintergrund des Gewinnrads (Desktop)" : "Hintergrund des Gewinnrads (Mobil)"}
             className="pointer-events-none absolute inset-0 z-[1] h-full w-full select-none object-fill"
             draggable={false}
             loading="eager"
@@ -241,7 +241,7 @@ export function AlbertHeijnWheel({ layout, rotation, spinning, disabled, onSpin,
             type="button"
             onClick={onSpin}
             disabled={disabled}
-            aria-label="Spin the prize wheel"
+            aria-label="Gewinnrad drehen"
             className="absolute z-[8] bg-transparent focus:outline-none focus-visible:ring-4 focus-visible:ring-white/80 disabled:cursor-not-allowed"
             style={{
               left: assets.buttonLeft,
@@ -252,7 +252,7 @@ export function AlbertHeijnWheel({ layout, rotation, spinning, disabled, onSpin,
               borderRadius: "100px",
             }}
           >
-            <span className="sr-only">{spinning ? "Spinning" : "Spin now"}</span>
+            <span className="sr-only">{spinning ? "Dreht sich" : "Jetzt drehen"}</span>
           </button>
         </div>
       </div>

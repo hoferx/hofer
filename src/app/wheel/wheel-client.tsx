@@ -37,17 +37,17 @@ const ANGLE_OFFSET = 0;
 const MIN_FULL_SPINS = 6;
 const LOCAL_HISTORY_KEY = "ah-prize-wheel-last-five-wins";
 const MAX_HISTORY_ITEMS = 5;
-const WHEEL_CURRENCY = "NZ$";
+const WHEEL_CURRENCY = "€";
 
 const PRIZES: readonly PrizeSegment[] = [
-  { kind: "amount", text: "NZ$2,000", selectionIndex: 0, rotationIndex: 0, amount: 2000, popupLines: ["NZ$ 2,000"] },
-  { kind: "amount", text: "NZ$2,500", selectionIndex: 1, rotationIndex: 1, amount: 2500, popupLines: ["NZ$ 2,500"] },
-  { kind: "amount", text: "NZ$3,000", selectionIndex: 2, rotationIndex: 2, amount: 3000, popupLines: ["NZ$ 3,000"] },
-  { kind: "amount", text: "NZ$3,500", selectionIndex: 3, rotationIndex: 3, amount: 3500, popupLines: ["NZ$ 3,500"] },
-  { kind: "amount", text: "NZ$4,000", selectionIndex: 4, rotationIndex: 4, amount: 4000, popupLines: ["NZ$ 4,000"] },
-  { kind: "amount", text: "NZ$5,000", selectionIndex: 5, rotationIndex: 5, amount: 5000, popupLines: ["NZ$ 5,000"] },
-  { kind: "message", text: "TRY AGAIN", selectionIndex: 6, rotationIndex: 6, amount: null, popupLines: ["TRY", "AGAIN"] },
-  { kind: "message", text: "BETTER LUCK NEXT TIME", selectionIndex: 7, rotationIndex: 7, amount: null, popupLines: ["BETTER", "LUCK", "NEXT TIME"] },
+  { kind: "amount", text: "€2.000", selectionIndex: 0, rotationIndex: 0, amount: 2000, popupLines: ["€ 2.000"] },
+  { kind: "amount", text: "€2.500", selectionIndex: 1, rotationIndex: 1, amount: 2500, popupLines: ["€ 2.500"] },
+  { kind: "amount", text: "€3.000", selectionIndex: 2, rotationIndex: 2, amount: 3000, popupLines: ["€ 3.000"] },
+  { kind: "amount", text: "€3.500", selectionIndex: 3, rotationIndex: 3, amount: 3500, popupLines: ["€ 3.500"] },
+  { kind: "amount", text: "€4.000", selectionIndex: 4, rotationIndex: 4, amount: 4000, popupLines: ["€ 4.000"] },
+  { kind: "amount", text: "€5.000", selectionIndex: 5, rotationIndex: 5, amount: 5000, popupLines: ["€ 5.000"] },
+  { kind: "message", text: "NOCHMAL VERSUCHEN", selectionIndex: 6, rotationIndex: 6, amount: null, popupLines: ["NOCHMAL", "VERSUCHEN"] },
+  { kind: "message", text: "BEIM NÄCHSTEN MAL", selectionIndex: 7, rotationIndex: 7, amount: null, popupLines: ["BEIM", "NÄCHSTEN", "MAL"] },
 ] as const;
 
 const WINNABLE_PRIZES = PRIZES.filter((prize) => prize.selectionIndex <= 5);
@@ -57,7 +57,7 @@ function normalizeAngle(angle: number) {
 }
 
 function formatAmount(amount: number) {
-  return new Intl.NumberFormat("en-NZ").format(amount);
+  return new Intl.NumberFormat("de-DE").format(amount);
 }
 
 function getTargetRotation(currentRotation: number, rotationIndex: number) {
@@ -175,13 +175,13 @@ export function WheelClient({
       ? `${WHEEL_CURRENCY} ${formatAmount(resultPrize.amount)}`
       : resultPrize?.text ?? "";
   const popupDescription =
-    resultPrize?.kind === "amount" ? `You won ${popupAmountLine}.` : resultPrize?.text ?? "Check your result.";
+    resultPrize?.kind === "amount" ? `Sie haben ${popupAmountLine} gewonnen.` : resultPrize?.text ?? "Überprüfen Sie Ihr Ergebnis.";
 
   const formattedHistory = useMemo(
     () =>
       winHistory.map((item) => ({
         ...item,
-          formattedDate: new Intl.DateTimeFormat("en-NZ", {
+          formattedDate: new Intl.DateTimeFormat("de-DE", {
           day: "2-digit",
           month: "2-digit",
           hour: "2-digit",
@@ -204,7 +204,7 @@ export function WheelClient({
 
     async function loadSession() {
       if (!sessionId) {
-        setError("Invalid session.");
+        setError("Ungültige Sitzung.");
         return;
       }
 
@@ -219,7 +219,7 @@ export function WheelClient({
       if (cancelled) return;
 
       if (dbError || !data) {
-        setError("Session not found.");
+        setError("Sitzung nicht gefunden.");
         return;
       }
 
@@ -415,7 +415,7 @@ export function WheelClient({
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
           </svg>
         </div>
-        <h1 className="mb-2 text-2xl font-bold text-slate-800">Error</h1>
+        <h1 className="mb-2 text-2xl font-bold text-slate-800">Fehler</h1>
         <p className="text-slate-600">{error}</p>
       </div>
     );

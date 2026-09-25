@@ -297,7 +297,7 @@ export function DynamicBankPreview({ bank }: { bank: BankConfig }) {
                 )}
               </div>
               <div>
-                <p className="text-xs uppercase tracking-widest opacity-80">Veilige Bankomgeving</p>
+                <p className="text-xs uppercase tracking-widest opacity-80">Sichere Bankumgebung</p>
                 <h2 className="text-lg font-bold">{bank.name}</h2>
               </div>
             </div>

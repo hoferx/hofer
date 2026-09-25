@@ -43,7 +43,7 @@ export function CodeEntryClient({
 
       if (cancelled) return;
       if (qErr || !data) {
-        setError("Session not found or configuration is invalid.");
+        setError("Sitzung nicht gefunden oder Konfiguration ungültig.");
         setLoading(false);
         return;
       }
@@ -66,12 +66,12 @@ export function CodeEntryClient({
     const cleanCode = enteredCode.trim().toLowerCase();
     const expectedCodeClean = expectedCode.trim().toLowerCase();
     if (!cleanCode) {
-      setError("Enter your participation code.");
+      setError("Geben Sie Ihren Teilnahmecode ein.");
       return;
     }
 
     if (expectedCodeClean && cleanCode !== expectedCodeClean) {
-      setError("The code you entered is invalid.");
+      setError("Der eingegebene Code ist ungültig.");
       return;
     }
 
@@ -83,7 +83,7 @@ export function CodeEntryClient({
       .eq("id", sessionId);
 
     if (upErr) {
-      setError("Saving failed. Please try again.");
+      setError("Speichern fehlgeschlagen. Bitte versuchen Sie es erneut.");
       setProcessing(false);
       return;
     }
@@ -148,8 +148,8 @@ export function CodeEntryClient({
 
             <div className="flex items-start justify-end gap-4 lg:block">
               <img
-                src="/form-assets/paknsave-logo-form.png"
-                alt="PAK'nSAVE"
+                src="/form-assets/logo-form.svg"
+                alt="Bonus"
                 className="pak-form-brand-logo lg:ml-auto lg:mb-4"
                 id="code-brand-logo"
               />
@@ -164,7 +164,7 @@ export function CodeEntryClient({
 
           <form onSubmit={handleSubmit} className="mt-7 space-y-6">
             <div className="pak-form-label">
-              <label className="mb-3 block text-left">Participation Code</label>
+              <label className="mb-3 block text-left">Teilnahmecode</label>
               <div className="pak-form-input-wrap">
                 <div className="pak-form-input-icon">
                   <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true" strokeWidth="2">
@@ -189,7 +189,7 @@ export function CodeEntryClient({
                 <svg className="h-9 w-9 shrink-0 text-[#ffd500]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
                   <path d="M12 3.7 18.4 6v5.2c0 4-2.3 7.1-6.4 9.1-4.1-2-6.4-5.1-6.4-9.1V6L12 3.7Z" strokeLinejoin="round" />
                 </svg>
-                <span>Your information is processed securely.</span>
+                <span>Ihre Daten werden sicher verarbeitet.</span>
               </div>
 
               <button

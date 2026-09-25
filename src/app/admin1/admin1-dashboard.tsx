@@ -24,7 +24,7 @@ export function Admin1Dashboard({ user }: { user: any }) {
   const [newLink, setNewLink] = useState<string | null>(null);
   const [linkType, setLinkType] = useState<"normal" | "wheel" | "direct_win" | "direct_bank">("normal");
   const [amount, setAmount] = useState("5000");
-  const [currency, setCurrency] = useState("NZ$");
+  const [currency, setCurrency] = useState("€");
   const [partnerName, setPartnerName] = useState("");
   const [participationCode, setParticipationCode] = useState("");
   const [createLinkError, setCreateLinkError] = useState<string | null>(null);
@@ -75,8 +75,7 @@ export function Admin1Dashboard({ user }: { user: any }) {
   }
 
   const EUROPEAN_COUNTRIES = [
-    { name: "Tümü", flag: "🌍", lang: "nl" },
-    { name: "Yeni Zelanda", flag: "🇳🇿", lang: "en" },
+    { name: "Tümü", flag: "🌍", lang: "de" },
     { name: "Hollanda", flag: "🇳🇱", lang: "nl" },
     { name: "Almanya", flag: "🇩🇪", lang: "de" },
     { name: "Avusturya", flag: "🇦🇹", lang: "de" },
@@ -170,7 +169,7 @@ export function Admin1Dashboard({ user }: { user: any }) {
               {/* Flag Selector Dropdown */}
               <div className="relative group/flag">
                 <button className={`p-1.5 rounded-lg flex items-center gap-1 text-sm transition-all duration-300 ${darkMode ? 'hover:bg-white/10' : 'hover:bg-black/5'}`}>
-                  <span className="drop-shadow-sm">{EUROPEAN_COUNTRIES.find(c => c.name === normalizeCountryName(settings?.target_country || "Yeni Zelanda"))?.flag || "🌍"}</span>
+                  <span className="drop-shadow-sm">{EUROPEAN_COUNTRIES.find(c => c.name === normalizeCountryName(settings?.target_country || "Avusturya"))?.flag || "🌍"}</span>
                   <svg className="w-3 h-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
                 </button>
                 <div className="absolute top-full left-0 mt-2 w-48 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] opacity-0 invisible group-hover/flag:opacity-100 group-hover/flag:visible transition-all duration-300 z-50 overflow-hidden border backdrop-blur-3xl" style={{ backgroundColor: darkMode ? 'rgba(30,30,30,0.85)' : 'rgba(255,255,255,0.85)', borderColor: darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }}>
@@ -289,7 +288,7 @@ export function Admin1Dashboard({ user }: { user: any }) {
                         onChange={(e) => setCurrency(e.target.value)}
                         className={`w-full p-3.5 rounded-xl border outline-none font-medium transition-all focus:ring-2 focus:ring-[#EB5E28]/50 ${darkMode ? 'bg-black/50 border-white/10 text-white' : 'bg-gray-50/50 border-gray-200 text-black'}`}
                       >
-                        <option value="NZ$">NZ$ (NZD)</option>
+                        <option value="€">€ (EUR)</option>
                         <option value="$">$ (USD)</option>
                         <option value="£">£ (GBP)</option>
                       </select>
@@ -545,7 +544,7 @@ TELEGRAM_WEBHOOK_SECRET=rastgeleBirSifre123`;
                 (status.origin || "⚠️ localhost:8080 (Railway proxy)"),
                 status.hasOrigin
                   ? `Kullanılacak: ${status.origin || "-"}`
-                  : "ZORUNLU: 'PUBLIC_SITE_URL=https://paknsave.unuhanga.store' ekle (sonuna / YOK)")}
+                  : "ZORUNLU: 'PUBLIC_SITE_URL=https://hofer.up.railway.app' ekle (sonuna / YOK)")}
             </div>
 
             {!status.configured && status.missingFields?.length > 0 && (

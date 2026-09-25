@@ -4,7 +4,7 @@ import { NextRequest } from "next/server";
 
 export const dynamic = "force-dynamic";
 
-const PORTAL_ASSET_DIR = join("C:", "Users", "XENOTIC", "Desktop", "paknsave-nz-campaign-package", "assets", "portal");
+const PORTAL_ASSET_DIR = join(process.cwd(), "public", "portal");
 
 const VARIANT_FILES = {
   desktop: "desktop-background.png",

