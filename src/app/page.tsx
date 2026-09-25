@@ -133,7 +133,7 @@ export default function Home() {
           <div className="pak-form-inner px-5 pb-6 pt-6 sm:px-7 sm:pb-8 sm:pt-8 lg:px-10 lg:pb-9 lg:pt-9">
             <div className="grid gap-6 lg:grid-cols-[minmax(0,1.08fr)_84px] lg:items-start">
               <div className="min-w-0">
-                <div className="mb-4 inline-flex max-w-full items-center gap-2 rounded-full border border-[#ffdb4d]/35 bg-[#5a0808]/35 px-4 py-2 text-left">
+                <div className="mb-4 inline-flex max-w-full items-center gap-2 rounded-full border border-red-400/30 bg-[#3a0505]/40 px-4 py-2 text-left backdrop-blur-sm">
                   <span className="relative flex h-2.5 w-2.5 shrink-0">
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
                     <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500" />
@@ -156,7 +156,7 @@ export default function Home() {
                     <div>Bonusangebot</div>
                   </div>
                   <div className="pak-form-amount-divider" />
-                  <div className="pak-form-amount-value">€5.000</div>
+                  <div className="pak-form-amount-value">€3.500</div>
                 </div>
 
                 {error && (
